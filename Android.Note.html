@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>Android 笔记</title>
+</head>
+<body>
+
+<style id="style_area" >
+a{
+    text-decoration:none;
+}
+p{
+    line-height: 1.4em;
+    text-indent:2em;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0.3em 0;
+}
+li{
+    padding: 0.3em 0;
+}
+.gray-line{
+    color:#F77;
+    font-weight: 100;
+    font-style: oblique;
+    font-size: 0.8em;
+}
+code{
+    line-height: 24px;
+    border-bottom: rgb(253, 191, 186) solid 2px;
+    margin: 3px 0.5em;
+    padding: 2px;
+
+    font-weight: 400;
+    font-size: 12px;
+    font-style: oblique;
+    border-radius: 3px;
+    backdrop-filter: blur(2px);
+    color: rgb(231,76,60);
+}
+/* code{
+    line-height: 20px;
+    margin: 3px;
+    padding: 2px;
+    border-radius: 3px;
+    color: #eb3f2f;
+    font-weight: bold;
+    font-size: 12px;
+    margin: 3px;
+    background-color:#f0f0f0;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #a9a9a9;
+    backdrop-filter: blur(2px);
+} */
+pre{
+    border-radius: 4px;
+    background-color: rgb(247,247,247,0.3);
+    border: 1px solid #aaa;
+    line-height: 1.182em;
+    overflow: auto;
+    font-size: 11px;
+    padding: 16px;
+    margin: 10px;
+}
+img{
+    opacity:1;
+    margin: 10px;
+}
+.breadboard{
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.37);
+    margin: 5px 2% 45px;
+    padding: 10px;
+}
+
+.head_index{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+}
+.head_1{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 4px #133152 solid;
+    width: 99%;
+    margin-top: 1.5em;
+}
+.head_2{
+    color: #163a60;
+    font-size: 25px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 2px #163a60 solid;
+    width: 99%;
+    margin-top: 1.25em;
+}
+.head_3{
+    color: #1a426e;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.head_4{
+    color: #1d4a7b;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.div_2{
+    margin: 5px 2% 45px;
+    padding: 40px;
+    height: 100px;
+    text-align: center;
+
+}
+
+.img_center{
+    text-align: center;
+}
+.img_left{
+    text-align: left;
+    margin-left: 4em;
+}
+.note_msg{
+    color: #eb3f2f;
+    font-weight: 600;
+}
+
+.offset_1em{margin-left: 1em;}
+.offset_2em{margin-left: 2em;}
+.offset_3em{margin-left: 3em;}
+.offset_4em{margin-left: 4em;}
+.offset_5em{margin-left: 5em;}
+.offset_6em{margin-left: 6em;}
+.offset_7em{margin-left: 7em;}
+.offset_8em{margin-left: 8em;}
+.offset_9em{margin-left: 9em;}
+.offset_10em{margin-left: 10em;}
+
+.green_text{
+    color: green;
+}
+.red_text{
+    color: red;
+}
+.purple_text{
+    color: purple;
+}
+
+.limit_window_size{
+    /* overflow:auto; */
+    max-height:30em;
+    overflow-y:auto;
+    word-wrap:break-word;
+    word-break: normal;
+    white-space: pre-wrap;
+    margin:10px;
+}
+
+.child_red2_key li strong{
+    color: red;
+}
+.child_red1_key li strong{
+    color: red;
+}
+.child_red2_key li strong{
+    color: #F77;
+}
+.child_red3_key li strong{
+    color: #Faa;
+}
+
+.foot_panel{
+    position:fixed;
+    right:3em;
+    bottom: 3em;
+    width:6em;
+    height:30px;
+    padding:15px 5px 5px 15px;
+    background-color:rgb( 157, 157, 157, 0.618 );
+    border-radius: 8px;
+}
+#foot_panel_top{
+    display: inline;
+    border-right: 5px solid #eee;
+}
+#foot_panel_top a{
+    width:4em;
+}
+#foot_panel_bottom {
+    display: inline;
+    margin-left: 5px;
+}
+#foot_panel_top a{
+    width:4em;
+}
+
+#main_index li{
+    line-height: 17px;
+    font-size: 16px;
+}
+</style>
+
+
+
+
+<div class="breadboard">
+<div class="head_index">目录</div>
+<div><ol id="main_index">
+</ol></div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">Android 版本</div>
+<p>
+    Android 作業系統有預發行的內部版本，分別為原子小金剛（Astro）與機器人班亭（Bender，电视动画《乃出個未來》的角色）。
+    從2009年5月開始，Android 的版本代號改以甜點來命名，且每個代號間的字首以英文字母序接續排列： Cupcake （紙杯蛋糕）、Donut（甜甜圈）、Eclair（閃電泡芙）、
+    Froyo（優格冰淇淋）、Gingerbread（薑餅）、Honeycomb（蜂巢）[來源請求]、Ice Cream Sandwich（冰淇淋三明治）、Jelly Bean（雷根糖）、KitKat（奇巧巧克力）、
+    Lollipop（棒棒糖）、Marshmallow（棉花糖）、Nougat（牛轧糖）、Oreo（奧利奧）、Pie（派）、Red Velvet Cake（11.0——紅色天鵝絨蛋糕）、Snow cone（12.0——杯套裝碎冰）。
+    唯一不使用以甜品命名的版本為 Android 10，2019 年 8 月 23 日，Google 宣布從 Android Q 開始不再以甜品命名，且直接稱 Android Q 為 Android 10。 -- 摘自 WIKI-PEDIA 
+</p>
+<div>
+    <img cllass="img_center" width="600px" src="https://images.cnblogs.com/cnblogs_com/mojies/2134079/o_220328160151_Android.version.png"/>
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">命令行工具</div>
+<ul>
+<li><strong>screencap 源码</strong>
+    <br> 位置： <code>frameworks/base/cmds/screencap/</code>
+</li>
+<li><strong>dumpsys</strong>
+    <br> 查询系统服务运行状态：命令格式 <code>dumpsys 服务名</code>, 服务名可以通过 <code>dumpsys -L</code> 或者 <code>service List</code> 查看。
+    <br> 查看可以的 display <code>dumpsys SurfaceFlinger --display-id</code>
+</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">Android 系统编译框架</div>
+<p>
+    一般编译 Android 会首先要执行 <code>source build/envsetup.sh</code>, 该命令会将脚本中的一些脚本函数（操作流程）加载到当前的环境中。
+    你可以通过直接调用函数名称来执行该过程。该脚本加载的函数包括：
+</p>
+<ul>
+<li><strong>gettop</strong>（经常用到）
+    <br> 获取当前工程的绝对路径
+</li>
+<li><strong>get_build_var</strong>（非常有用，有助于分析编译架构）
+    <br> 获取某一个宏（变量 or 环境变量）对应对值。这个函数其实调用的是 <code>build/soong/soong_ui.bash --dumpvar-mode $1</code>， 所以我们如果要进一步分析，需要查看 <code>build/soong/soong_ui.bash</code> 文件。
+</li>
+<li><strong>hmm</strong>
+    <br> 打印以下命令的帮助信息
+</li>
+<li><strong>lunch</strong>
+    <br> 选择板级，你可以直接在该函数后带目标板级，也可以直接执行该函数。
+    <br> 直接调用该函数之后，它会直接打印出当前 SDK 支持的板级，你选择好编号之后，也可选择初始化对应的板级。
+    <br> 一般你在编译之前，都需要运行该命令，确定你编译的目标平台。
+    <br> 执行完该命令之后，一般会设置下列几个主要的环境变量：<code>TARGET_PRODUCT</code>, <code>TARGET_BUILD_VARIANT</code>, <code>TARGET_PLATFORM_VERSION</code>
+    <br> <code>BUILD_TYPE</code> 一般有三个可选的值： <code>user</code>， <code>userdebug</code>， <code>eng</code>。 其分别代表，开放给用限制权限的版本；带有开放 root 权限的可调式版本；带有开发工具/调试工具的版本。
+</li>
+<li><strong>tapas</strong>
+    <br> 主要用于配置之前没有配置到板级中的应用。执行 <code>tapas</code> 或者 <code>hmm</code> 可以了解详情。
+</li>
+<li><strong>banchan</strong>
+    <br> 和 tapas 类似，不过该命令用于配置模块。
+</li>
+<li><strong>croot</strong>
+    <br> cd 到工程顶部目录。
+</li>
+<li><strong>m</strong>
+    <br> 在 top 目录进行建构，其可指定特定的名称来建构指定模块
+    <br> 这些名称在哪里找？
+</li>
+<li><strong>mm</strong>
+    构建当前目录中的工程
+</li>
+<li><strong>mmm</strong>
+</li>
+<li><strong>mma</strong>
+    构建当前目录中的所有模块及其依赖项。
+</li>
+<li><strong>mmma</strong>
+</li>
+<li><strong>provision</strong>
+</li>
+<li><strong>cgrep</strong>
+</li>
+<li><strong>ggrep</strong>
+</li>
+<li><strong>gogrep</strong>
+</li>
+<li><strong>jgrep</strong>
+</li>
+<li><strong>ktgrep</strong>
+</li>
+<li><strong>resgrep</strong>
+</li>
+<li><strong>mangrep</strong>
+</li>
+<li><strong>mgrep</strong>
+</li>
+<li><strong>owngrep</strong>
+</li>
+<li><strong>rsgrep</strong>
+</li>
+<li><strong>sepgrep</strong>
+</li>
+<li><strong>sgrep</strong>
+</li>
+<li><strong>godir</strong>
+</li>
+<li><strong>allmod</strong>
+</li>
+<li><strong>gomod</strong>
+</li>
+<li><strong>pathmod</strong>
+</li>
+<li><strong>outmod</strong>
+</li>
+<li><strong>dirmods</strong>
+</li>
+<li><strong>installmod</strong>
+</li>
+<li><strong>refreshmod</strong>
+</li>
+<li><strong>syswrite</strong>
+</li>
+
+</ul>
+<p>
+    <code>envsetup.sh</code> 
+</p>
+
+</div>
+    
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">Android.mk</div>
+<ul>
+<li><strong>LOCAL_PATH := $(call my-dir)</strong>
+    <br> LOCAL_PATH 将为当前 Android.mk 所在目录的位置
+</li>
+<li><strong>include $(CLEAR_VARS)</strong>
+    <br> <code>CLEAR_VARS</code> 指向一个特殊的 Makefile（可能在这个路径 <code>./build/make/core/clear_vars.mk</code> ），该命令将会为你清除很多 <code>LOCAL_</code> 开头的变量
+</li>
+<li><strong>LOCAL_MODULE</strong>
+    <br> 存储您要构建的模块的名称。在应用的每个模块中使用一次此变量，并且需要确保每一个模块明为唯一的，且不包含任何空格。
+    <br> 构建系统在生成最终共享库文件时，会对您分配给 LOCAL_MODULE 的名称自动添加正确的前缀和后缀。比如如果是共享库，则会加上 <code>lib</code> 前缀和 <code>.so</code> 后缀。
+</li>
+<li><strong>LOCAL_SRC_FILES</strong>
+    <br> 该变量包含要建构到该模块中的 C 或者 C++ 源文件
+    <br> 每一个文件用空格分隔
+</li>
+<li><strong>include $(BUILD_SHARED_LIBRARY)</strong>
+    <br> 这一行会运行一个特殊的 Makefile 构建出该模块。
+    <br> 该变量指向的文件在 <code>./build/make/core/shared_library.mk</code>
+</li>
+<li><strong>LOCAL_SDK_VERSION</strong>
+    <br> 我也没找到该变量的具体说明，但目前从经验来看，该变量制指定的是当前编译 Android 的 SDK 版本。
+    <br> 而且如果你编写了 JNI， 那么你必须指定该变量，否则编译的时候可能会报告 <code>jni.h not found</code>（出现在 Android 12 某芯片厂商的工程中）。
+    <br> 一般赋值为 <code>current</code> 即可。
+    <br> 其可选值有：<code>current</code>， <code>system_current</code>, <code>test_current</code>, <code>core_current</code>，以及具体的版本编号，
+</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><tr>
+<td><img width="190" src="http://images.cnblogs.com/cnblogs_com/mojies/998573/o_AliPay1.jpg" alt=""></td>
+<td><img width="200" src="http://images.cnblogs.com/cnblogs_com/mojies/998573/o_WeChatPa1.jpg" alt=""></td>
+</tr></table>
+<div class="div_2" id="AuthorizationWarning">
+<div class="Text_ZZ">原创文章，版权所有，转载请获得作者本人允许并注明出处</div>
+<div class="Text_LB">我是留白；我是留白；我是留白；（重要的事情说三遍）</div>
+</div>
+<div class="foot_panel" id="foot_panel">
+    <div id="foot_panel_top" >
+        <a href="#main_index" class="NoExternal">TOP</a>
+    </div>
+    <div id="foot_panel_bottom" >
+        <a href="#AuthorizationWarning" class="NoExternal">BOT</a>
+    </div>
+</div>
+</body>
+
+<script src="../js/PrePost.js"></script>
+</html>

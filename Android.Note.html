@@ -287,7 +287,8 @@ img{
     <br> 获取当前工程的绝对路径
 </li>
 <li><strong>get_build_var</strong>（非常有用，有助于分析编译架构）
-    <br> 获取某一个宏（变量 or 环境变量）对应对值。这个函数其实调用的是 <code>build/soong/soong_ui.bash --dumpvar-mode $1</code>， 所以我们如果要进一步分析，需要查看 <code>build/soong/soong_ui.bash</code> 文件。
+    <br> 获取某一个宏（变量 or 环境变量）对应对值。这个函数其实调用的是 <code>build/soong/soong_ui.bash --dumpvar-mode $1</code>。
+    <br> 而 soong 则是变量 device 目录下的 <code>AndroidProducts.mk</code> 目录来获得该列表的。
 </li>
 <li><strong>hmm</strong>
     <br> 打印以下命令的帮助信息

@@ -244,6 +244,9 @@ img{
 <div>
     <img cllass="img_center" width="600px" src="https://images.cnblogs.com/cnblogs_com/mojies/2134079/o_220328160151_Android.version.png"/>
 </div>
+<p>
+    NDK 的下载请访问：<a href="https://developer.android.com/ndk/downloads?hl=zh-cn">这里</a>。
+</p>
 </div>
 
 
@@ -386,6 +389,57 @@ img{
 
 
 <div class="breadboard">
+<div class="head head_1">APP 下的 gradle</div>
+<p>
+    大体框架如下：
+</p>
+<pre>
+apply plugin: 'com.android.application'
+android{
+    compileSdkVersion xx
+    defaultConfig {
+        applicationId 'com.xxx.xxx'
+        minSdkVersion xx
+        targetSdkVersion xx
+        versionCode X
+        versionName xx
+
+        externalNativeBuild{
+            cmake {
+
+            }
+            // or
+            ndkBuild {
+
+            }
+
+        }
+    }
+
+    buildTypes {
+        release {
+
+        }
+        debug {
+            minifyEnable true/false
+            proguarFiles
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path '.../CMakeLists.txt'
+            version '3.xx.x'
+        }
+    }
+}
+
+dependencies {
+  ...
+}
+</pre>
+
+
 <div class="head head_1">Android.mk</div>
 <ul>
 <li><strong>LOCAL_PATH := $(call my-dir)</strong>

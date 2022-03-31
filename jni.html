@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>Android 笔记</title>
+</head>
+<body>
+
+<style id="style_area" >
+a{
+    text-decoration:none;
+}
+p{
+    line-height: 1.4em;
+    text-indent:2em;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0.3em 0;
+}
+li{
+    padding: 0.3em 0;
+}
+.gray-line{
+    color:#F77;
+    font-weight: 100;
+    font-style: oblique;
+    font-size: 0.8em;
+}
+code{
+    line-height: 24px;
+    border-bottom: rgb(253, 191, 186) solid 2px;
+    margin: 3px 0.5em;
+    padding: 2px;
+
+    font-weight: 400;
+    font-size: 12px;
+    font-style: oblique;
+    border-radius: 3px;
+    backdrop-filter: blur(2px);
+    color: rgb(231,76,60);
+}
+/* code{
+    line-height: 20px;
+    margin: 3px;
+    padding: 2px;
+    border-radius: 3px;
+    color: #eb3f2f;
+    font-weight: bold;
+    font-size: 12px;
+    margin: 3px;
+    background-color:#f0f0f0;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #a9a9a9;
+    backdrop-filter: blur(2px);
+} */
+pre{
+    border-radius: 4px;
+    background-color: rgb(247,247,247,0.3);
+    border: 1px solid #aaa;
+    line-height: 1.182em;
+    overflow: auto;
+    font-size: 11px;
+    padding: 16px;
+    margin: 10px;
+}
+img{
+    opacity:1;
+    margin: 10px;
+}
+.breadboard{
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.37);
+    margin: 5px 2% 45px;
+    padding: 10px;
+}
+
+.head_index{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+}
+.head_1{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 4px #133152 solid;
+    width: 99%;
+    margin-top: 1.5em;
+}
+.head_2{
+    color: #163a60;
+    font-size: 25px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 2px #163a60 solid;
+    width: 99%;
+    margin-top: 1.25em;
+}
+.head_3{
+    color: #1a426e;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.head_4{
+    color: #1d4a7b;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.div_2{
+    margin: 5px 2% 45px;
+    padding: 40px;
+    height: 100px;
+    text-align: center;
+
+}
+
+.img_center{
+    text-align: center;
+}
+.img_left{
+    text-align: left;
+    margin-left: 4em;
+}
+.note_msg{
+    color: #eb3f2f;
+    font-weight: 600;
+}
+
+.offset_1em{margin-left: 1em;}
+.offset_2em{margin-left: 2em;}
+.offset_3em{margin-left: 3em;}
+.offset_4em{margin-left: 4em;}
+.offset_5em{margin-left: 5em;}
+.offset_6em{margin-left: 6em;}
+.offset_7em{margin-left: 7em;}
+.offset_8em{margin-left: 8em;}
+.offset_9em{margin-left: 9em;}
+.offset_10em{margin-left: 10em;}
+
+.green_text{
+    color: green;
+}
+.red_text{
+    color: red;
+}
+.purple_text{
+    color: purple;
+}
+
+.limit_window_size{
+    /* overflow:auto; */
+    max-height:30em;
+    overflow-y:auto;
+    word-wrap:break-word;
+    word-break: normal;
+    white-space: pre-wrap;
+    margin:10px;
+}
+
+.child_red2_key li strong{
+    color: red;
+}
+.child_red1_key li strong{
+    color: red;
+}
+.child_red2_key li strong{
+    color: #F77;
+}
+.child_red3_key li strong{
+    color: #Faa;
+}
+
+.foot_panel{
+    position:fixed;
+    right:3em;
+    bottom: 3em;
+    width:6em;
+    height:30px;
+    padding:15px 5px 5px 15px;
+    background-color:rgb( 157, 157, 157, 0.618 );
+    border-radius: 8px;
+}
+#foot_panel_top{
+    display: inline;
+    border-right: 5px solid #eee;
+}
+#foot_panel_top a{
+    width:4em;
+}
+#foot_panel_bottom {
+    display: inline;
+    margin-left: 5px;
+}
+#foot_panel_top a{
+    width:4em;
+}
+
+#main_index li{
+    line-height: 17px;
+    font-size: 16px;
+}
+</style>
+
+
+
+
+<div class="breadboard">
+<div class="head_index">目录</div>
+<div><ol id="main_index">
+</ol></div>
+</div>
+
+
+
+
+
+
+
+
+
+
+https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html
+
+<div class="breadboard">
+<div class="head head_1">JNI</div>
+<div class="head head_2">几个+++++栗子</div>
+<ul>
+<li><strong>纯返回</strong>
+<pre>
+package com.xxx
+
+// Java Part
+class JavaClassName {
+    static {
+        // 掐头 lib
+        // 去尾 .so.x.x
+        System.loadLibrary( 'library' );
+    }
+    public native String getStrFromJNI();
+    
+}
+
+// C/C++ Part
+external "C" JNIEXPORT jstring JNICALL
+Java_com_xxx_xxx_JavaClassName_getStrFromJNI( JNIENv *env, joject this ){
+    std::string hello = "hello world";
+    return env->NewStringUTF( hello.c_str() );
+    // const char retStr = "hello world";
+    // return env->NewStringUTF( retStr );
+}
+</pre>
+</li>
+
+<li><strong>纯处理参数</strong>  
+
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><tr>
+<td><img width="190" src="http://images.cnblogs.com/cnblogs_com/mojies/998573/o_AliPay1.jpg" alt=""></td>
+<td><img width="200" src="http://images.cnblogs.com/cnblogs_com/mojies/998573/o_WeChatPa1.jpg" alt=""></td>
+</tr></table>
+<div class="div_2" id="AuthorizationWarning">
+<div class="Text_ZZ">原创文章，版权所有，转载请获得作者本人允许并注明出处</div>
+<div class="Text_LB">我是留白；我是留白；我是留白；（重要的事情说三遍）</div>
+</div>
+<div class="foot_panel" id="foot_panel">
+    <div id="foot_panel_top" >
+        <a href="#main_index" class="NoExternal">TOP</a>
+    </div>
+    <div id="foot_panel_bottom" >
+        <a href="#AuthorizationWarning" class="NoExternal">BOT</a>
+    </div>
+</div>
+</body>
+
+<script src="../js/PrePost.js"></script>
+</html>

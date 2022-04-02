@@ -749,6 +749,12 @@ static int event_loop(struct run_state *ctl)
     return rc;
 }
 
+static int      arp_ip = 0;
+
+int arping_start( void ){
+    
+}
+
 
 int main( int argc, char **argv ){
     struct run_state ctl = {

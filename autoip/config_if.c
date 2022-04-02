@@ -6,6 +6,12 @@
 #include "md5.h"
 #include "net_tools.h"
 
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+
 static char         *l_if_name = NULL;
 static uint8_t      l_if_mac[ 6 ];
 static uint8_t      l_seed[64];
@@ -64,32 +70,49 @@ int if_config_gen_new_ipv4( const char *if_name, uint8_t addr[4] ){
     return 0;
 }
 
-static int lf_set_ip_using( const char *name, int c, unsigned long ip );
+// unsigned long = inet_addr( "xx.xx.xx.xx" );
+int net_set_if_ip( const char *name,
+        unsigned long ip, unsigned long netmask. unsigned long broadcast ){
 
-int net_set_if_ipv4( const char *name, unsigned long ip ){
-    return lf_set_ip_using( name, SIOCSIFADDR, ip);
-}
+    struct ifreq        ifr;
+    struct sockaddr_in  sin;
+    int                 fd;
+    int                 selector;
+    unsigned char       mask;
 
-int net_set_if_netmask( const char *name, unsigned long ip ){
-    return lf_set_ip_using( name, SIOCSIFBRDADDR, ip);
-}
+    char                *p;
 
-int net_set_if_broadcast( const char *name, unsigned long ip ){
-    return lf_set_ip_using( name, SIOCSIFBRDADDR, ip);
-}
+    fd = socket( AF_INET, SOCK_DGRAM, 0 );
+    if( fd < 0 ){
+        return -1;
+    }
 
-static int lf_set_ip_using( const char *name, int c, unsigned long ip ){
-    struct ifreq ifr;
-    struct sockaddr_in sin;
-
-    safe_strncpy(ifr.ifr_name, name, IFNAMSIZ);
+    strncpy(ifr.ifr_name, name, IFNAMSIZ);
     memset(&sin, 0, sizeof(struct sockaddr));
     sin.sin_family = AF_INET;
+
     sin.sin_addr.s_addr = ip;
     memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
-    if (ioctl(skfd, c, &ifr) < 0)
+    if (ioctl( fd, SIOCSIFADDR, &ifr ) < 0)
         return -1;
+
+    sin.sin_addr.s_addr = netmask;
+    memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
+    if (ioctl( fd, SIOCSIFNETMASK, &ifr ) < 0)
+        return -1;
+
+    sin.sin_addr.s_addr = broadcast;
+    memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
+    if (ioctl( fd, SIOCSIFBRDADDR, &ifr ) < 0)
+        return -1;
+
+    if( ioctl(sockfd, SIOCGIFFLAGS, &ifr)  < 0 )
+        return -1;
+    ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
+    if( ioctl(sockfd, SIOCSIFFLAGS, &ifr) < 0 )
+        return -1;
+
+    close( fd );
     return 0;
 }
-
 

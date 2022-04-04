@@ -749,10 +749,103 @@ static int event_loop(struct run_state *ctl)
     return rc;
 }
 
-static int      arp_ip = 0;
 
-int arping_start( void ){
+static int get_if_info( const char *if_name, struct ifaddrs **ifa, int *if_index ){
+    int rc;
+    struct ifaddrs *all_if;
+    struct ifaddrs *a_if;
+
+    assert( if_name == NULL || *if_name == '\0' );
+
+    *ifa = NULL;
+    if( getifaddrs(&all_if) ){
+        // TODO error log
+        return -1;
+    }
+
+    for (a_if = all_if; a_if; a_if = a_if->ifa_next) {
+        if( a_if->ifa_addr == NULL )
+            continue;
+        if( a_if->ifa_addr->sa_family != AF_PACKET )
+            continue;
+        if ( a_if->ifa_name == NULL )
+            continue;
+        if( strcmp( a_if->ifa_name, if_name ) )
+            continue;
+        
+        // is UP
+        if( (a_if->ifa_flags & IFF_UP) == 0 )
+            continue;
+        // is forbiden arp or is lo
+        if( a_if->ifa_flags & (IFF_NOARP | IFF_LOOPBACK) )
+            continue;
+
+        if (!((struct sockaddr_ll *)a_if->ifa_addr)->sll_halen)
+            continue;
+        if (!a_if->ifa_broadaddr)
+            continue;
+        break;
+    }
+    if( a_if ){
+        *ifa = a_if;
+        *if_index = if_nametoindex( a_if->ifa_name );
+        return 0
+    }else{
+        return -1;
+    }
+}
+
+static int              arp_ip = 0;
+static int              l_fd = -1;
+static struct in_addr  *l_dst_addr = NULL;
+static struct ifaddrs  *l_ifa = NULL;
+static int              l_if_index = -1;
+
+int arping_start( const char *if_name, const char *ip ){
+    // param check
+    if( if_name == NULL || ip == NULL ){
+        // TODO error log
+        return -1;
+    }
+
+    // legality check
+#if 1
+    if( strncmp( ip, "169.254.", sizeof( "169.254." ) ) ){
+        // TODO error log
+        return -1;
+    }
+#endif
+
+    if( inet_aton( ip, &l_dst_addr) == 0 ){
+        // TODO error log
+        return -1;
+    }
+
+    if( get_if_info( if_name, &l_ifa, &l_if_index ) ){
+        // TODO error log
+        return -1;
+    }
+
+    // get socket fd
+    if( (l_fd = socket(PF_PACKET, SOCK_DGRAM, 0) ) < 0 ){
+        // TODO error log
+        return -1;
+    }
+
+    //
     
+    
+
+
+
+
+
+}
+
+int arping_stop( void ){
+
+
+    l_fd = -1;
 }
 
 

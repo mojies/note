@@ -55,7 +55,7 @@ static int lf_send_arp_request_package( int fd,
         struct in_addr   *src, struct in_addr   *dst );
 
 static int lf_get_mac_and_ip( const uint8_t *buf, size_t len,
-        uint8_t mac[8], uint8_t ip[4] );
+        uint8_t mac[8], struct in_addr *ip );
 
 // =============================================================================
 static int              l_if_index = -1;
@@ -64,8 +64,8 @@ static struct sockaddr  l_if_address;
 static struct sockaddr  l_if_netmask;
 static struct sockaddr  l_if_broadcast;
 
-static struct in_addr   l_dst_addr;
 static struct in_addr   l_src_addr;
+static struct in_addr   l_dst_addr;
 
 struct sockaddr_storage l_me;
 struct sockaddr_storage l_he;
@@ -409,20 +409,11 @@ static int lf_send_arp_request_package( int fd,
 }
 
 static int lf_get_mac_and_ip( const uint8_t *buf, size_t len,
-        uint8_t mac[8], uint8_t ip[4] ){
+        uint8_t mac[8], struct in_addr *ip ){
 
-    struct arphdr *ah = (struct arphdr *)buf;
-
-    /* Filter out wild packets */
-    if (FROM->sll_pkttype != PACKET_HOST &&
-            FROM->sll_pkttype != PACKET_BROADCAST &&
-            FROM->sll_pkttype != PACKET_MULTICAST)
-        return -1;
-
-    /* Only these types are recognised */
-    if (ah->ar_op != htons(ARPOP_REQUEST) &&
-            ah->ar_op != htons(ARPOP_REPLY))
-        return -1;
+    struct arphdr       *ah = (struct arphdr *)buf;
+    uint8_t             hardware_addr_len;
+    uint8_t             protocol_addr_len;
 
     if( buf[ 0 ] != 0x00 || buf[ 1 ] != 0x01 )
         return -1;
@@ -436,6 +427,7 @@ static int lf_get_mac_and_ip( const uint8_t *buf, size_t len,
     if( buf[ 6 ] != 0x00 )
         return -1;
 
+    // htons(ARPOP_REQUEST) htons(ARPOP_REPLY))
     if( buf[ 7 ] != 0x00 && buf[7] != 0x01 )
         return -1;
 
@@ -454,9 +446,14 @@ static void *lf_detect_conflict_thrd( void *pdata ){
     };
     struct pollfd           pfds[ POLLFD_COUNT ];
 
-
     int                     tfd;
-    struct itimerspec       timerfd_val;
+    struct itimerspec       timerfd_val = {
+        .it_interval.tv_sec = DL_TIMER_LIMIT_MS/1000,
+        .it_interval.tv_nsec = DL_TIMER_LIMIT_MS*1000,
+        .it_value.tv_sec = DL_TIMER_LIMIT_MS/1000,
+        .it_value.tv_nsec = DL_TIMER_LIMIT_MS*1000
+    };
+
 
     uint64_t                exp;
     uint64_t                total_expires = 1;
@@ -469,36 +466,31 @@ static void *lf_detect_conflict_thrd( void *pdata ){
 
     pthread_detach( pthread_self() );
 
+
+    if( l_fd < 0 )
+        goto exit;
+
     memset(&from, 0, sizeof(from));
 
     /* interval timerfd */
-    tfd = timerfd_create(CLOCK_MONOTONIC, 0);
-    if( tfd == -1 ){
-        lv_stat |= ARP_STAT_THRD_EXIT;
-        return NULL;
+    if( ( tfd = timerfd_create(CLOCK_MONOTONIC, 0) ) < 0 ){
+        goto exit;
     }
 
-    timerfd_val = {
-        .it_interval.tv_sec = DL_TIMER_LIMIT_MS/1000,
-        .it_interval.tv_nsec = DL_TIMER_LIMIT_MS*1000,
-        .it_value.tv_sec = DL_TIMER_LIMIT_MS/1000,
-        .it_value.tv_nsec = DL_TIMER_LIMIT_MS*1000
-    };
-
     if( timerfd_settime( tfd, 0, &timerfd_val, NULL ) ){
-        lv_stat |= ARP_STAT_THRD_EXIT;
-        return NULL;
+        goto exit;
     }
 
     pfds[POLLFD_TIMER].fd = tfd;
     pfds[POLLFD_TIMER].events = POLLIN | POLLERR | POLLHUP;
 
     /* socket */
-    pfds[POLLFD_SOCKET].fd = fd;
+    pfds[POLLFD_SOCKET].fd = l_fd;
     pfds[POLLFD_SOCKET].events = POLLIN | POLLERR | POLLHUP;
-    lf_send_arp_request_package(  );
+    lf_send_arp_request_package( l_fd,
+            &l_me, &l_he, &l_src_addr, &l_dst_addr);
 
-    while( ( lv_stat & ARP_STAT_THRD_EXIT ) == 0 ){
+    while( ( l_stat & ARP_STAT_THRD_EXIT ) == 0 ){
         int ret;
         size_t i;
 
@@ -507,7 +499,7 @@ static void *lf_detect_conflict_thrd( void *pdata ){
             if( errno == EAGAIN )
                 continue;
 
-            lv_stat |= ARP_STAT_THRD_EXIT;
+            l_stat |= ARP_STAT_THRD_EXIT;
             continue;
         }
 
@@ -522,12 +514,12 @@ static void *lf_detect_conflict_thrd( void *pdata ){
                     error( 0, errno, "could not read timerfd" );
                     continue;
                 }
-                lf_send_arp_request_package(  );
+                lf_send_arp_request_package( l_fd,
+                    &l_me, &l_he, &l_src_addr, &l_dst_addr);
             }break;
 
             case POLLFD_SOCKET:{
-                if ((rlen = recvfrom( fd,
-                                packet, sizeof(packet),
+                if ((rlen = recvfrom( l_fd, packet, sizeof(packet),
                                 0, (struct sockaddr *)&from, &addr_len)) < 0) {
 
                     // TODO err log
@@ -537,8 +529,16 @@ static void *lf_detect_conflict_thrd( void *pdata ){
 
                 if( rlen > 0 ){
                     uint8_t         mac[6];
-                    uint8_t         ip[4];
-                    if( lf_get_mac_and_ip( packet, rlen, mac, ip ) ){
+                    struct in_addr  ip;
+                    struct sockaddr_ll  *ll_from = ( struct sockaddr_ll * )&from;
+
+                    /* Filter out wild packets */
+                    if( ll_from->sll_pkttype != PACKET_HOST
+                     && ll_from->sll_pkttype != PACKET_BROADCAST
+                     && ll_from->sll_pkttype != PACKET_MULTICAST )
+                     break;
+
+                    if( lf_get_mac_and_ip( packet, rlen, mac, &ip ) ){
                         // TODO err log
                         break;
                     }
@@ -551,8 +551,11 @@ static void *lf_detect_conflict_thrd( void *pdata ){
             }
         }
     }
-    close( tfd );
-    close( fd );
+exit:
+    if( tfd > 0 )
+        close( tfd );
+    if( l_fd > 0 )
+        close( l_fd );
     lf_init_param();
     pthread_exit( NULL );
     return NULL;

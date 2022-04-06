@@ -9,7 +9,6 @@
 #include <net/if.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netinet/ip.h>
 
 extern int if_config_gen_new_ipv4( const char *if_name, struct in_addr *addr );
 extern int net_set_if_ip( const char *if_name,

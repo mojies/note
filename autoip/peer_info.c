@@ -1,21 +1,22 @@
-#include <string,h>
-#include <stdlib.h>
+#include <sys/time.h>
+
 #include "peer_info.h"
 
 static m_dev_table      l_tb[ PEER_MAX_CAPACITY ];
-static int              l_tb_size = 0;
 
 int peer_init( void ){
-    memcpy( l_tb_size, 0, sizeof(l_tb) );
+    memcpy( l_tb, 0, sizeof(l_tb) );
 }
 
 int peer_update( void ){
     struct timeval          tv;
+    int                     i;
 
     gettimeofday( &tv, NULL );
-    if( (tv.tv_sec - sec) >= PEER_DEAD_TIME ){
-        l_tb[ i ].is_set = 0;
-    }
+    for( i = 0; i < PEER_MAX_CAPACITY; i++ )
+        if( l_tb[ i ].is_set == 1 )
+            if( (tv.tv_sec - l_tb[i].sec) >= PEER_DEAD_TIME )
+                l_tb[ i ].is_set = 0;
 
     return 0;
 }
@@ -60,8 +61,11 @@ int peer_add_dev( uint8_t mac[6], struct in_addr ip ){
     int                     i;
 
     gettimeofday( &tv, NULL );
-    if( (tv.tv_sec - sec) >= PEER_DEAD_TIME )
-        l_tb[ i ].is_set = 0;
+
+    for( i = 0; i < PEER_MAX_CAPACITY; i++ )
+        if( l_tb[ i ].is_set == 1 )
+            if( (tv.tv_sec - l_tb[i].sec) >= PEER_DEAD_TIME )
+                l_tb[ i ].is_set = 0;
 
     tb = peer_find_via_mac( mac );
 

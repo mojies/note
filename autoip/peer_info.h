@@ -1,6 +1,14 @@
 #ifndef __M_PEER_H
 #define __M_PEER_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <stdint.h>
+
+#include <netinet/ip.h>
+
 // seconds
 #define PEER_DEAD_TIME          10
 

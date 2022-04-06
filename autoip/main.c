@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <assert.h>
+
+#include <unistd.h>
+
 #include <sys/socket.h>
 #include <linux/if_packet.h>
 #include <net/ethernet.h> /* the L2 protocols */
@@ -31,6 +35,18 @@ int main( int argc, char *argv[] ) {
                 netmask, broadcast );
 
         arp_restart( "eth0", addr );
+
+        while(1){
+            int ret;
+            ret = arp_is_conflict();
+
+            assert( ret != -1 );
+            if( ret == 1 ){
+                break;
+            }else{
+                sleep(1);
+            }
+        }
     }
 
     return 0;

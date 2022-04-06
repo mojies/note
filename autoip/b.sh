@@ -3,7 +3,8 @@
 case $1 in
 
 test)
-    gcc -o test main.c net_tools.c config_if.c md5.c arp.c peer_info.c -lpthread
+    gcc -o test main.c net_tools.c config_if.c \
+    md5.c arp.c peer_info.c mdebug.c  -lpthread
     ;;
 *)
     gcc -o arp.t arping.c iputils_common.c md5.c

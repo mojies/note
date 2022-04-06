@@ -26,24 +26,36 @@ int main( int argc, char *argv[] ) {
     while( 1 ){
         ret = if_config_gen_new_ipv4( "eth0", &addr );
         printf( "ret -> %d\n", ret );
-        if( ret = -1 ){
+        if( ret == -1 ){
             // TODO err log
             break;
         }
 
-        ret = net_set_if_ip( "eth0", addr,
-                netmask, broadcast );
+        net_print_ipv4( "set", addr );
+        net_print_ipv4( "set", netmask );
+        net_print_ipv4( "set", broadcast );
 
-        arp_restart( "eth0", addr );
+        ret = net_set_if_ip( "eth0", addr, netmask, broadcast );
+        printf( "ret -> %d\n", ret );
+        if( ret == -1 ){
+            // TODO err log
+            break;
+        }
+
+        ret = arp_restart( "eth0", addr );
+        printf( "ret -> %d\n", ret );
+        assert( ret ==  0 );
 
         while(1){
             int ret;
             ret = arp_is_conflict();
-
             assert( ret != -1 );
+
             if( ret == 1 ){
+                printf( "conflict ---->\n" );
                 break;
             }else{
+                printf( "detect agin ---->\n" );
                 sleep(1);
             }
         }

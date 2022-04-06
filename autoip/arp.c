@@ -24,6 +24,7 @@
 
 #include "iputils_common.h"
 #include "peer_info.h"
+#include "mdebug.h"
 
 #ifndef AX25_P_IP
 # define AX25_P_IP        0xcc    /* ARPA Internet Protocol     */
@@ -94,7 +95,7 @@ int arp_start( const char *if_name, struct in_addr self_ip ){
     // legality check
 #if 1
     // if( strncmp( self_ip, "169.254.", sizeof( "169.254." ) ) ){
-    if( (self_ip.s_addr & 0xFFFF0000) != 0xA9FE0000 ){
+    if( (self_ip.s_addr & 0xFFFF) != 0xFEA9 ){
         // TODO error log
         return -1;
     }
@@ -103,30 +104,32 @@ int arp_start( const char *if_name, struct in_addr self_ip ){
     if( lf_get_if_info( if_name, &l_if_index,
                 &l_if_address, &l_if_netmask, &l_if_broadcast ) ){
         // TODO error log
-        return -1;
+        return -2;
     }
 
     l_src_addr = l_dst_addr = self_ip;
 
     if( lf_set_if_dont_route( if_name, &l_dst_addr, &l_src_addr ) ){
         // TODO error log
-        return -1;
+        return -3;
     }
 
     // get socket fd
     if( (l_fd = lf_get_ping_socket( l_if_index ) ) < 0 ){
         // TODO error log
-        return -1;
+        return -4;
     }
 
     // me he
     if( lf_get_me_and_he( &l_if_broadcast, l_fd, &l_me, &l_he ) ){
         // TODO error log
+        ret = -5;
         goto err;
     }
 
     if( pthread_create( (pthread_t*)&l_thrd_id, NULL, lf_detect_conflict_thrd, NULL ) ){
         // TODO error log
+        ret = -6;
         goto err;
     }
 
@@ -134,7 +137,7 @@ int arp_start( const char *if_name, struct in_addr self_ip ){
     return 0;
 err:
     close( l_fd );
-    return -1;
+    return ret;
 }
 
 int arp_stop( void ){
@@ -193,7 +196,7 @@ static int lf_get_if_info( const char *if_name, int *if_index,
     struct ifaddrs *all_if;
     struct ifaddrs *a_if;
 
-    assert( if_name == NULL || *if_name == '\0' );
+    assert( if_name != NULL && *if_name != '\0' );
 
     if( getifaddrs(&all_if) ){
         // TODO error log
@@ -412,17 +415,17 @@ static int lf_get_mac_and_ip( const uint8_t *buf, size_t len,
         uint8_t mac[8], struct in_addr *ip ){
 
     struct arphdr       *ah = (struct arphdr *)buf;
-    uint8_t             hardware_addr_len;
-    uint8_t             protocol_addr_len;
+    // uint8_t             hardware_addr_len;
+    // uint8_t             protocol_addr_len;
 
     if( buf[ 0 ] != 0x00 || buf[ 1 ] != 0x01 )
         return -1;
 
-    if( buf[ 2 ] != 0x80 || buf[ 3 ] != 0x00 )
+    if( buf[ 2 ] != 0x08 || buf[ 3 ] != 0x00 )
         return -1;
 
-    hardware_addr_len = buf[4];
-    protocol_addr_len = buf[5];
+    // hardware_addr_len = buf[4];
+    // protocol_addr_len = buf[5];
 
     if( buf[ 6 ] != 0x00 )
         return -1;
@@ -431,8 +434,10 @@ static int lf_get_mac_and_ip( const uint8_t *buf, size_t len,
     if( buf[ 7 ] != 0x00 && buf[7] != 0x01 )
         return -1;
 
+    // hardware_addr_len
     memcpy( mac, &buf[8], 6 );
-    memcpy( ip, &buf[8+4], 4 );
+    // protocol_addr_len
+    memcpy( ip, &buf[8+6], 4 );
 
     return 0;
 }
@@ -526,18 +531,21 @@ static void *lf_detect_conflict_thrd( void *pdata ){
                     if (errno == ENETDOWN)
                         continue;
                 }
+    printf( "mojies -------------------> %d %d\n", __LINE__, rlen );
 
                 if( rlen > 0 ){
                     uint8_t         mac[6];
                     struct in_addr  ip;
                     struct sockaddr_ll  *ll_from = ( struct sockaddr_ll * )&from;
 
+    printf( "mojies -------------------> %d\n", __LINE__ );
                     /* Filter out wild packets */
                     if( ll_from->sll_pkttype != PACKET_HOST
                      && ll_from->sll_pkttype != PACKET_BROADCAST
                      && ll_from->sll_pkttype != PACKET_MULTICAST )
                      break;
 
+    mdebug_print_hex( packet, rlen );
                     if( lf_get_mac_and_ip( packet, rlen, mac, &ip ) ){
                         // TODO err log
                         break;

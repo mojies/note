@@ -19,7 +19,7 @@ int if_config_gen_new_ipv4( const char *if_name, struct in_addr *addr ){
     mbedtls_md5_context
                     md5_ctx;
     uint8_t         hash_code[16];
-    unsigned long   ipv4 = 0;
+    uint8_t         ipv4[4];
     int             i;
 
     if( if_name == NULL || if_name_len <= 0 || if_name_len >= 12 )
@@ -44,8 +44,8 @@ int if_config_gen_new_ipv4( const char *if_name, struct in_addr *addr ){
         memcpy( l_seed, l_if_mac, 6 );
     }
 
-    ipv4 |= 169<<24;
-    ipv4 |= 254<<16;
+    ipv4[0] = 169;
+    ipv4[1] = 254;
     while( 1 ){
         mbedtls_md5_init( &md5_ctx );
         mbedtls_md5_starts( &md5_ctx );
@@ -58,17 +58,18 @@ int if_config_gen_new_ipv4( const char *if_name, struct in_addr *addr ){
         for( i = 0; i < 16; i++ ){
             if( hash_code[i] == 0 || hash_code[i] == 255 )
                 continue;
-            ipv4 |= (hash_code[i])<<8;
+            ipv4[2] = hash_code[i];
+            break;
         }
         if( i == 16 ) continue;
 
         i++; i %= 16;
-        ipv4 |= hash_code[i];
+        ipv4[3] = hash_code[i];
 
         break;
     }
 
-    addr->s_addr = ipv4;
+    memcpy( &addr->s_addr, ipv4, 4 );
     return 0;
 }
 

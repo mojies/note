@@ -4,9 +4,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-extern int if_config_gen_new_ipv4( const char *if_name, uint8_t addr[4] );
-extern int net_set_if_ipv4( const char *name, unsigned long ip );
-extern int net_set_if_netmask( const char *name, unsigned long ip );
-extern int net_set_if_broadcast( const char *name, unsigned long ip );
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+
+extern int if_config_gen_new_ipv4( const char *if_name, struct in_addr *addr );
+extern int net_set_if_ip( const char *if_name,
+        struct in_addr ip, struct in_addr netmask, struct in_addr broadcast );
 
 #endif

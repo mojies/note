@@ -1,28 +1,26 @@
-#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
+
+#include <unistd.h>
 
 #include "md5.h"
 #include "net_tools.h"
 
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
+#include "config_if.h"
 
 static char         *l_if_name = NULL;
 static uint8_t      l_if_mac[ 6 ];
 static uint8_t      l_seed[64];
 
-int if_config_gen_new_ipv4( const char *if_name, uint8_t addr[4] ){
+int if_config_gen_new_ipv4( const char *if_name, struct in_addr *addr ){
     bool            need_get_mac = false;
     int             if_name_len = strlen( if_name );
     mbedtls_md5_context
                     md5_ctx;
     uint8_t         hash_code[16];
-    uint8_t         ipv4[4];
+    unsigned long   ipv4 = 0;
+    int             i;
 
     if( if_name == NULL || if_name_len <= 0 || if_name_len >= 12 )
         return -1;
@@ -46,8 +44,8 @@ int if_config_gen_new_ipv4( const char *if_name, uint8_t addr[4] ){
         memcpy( l_seed, l_if_mac, 6 );
     }
 
-    ipv4[0] = 169;
-    ipv4[1] = 254;
+    ipv4 |= 169<<24;
+    ipv4 |= 254<<16;
     while( 1 ){
         mbedtls_md5_init( &md5_ctx );
         mbedtls_md5_starts( &md5_ctx );
@@ -56,23 +54,27 @@ int if_config_gen_new_ipv4( const char *if_name, uint8_t addr[4] ){
         mbedtls_md5_free( &md5_ctx );
 
         memcpy( &l_seed[6], hash_code, 16 );
-        ipv4[2] = hash_code[0];
-        ipv4[3] = hash_code[1];
 
-        if( ipv4[2] == 0 || ipv4[2] == 255 )
-            continue;
+        for( i = 0; i < 16; i++ ){
+            if( hash_code[i] == 0 || hash_code[i] == 255 )
+                continue;
+            ipv4 |= (hash_code[i])<<8;
+        }
+        if( i == 16 ) continue;
+
+        i++; i %= 16;
+        ipv4 |= hash_code[i];
 
         break;
     }
 
-    memcpy( addr, ipv4, 4 );
-
+    addr->s_addr = ipv4;
     return 0;
 }
 
 // unsigned long = inet_addr( "xx.xx.xx.xx" );
-int net_set_if_ip( const char *name,
-        unsigned long ip, unsigned long netmask. unsigned long broadcast ){
+int net_set_if_ip( const char *if_name,
+        struct in_addr ip, struct in_addr netmask, struct in_addr broadcast ){
 
     struct ifreq        ifr;
     struct sockaddr_in  sin;
@@ -87,29 +89,29 @@ int net_set_if_ip( const char *name,
         return -1;
     }
 
-    strncpy(ifr.ifr_name, name, IFNAMSIZ);
+    strncpy(ifr.ifr_name, if_name, IFNAMSIZ);
     memset(&sin, 0, sizeof(struct sockaddr));
     sin.sin_family = AF_INET;
 
-    sin.sin_addr.s_addr = ip;
+    sin.sin_addr.s_addr = ip.s_addr;
     memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
     if (ioctl( fd, SIOCSIFADDR, &ifr ) < 0)
         return -1;
 
-    sin.sin_addr.s_addr = netmask;
+    sin.sin_addr.s_addr = netmask.s_addr;
     memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
     if (ioctl( fd, SIOCSIFNETMASK, &ifr ) < 0)
         return -1;
 
-    sin.sin_addr.s_addr = broadcast;
+    sin.sin_addr.s_addr = broadcast.s_addr;
     memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
     if (ioctl( fd, SIOCSIFBRDADDR, &ifr ) < 0)
         return -1;
 
-    if( ioctl(sockfd, SIOCGIFFLAGS, &ifr)  < 0 )
+    if( ioctl(fd, SIOCGIFFLAGS, &ifr)  < 0 )
         return -1;
     ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
-    if( ioctl(sockfd, SIOCSIFFLAGS, &ifr) < 0 )
+    if( ioctl(fd, SIOCSIFFLAGS, &ifr) < 0 )
         return -1;
 
     close( fd );

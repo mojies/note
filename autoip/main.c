@@ -6,25 +6,31 @@
 #include <ifaddrs.h>
 
 #include "config_if.h"
+#include "arp.h"
 
 int main( int argc, char *argv[] ) {
-    uint8_t         addr[ 4 ];
     int             ret = 0;
     int             count = 0;
 
+    struct in_addr  addr;
+    struct in_addr  netmask;
+    struct in_addr  broadcast;
+
+    inet_aton( "255.255.0.0", &netmask );
+    inet_aton( "169.254.255.255", &broadcast );
+
     while( 1 ){
-        ret = if_config_gen_new_ipv4( "eth0", addr );
+        ret = if_config_gen_new_ipv4( "eth0", &addr );
         printf( "ret -> %d\n", ret );
-
-        printf( "ip addr -> " );
-        for( int j = 0; j < 4; j++ ){
-            printf( "%d.", (int)addr[j] );
-        }
-        printf( "\n" );
-
-        count++;
-        if( count > 2 )
+        if( ret = -1 ){
+            // TODO err log
             break;
+        }
+
+        ret = net_set_if_ip( "eth0", addr,
+                netmask, broadcast );
+
+        arp_restart( "eth0", addr );
     }
 
     return 0;

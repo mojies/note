@@ -27,5 +27,6 @@ extern int peer_update( void );
 extern m_dev_table *peer_find_via_mac( uint8_t mac[6] );
 extern m_dev_table *peer_find_via_ip( struct in_addr ip );
 extern int peer_add_dev( uint8_t mac[6], struct in_addr ip );
+extern void peer_show_table( void );
 
 #endif

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>C++ Effective</title>
+</head>
+<body>
+
+<style id="style_area" >
+a{
+    text-decoration:none;
+}
+p{
+    line-height: 1.4em;
+    text-indent:2em;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0.3em 0;
+}
+li{
+    padding: 0.3em 0;
+}
+.gray-line{
+    color:#F77;
+    font-weight: 100;
+    font-style: oblique;
+    font-size: 0.8em;
+}
+code{
+    line-height: 24px;
+    border-bottom: rgb(253, 191, 186) solid 2px;
+    margin: 3px 0.5em;
+    padding: 2px;
+
+    font-weight: 400;
+    font-size: 12px;
+    font-style: oblique;
+    border-radius: 3px;
+    backdrop-filter: blur(2px);
+    color: rgb(231,76,60);
+}
+/* code{
+    line-height: 20px;
+    margin: 3px;
+    padding: 2px;
+    border-radius: 3px;
+    color: #eb3f2f;
+    font-weight: bold;
+    font-size: 12px;
+    margin: 3px;
+    background-color:#f0f0f0;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #a9a9a9;
+    backdrop-filter: blur(2px);
+} */
+pre{
+    border-radius: 4px;
+    background-color: rgb(247,247,247,0.3);
+    border: 1px solid #aaa;
+    line-height: 1.182em;
+    overflow: auto;
+    font-size: 11px;
+    padding: 16px;
+    margin: 10px;
+}
+img{
+    opacity:1;
+    margin: 10px;
+}
+.breadboard{
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.37);
+    margin: 5px 2% 45px;
+    padding: 10px;
+}
+
+.head_index{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+}
+.head_1{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 4px #133152 solid;
+    width: 99%;
+    margin-top: 1.5em;
+}
+.head_2{
+    color: #163a60;
+    font-size: 25px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 2px #163a60 solid;
+    width: 99%;
+    margin-top: 1.25em;
+}
+.head_3{
+    color: #1a426e;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.head_4{
+    color: #1d4a7b;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.div_2{
+    margin: 5px 2% 45px;
+    padding: 40px;
+    height: 100px;
+    text-align: center;
+
+}
+
+.img_center{
+    text-align: center;
+}
+.img_left{
+    text-align: left;
+    margin-left: 4em;
+}
+.note_msg{
+    color: #eb3f2f;
+    font-weight: 600;
+}
+
+.offset_1em{margin-left: 1em;}
+.offset_2em{margin-left: 2em;}
+.offset_3em{margin-left: 3em;}
+.offset_4em{margin-left: 4em;}
+.offset_5em{margin-left: 5em;}
+.offset_6em{margin-left: 6em;}
+.offset_7em{margin-left: 7em;}
+.offset_8em{margin-left: 8em;}
+.offset_9em{margin-left: 9em;}
+.offset_10em{margin-left: 10em;}
+
+.green_text{
+    color: green;
+}
+.red_text{
+    color: red;
+}
+.purple_text{
+    color: purple;
+}
+
+.limit_window_size{
+    /* overflow:auto; */
+    max-height:30em;
+    overflow-y:auto;
+    word-wrap:break-word;
+    word-break: normal;
+    white-space: pre-wrap;
+    margin:10px;
+}
+
+.child_red2_key li strong{
+    color: red;
+}
+.child_red1_key li strong{
+    color: red;
+}
+.child_red2_key li strong{
+    color: #F77;
+}
+.child_red3_key li strong{
+    color: #Faa;
+}
+
+.foot_panel{
+    position:fixed;
+    right:3em;
+    bottom: 3em;
+    width:6em;
+    height:30px;
+    padding:15px 5px 5px 15px;
+    background-color:rgb( 157, 157, 157, 0.618 );
+    border-radius: 8px;
+}
+#foot_panel_top{
+    display: inline;
+    border-right: 5px solid #eee;
+}
+#foot_panel_top a{
+    width:4em;
+}
+#foot_panel_bottom {
+    display: inline;
+    margin-left: 5px;
+}
+#foot_panel_top a{
+    width:4em;
+}
+
+#main_index li{
+    line-height: 17px;
+    font-size: 16px;
+}
+</style>
+
+
+
+
+<div class="breadboard">
+<div class="head_index">目录</div>
+<div><ol id="main_index">
+</ol></div>
+</div>
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">原则</div>
+<ul>
+<li><strong>将 C++ 看成联邦语言</strong>
+    <br> C++ 大体上可看坐 C, C with class, Temeplate, STL 的一个集合
+</li>
+
+<li><strong>尽量使用 <code>const</code>, <code>enum</code>, <code>inline</code>, <code>template</code> 代替宏定义 </strong>
+    <br> 主要有以下三个问题：
+    <br> 1. 因为宏定义如果出现为题编译其很难定位问题点
+    <br> 2. 其次宏定义是全局性的无法进行区域化
+    <br> 3. 最后我们在设计宏定义表达式的时候很容易出问题
+</li>
+
+<li><strong>多用 const</strong>
+    <br> const 语法虽然变化多端，但并不莫测高深。如果关键字 const 出现在星号左边，表示被指物是常量；如果出现在星号右边，表示指针自身是常量；如果出现在星号两边，表示被指物和指针两者都是常量。
+    <br> const 修饰的函数，返回的值也应该是 const 类型的
+    <br> 如果一定要在 const 函数中修改成员，那么可以使用 <code>mutable</code> 修饰该成员。
+</li>
+
+<li><strong>确保所有的变量在使用前都初始化了</strong>
+    <br> C part of C++ 类的变量不会确保初始化， non-C part of C++ 会确保初始化
+    <br> 但你很难确保你记住这些规则，最好的方法就是在使用前先初始化所有变量。
+    <br> 因为成员的初始化时更具申明的顺序来的，而不是根据初始化列表的顺序来的，这有时候会造成困惑，为了解决这种困惑，你应该尽量保证初始化列表中的顺序与类成员申明顺序一致。
+    <br> static 对象时再程序退出的时候才会被销毁。（即静态变量的析构函数时程序退出时才会调用）
+    <br> static 成员因为可能分布在程序中的任何位置，因此编译器要推断其合理的初始化顺序是几乎不可能的，因此一个消除这个问题的方法是将 non-local static 对象放到一个自己的专属函数内。
+        这些函数返回一个支详该对象的 refrence 中。换句话说也就是 non-local static 被 local static 代替了。而 local static 对象会在“该函数被调用期间”“首次遇到该对象之定义式” 时被初始化。
+        而这样又带来一个好处，如果该对象不被访问到，那么该变量的初始化永远不会被调用到（节省初始化资源消耗）。
+    <br> 如果 static 对象在多线程中访问，有可能会产生初始化竞态，从而导致不可知的程序错误，消除这种问题的一种方式是在对象单线程状态时，逐个调用一下每个静态函数的 refrence-returning 函数。
+</li>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><tr>
+<td><img width="190" src="http://images.cnblogs.com/cnblogs_com/mojies/998573/o_AliPay1.jpg" alt=""></td>
+<td><img width="200" src="http://images.cnblogs.com/cnblogs_com/mojies/998573/o_WeChatPa1.jpg" alt=""></td>
+</tr></table>
+<div class="div_2" id="AuthorizationWarning">
+<div class="Text_ZZ">原创文章，版权所有，转载请获得作者本人允许并注明出处</div>
+<div class="Text_LB">我是留白；我是留白；我是留白；（重要的事情说三遍）</div>
+</div>
+<div class="foot_panel" id="foot_panel">
+    <div id="foot_panel_top" >
+        <a href="#main_index" class="NoExternal">TOP</a>
+    </div>
+    <div id="foot_panel_bottom" >
+        <a href="#AuthorizationWarning" class="NoExternal">BOT</a>
+    </div>
+</div>
+</body>
+
+<script src="../js/PrePost.js"></script>
+</html>

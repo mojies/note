@@ -5,9 +5,15 @@
 #include <string.h>
 
 #include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
+
+#include <poll.h>
+#include <sys/param.h>
+#include <sys/signalfd.h>
+#include <sys/timerfd.h>
 
 #include <arpa/inet.h>
-#include <errno.h>
 #include <ifaddrs.h>
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>
@@ -15,22 +21,16 @@
 #include <netdb.h>
 #include <net/if_arp.h>
 #include <net/if.h>
-#include <poll.h>
-#include <sys/param.h>
-#include <sys/signalfd.h>
-#include <sys/timerfd.h>
-#include <unistd.h>
-#include <pthread.h>
 
 #include "iputils_common.h"
 #include "peer_info.h"
 #include "mdebug.h"
 
 #ifndef AX25_P_IP
-# define AX25_P_IP        0xcc    /* ARPA Internet Protocol     */
+# define AX25_P_IP        	0xcc    /* ARPA Internet Protocol     */
 #endif
 
-#define FINAL_PACKS        2
+#define FINAL_PACKS        	2
 
 #define DL_TIMER_LIMIT_MS       300
 

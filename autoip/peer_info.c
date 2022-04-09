@@ -5,6 +5,10 @@
 
 static m_dev_table      l_tb[ PEER_MAX_CAPACITY ];
 
+void peer_show_table( void ){
+
+}
+
 int peer_init( void ){
     memcpy( l_tb, 0, sizeof(l_tb) );
 }
@@ -40,7 +44,6 @@ m_dev_table *peer_find_via_mac( uint8_t mac[6] ){
 m_dev_table *peer_find_via_ip( struct in_addr ip ){
     int                     i;
 
-    printf( "mojies -------------------> %d\n", __LINE__ );
     mdebug_print_hex( (void*)&ip, sizeof(struct in_addr) );
     for( i = 0; i < PEER_MAX_CAPACITY; i++ ){
         if( l_tb[ i ].is_set == 0 )

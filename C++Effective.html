@@ -261,6 +261,42 @@ img{
     <br> 如果 static 对象在多线程中访问，有可能会产生初始化竞态，从而导致不可知的程序错误，消除这种问题的一种方式是在对象单线程状态时，逐个调用一下每个静态函数的 refrence-returning 函数。
 </li>
 
+<li><strong>了解 C++ 默默编写并调用了哪些函数</strong>
+    <br> 如果你定义了一个类，即使你不对下列函数进行申明，但只要有人尝试调用它们，编译器会为你声明它们。这些函数有 default 构造函数, copy 构造函数, 析构函数, copy assignment 拷贝复制函数，如下所示：
+<pre>
+class Empty{
+public:
+    Empty();
+    Empty(const Empty &);
+    ~Empty();
+    Empty & opterator=( const Empty & );
+}
+</pre>
+    <br> non-static refrence 和 non-static const 对象都不能进行拷贝复制。
+<pre>
+main.cpp:6:7: error: non-static reference member ‘std::string& NameObject<int>::nameValue’, cannot use default assignment operator
+main.cpp:6:7: error: non-static const member ‘const int NameObject<int>::objectValue’, cannot use default assignment operator
+</pre>
+    <br> non-static refrence 和 non-static const 只能在初始化列表进行初始化。
+</li>
+
+<li><strong>若不想使用编译器自动生成的函数，就该明确拒绝</strong>
+    <br> 将拷贝函数和拷贝复制函数申明为私有函数并不足以在所有条件下禁用编译自动生成的函数，因为友元函数和成员函数还是可以调用到。
+    <br> 而解决办法就是，在申明为似有函数的基础上，不去实现此类函数。
+    <br> 当然也可以去继承下面的类：
+<pre>
+class Uncopyable{
+protect:
+    Uncopyable();
+    ~Uncopyable();
+private:
+    Uncopyable(const Uncopyable &);
+    Uncopyable &operator=(const Uncopyable &);
+
+}
+</pre>
+</li>
+
 
 </div>
 

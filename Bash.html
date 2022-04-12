@@ -1,0 +1,40 @@
+
+
+<li><strong>如何从字符串变量中获取指定位置的值</strong>
+    <br> ${STRING_ENV:START_INDEX:LENGTH}
+    <br> STRING_ENV 为字符串变量的名字，START_INDEX 指定从第几个字符开始截取（索引从 0 开始），LENGTH 为截取的长度
+</li>
+
+<li><strong>如何获取以空格分隔字符串中的指定序号的 world</strong>
+</li>
+
+<li><code>如何获取命令行参数</code>
+<pre>
+A=false
+B=false
+C=""
+
+while getopts "habc:" arg
+do
+    case ${args} in
+    a)
+        A=true
+    ;;
+    b)
+        B=true
+    ;;
+    c)
+        C=${OPTARG}
+    ;;
+    h)
+        show_help_info
+    ;;
+    *)
+        show_help_info
+    ;;
+    esac
+done
+
+</pre>
+</li>
+

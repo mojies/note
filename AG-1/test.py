@@ -121,49 +121,91 @@ def find_border( img, dir_vector ):
 
     return border
 
-SOOTH_OPERATOR_POS = [
+PEERS = [
     [ -1, -1 ], [ -1, 0 ], [ -1, 1 ],
-    [  0, -1 ], [  0, 0 ], [  0, 1 ],
+    [  0, -1 ],            [  0, 1 ],
     [  1, -1 ], [  1, 0 ], [  1, 1 ],
 ]
-SOOTH_OPERATOR_WEIGHT = [
+
+PEERS_WEIGHT = [
     1,1,1,
-    1,0,1,
+    1,  1,
     1,1,1,
 ]
-def smooth_border( img, border ):
-    POS_LEN = len( SOOTH_OPERATOR_POS )
+def smooth_border( img, border, skip ):
+    POS_LEN = len( PEERS )
     x_max = img.shape[0]
     y_max = img.shape[1]
+
+    flag = np.zeros( img.shape )
+    arch = np.zeros( img.shape )
+
     weigths = []
+    new_border = []
+    count = 0
+
+    for i in range( len( border ) ):
+        ( x, y ) = border[i]
+        flag[x][y] = 1
 
     # print( "x_max: ", x_max )
     # print( "y_max: ", y_max )
     print( "len( border ): ", len( border ) )
 
-    while True:
+    # while count < times:
+    while len( border ) > 0:
+        count += 1
         for i in range( len( border ) ):
             ( x, y ) = border[i]
             sum = 0
             for i in range( POS_LEN ):
-                x_peer = int(x + SOOTH_OPERATOR_POS[i][0])
-                y_peer = int(y + SOOTH_OPERATOR_POS[i][1])
+                x_peer = int(x + PEERS[i][0])
+                y_peer = int(y + PEERS[i][1])
                 if x_peer < 0 or y_peer < 0 or x_peer >= x_max or y_peer >= y_max:
                     continue
                 # print( "1.1 ", x_peer )
                 # print( "1.2 ", y_peer )
                 # print( "1 ", img[x_peer][y_peer] )
-                # print( "2", SOOTH_OPERATOR_WEIGHT[i] )
+                # print( "2", PEERS_WEIGHT[i] )
 
-                sum += img[x_peer][y_peer] * SOOTH_OPERATOR_WEIGHT[i]
-            sum /= POS_LEN
-            weigths.append( int(sum) )
+                sum += img[x_peer][y_peer] * PEERS_WEIGHT[i]
+
+            weigths.append( sum )
+
+        print( "border len ", len(border) )
+        print( "weight len ", len(weigths) )
         for i in range( len( border ) ):
             ( x, y ) = border[i]
-            img[x][y] = weigths[ i ]
 
-        break
+            if ( count <= skip and weigths[ i ] <= (255*4)) or ( count > skip and weigths[ i ] <= (255*8)) :
+                img[x][y] = 0
+                for j in range( len( PEERS ) ):
+                    x_peer = int(x + PEERS[j][0])
+                    y_peer = int(y + PEERS[j][1])
+                    if x_peer < 0 or y_peer < 0 or x_peer >= x_max or y_peer >= y_max:
+                        continue
+                    if img[x_peer][y_peer] == 0:
+                        continue
+                    if flag[x_peer][y_peer] == 1:
+                        continue
+                    flag[x_peer][y_peer] = 1
+                    new_border.append( ( x_peer, y_peer ) )
+                if count > skip:
+                    print( "i ", i )
+                    if weigths[ i ] <= (255*4):
+                        arch[x][y] = 255
+            else:
+                new_border.append( ( x, y ) )
+        border = new_border
+        new_border = []
+        weigths = []
 
+        cv2.imshow( "haha", img )
+        cv2.waitKey(0)
+    
+    cv2.imshow( "arch", arch )
+    cv2.waitKey(0)
+    
 
 def draw_arch( img, border, skip, score, dir_vector ):    
     img1 = img.copy()
@@ -244,10 +286,8 @@ flag = np.zeros( img.shape )
 for pos in border:
     flag[ pos[0] ][ pos[1] ] = 255
 
-smooth_border( img_bin, border )
+smooth_border( img_bin, border, 10 )
 
-cv2.imshow( "haha", img_bin )
-cv2.waitKey(0)
 # # cv2.imwrite( 'out.png', flag)
 
 # ---------> find arch

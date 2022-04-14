@@ -233,24 +233,53 @@ img{
 
 
 <div class="breadboard">
-<div class="head head_1">Android 版本</div>
-<p>
-    Android 作業系統有預發行的內部版本，分別為原子小金剛（Astro）與機器人班亭（Bender，电视动画《乃出個未來》的角色）。
+<div class="head head_1">基础</div>
+<ul>
+<li><strong>版本</strong>
+    <br> Android 作業系統有預發行的內部版本，分別為原子小金剛（Astro）與機器人班亭（Bender，电视动画《乃出個未來》的角色）。
     從2009年5月開始，Android 的版本代號改以甜點來命名，且每個代號間的字首以英文字母序接續排列： Cupcake （紙杯蛋糕）、Donut（甜甜圈）、Eclair（閃電泡芙）、
     Froyo（優格冰淇淋）、Gingerbread（薑餅）、Honeycomb（蜂巢）[來源請求]、Ice Cream Sandwich（冰淇淋三明治）、Jelly Bean（雷根糖）、KitKat（奇巧巧克力）、
     Lollipop（棒棒糖）、Marshmallow（棉花糖）、Nougat（牛轧糖）、Oreo（奧利奧）、Pie（派）、Red Velvet Cake（11.0——紅色天鵝絨蛋糕）、Snow cone（12.0——杯套裝碎冰）。
     唯一不使用以甜品命名的版本為 Android 10，2019 年 8 月 23 日，Google 宣布從 Android Q 開始不再以甜品命名，且直接稱 Android Q 為 Android 10。 -- 摘自 WIKI-PEDIA 
-</p>
-<div>
-    <img cllass="img_center" width="600px" src="https://images.cnblogs.com/cnblogs_com/mojies/2134079/o_220328160151_Android.version.png"/>
+    <br>  <img cllass="img_center" width="600px" src="https://images.cnblogs.com/cnblogs_com/mojies/2134079/o_220328160151_Android.version.png"/>
+</li>
+
+<li><strong>NDK 下载</strong>
+    <br> NDK 的下载请访问：<a href="https://developer.android.com/ndk/downloads?hl=zh-cn">这里</a>。
+</li>
+
+
+</ul>
 </div>
-<p>
-    NDK 的下载请访问：<a href="https://developer.android.com/ndk/downloads?hl=zh-cn">这里</a>。
-</p>
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">Android stdio 开发</div>
+<ul>
+
+<li><strong>AndroidAPP 中指定 SDK and NDK</strong>
+    <br> 工程 <code>local.properties</code> 文件中增加以下两行，其中路径该成你安装 SDK 和 NDK 的路径。
+<pre>
+sdk.dir=D\:\\AndroidSDK
+ndk.dir=D\:\\AndroidSDK\\ndk\\24.0.8215888
+</pre>
+
+</li>
+
+<li><strong>乱码</strong>
+    <br> 方法1: <strong>双击 shift -> 搜索 <code>Edit Custom VM Options</code> -> 回车，没有则创建之 </strong>, 在打开的文件中加入配置： <code>-Dfile.encoding=UTF-8</code>, 然后 <strong>双击 shift -> 搜索 <code>restart IED</code> -> 回车 </strong>,
+</li>
+
+</ul>
 </div>
-
-
-
 
 
 

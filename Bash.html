@@ -6,6 +6,8 @@
 </li>
 
 <li><strong>如何获取以空格分隔字符串中的指定序号的 world</strong>
+    <br> 方法 1: 可以使用 awk, <code>ls -l DIR | awk '{for(i=9; i<=NF; i++) printf $i" "; print ""}'</code>, 该命令用于获取 DIR 目录下文件的文件名，即便文件名包含空格也可以。
+    <br> 方法 2: 利用数组，比如我们可以通过这种方式去 A 变量中的第 2 个值。<code>A="1 2 3";B=(${A}); echo ${B[2]}</code> ( 验证 bash 可行， zsh 不支持 )
 </li>
 
 <li><code>如何获取命令行参数</code>
@@ -36,5 +38,15 @@ do
 done
 
 </pre>
+</li>
+
+<li><strong>数组</strong>
+    <br> 定义一个数组： <code>A=(1 2 3)</code>, <code>A=("123" "456" "789")</code>, <code>A=("12 34", "ssss")</code>
+    <br> 取数组大小： <code>${#A[@]}</code>
+    <br> 提取数组中某个元素： <code>${A[1]}</code> ( 获取第一个元素 )
+    <br> 提取数组中所有元素： <code>${A[@]}</code>
+    <br> 替换数组中指定元素： <code>A[2]="ss ss"</code>
+    <br> 追加数组： <code>A+=("12" "sad")</code>
+    <br> 提取数组某个区间的元素： <code>$(A[@]:start:stop)</code>
 </li>
 

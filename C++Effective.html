@@ -232,7 +232,9 @@ img{
 
 <div class="breadboard">
 <div class="head head_1">原则</div>
-<ul>
+
+<ol>
+
 <li><strong>将 C++ 看成联邦语言</strong>
     <br> C++ 大体上可看坐 C, C with class, Temeplate, STL 的一个集合
 </li>
@@ -304,9 +306,27 @@ private:
 </li>
 
 <li><strong>到让异常逃离析构函数</strong>
+    <br> 如果你有一个装在对象的容器，再容器销毁的时候，该容器中所有的对象的析构函数都应该被调用，而此时如果有异常发生，那么系统再同一时刻出现两个异常会导致导致意想不到的问题。
+    <br> 而最好的办法是，不要让异常暴漏到析构函数之外。对此有两种操作：
+    <br> 1. 捕获该异常，打印报错信息，退出程序
+    <br> 2. 捕获该异常，打印报错信息，不让之继续传播（吞下异常）
+    <br> 如果你在运行某个操作时候可能发生异常，那么最好的办法是，在析构函数之外简历一个操作函数，确保在析构之前该函数被调用，并将异常处理放在该函数内。
+</li>
+
+<li><strong>不要再构造和析构过程中调用 virtual 函数</strong>
     <br> 因为假设你的基类的构造函数内有调用虚函数，那么此时在你申明一个派生类的时候，构造函数内调用的虚函数并不是派生类里面的虚函数，而是基类里面的虚函数。这可能不是你意料中的。
 </li>
 
+<li><strong>让 <code>opterator=</code> 返回一个 <code>refrence to *this</code></strong>
+    <br> 这是实现连锁赋值的必要条件 ( a=b=c )，也是 C++ 内建库的通用规则
+    <br> 该规则同样适用于 <code>+=</code>, <code>-=</code>, <code>*=</code> 等等
+</li>
+
+<li><strong>在 <code>operator=</code> 中处理自我复制</strong>
+    <br> 
+</li>
+
+</ol>
 
 </div>
 

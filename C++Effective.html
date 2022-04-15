@@ -323,7 +323,54 @@ private:
 </li>
 
 <li><strong>在 <code>operator=</code> 中处理自我复制</strong>
-    <br> 
+    <br> 首先你得识别哪些是自我复制。第一种情况是指针和引用之间的复制，比如 <code>*a = *b;</code>, <code>ref_a = *b</code>, <code>a[n] = a[m]</code> ....
+    <br> 如果拷贝构造和拷贝赋值是系统生成的，一般没有什么问题（虽然这种自我复制仅仅是在浪费资源）。
+    <br> 但是一旦这两个函数是你自己编写的，那么很有可能因为你的疏忽导致非常严重的后果。比如下面这种情况：
+<pre>
+A &opterator=(const A &a){
+    delete memp;
+    memp = new mMem( *a.memp ); // a.memp 可能已经被自己释放
+    return *this;
+}
+</pre>
+    <br> 另外还一种情况时，当你的函数操作多个对象，而多个对象可能是同意对象的时候，要确保其行为依旧正确。 
+</li>
+
+<li><strong>复制对象时勿忘其每一个成员</strong>
+    <br> 第一种情况是你编写了自己的拷贝函数，很完美，但后续你可能又为该类增加了一些成员，但在拷贝的时候又忘记了，像下面这种情况：
+<pre>
+class A{
+    int b;
+    int c; 后面添加的
+public:
+    A( A &a ){
+        b = a.b
+    }
+}
+</pre>
+    <br> 还有一种情况是你继承了类 A, 但是忘记在你的拷贝函数中执行 A 的拷贝函数了。如下所示：
+<pre>
+class B : public A{
+    int d;
+public:
+    B( B &b )
+        :A( b )    // 千万不要忘记这一行
+    {
+        d = b,d
+
+        A( b );    // 或者这一行
+    }
+
+    B & operator=( const B &b ){
+        d = b,d
+        
+        A::operator=( b )    // 也不要忘记这一行
+    }
+}
+</pre>
+    <br> 另外，记住，不要在拷贝复制函数里面调用拷贝函数，也不要在拷贝函数里面调用拷贝复制函数，这会有意想不到的问题。
+        比较好又比较通用的做法是，创建一个 private 通用函数 ( 比如为 init ) ，然后让拷贝构造函数和拷贝函数都调用这个函数 ( init );
+
 </li>
 
 </ol>

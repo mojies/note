@@ -231,10 +231,48 @@ img{
 
 
 <div class="breadboard">
-<div class="head head_1">原则</div>
-
+<div class="head head_1">原则: 让自己习惯 C++</div>
+<div>
+    <strong>
+        下列原则对应原文章的分类：
+    </strong>
+</div>
 <ol>
+<li>
+    1-4： 让自己习惯 C++
+</li>
+<li>
+    5-12： 构造/析构/赋值运算
+</li>
+<li>
+    13-17：资源管理
+</li>
+<li>
+    18-25： 设计与声明
+</li>
+<li>
+    26-31：实现
+</li>
+<li>
+    32-40：集成与面向对象设计
+</li>
+<li>
+    41-48： 模板与泛型编程
+</li>
+<li>
+    49-52：定制 new 与 delete
+</li>
+<li>
+    53-55：杂项讨论
+</li>
+</ol>
 
+<div>
+    <strong>
+        下面是具体的原则：
+    </strong>
+</div>
+<ol>
 <li><strong>将 C++ 看成联邦语言</strong>
     <br> C++ 大体上可看坐 C, C with class, Temeplate, STL 的一个集合
 </li>
@@ -371,6 +409,12 @@ public:
     <br> 另外，记住，不要在拷贝复制函数里面调用拷贝函数，也不要在拷贝函数里面调用拷贝复制函数，这会有意想不到的问题。
         比较好又比较通用的做法是，创建一个 private 通用函数 ( 比如为 init ) ，然后让拷贝构造函数和拷贝函数都调用这个函数 ( init );
 
+</li>
+
+<li><strong>以对象管理资源</strong>
+    <br> 不能让多个 auto_ptr 指向同一指针。
+    <br> 两个 auto_ptr, A and B; 在执行 A=B 之后， B 会设置成 null。
+    <br> 引用计数型智慧指针 - RCSP - refrence-counting smart pointer
 </li>
 
 </ol>

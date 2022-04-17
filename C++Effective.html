@@ -412,9 +412,52 @@ public:
 </li>
 
 <li><strong>以对象管理资源</strong>
-    <br> 不能让多个 auto_ptr 指向同一指针。
-    <br> 两个 auto_ptr, A and B; 在执行 A=B 之后， B 会设置成 null。
-    <br> 引用计数型智慧指针 - RCSP - refrence-counting smart pointer
+    <br> 为了防止内存泄漏，（也就是你申请的指针忘记释放），C++ 准备了两种机制帮助你解决这一担忧，但这两种机制都有自己的限制，你需要仔细权衡。
+    <br> 一个是 auto_ptr 一个是 tr1::share_ptr
+    <br> 其中 auto_ptr 不能有多个 auto_ptr 指向同一指针。因为 auto_ptr 会在离开作用域，释放资源的时候调用析构函数 delete 掉申请的内存，如果有两个 auto_ptr 指向同一个指针，则会导致内存释放多次的异常情况。
+    <br> 但这并不意味着你不可以将 auto_ptr A 赋值给 auto_ptr B, 在你赋值之后 auto_ptr A 指向的地址将会被设置为 NULL。
+    <br> 另外一个就是引用计数型智慧指针 - RCSP - refrence-counting smart pointer -- tr1::share_ptr
+    <br> share_ptr 会对指针的引用进行计数，当引用变为 0  的时候就会释放指向的内存，但也有该指针处理不了的情况，比如，两个 share_ptr 存在互指的情况。
+    <br> 只要注意以上几点，share_ptr 还是能大大解放生产力的。
+</li>
+
+<li><strong>在资源管理类中提供对原始资源的访问</strong>
+    <br> 你可能经常使用智能指针来管理你的内存资源，但可能有时候你会要使用到原始资源的部分。那么智能指针针对这种情况提供了 <code>get()</code> 方法。
+        如果你想更加自然的使用，也可以使用含有隐式转换的 <code>-></code> 和 <code>*</code>。
+    <br> 或者使用隐式转换
+    <pre>
+class A{
+public:
+    ...
+    operator A() const{
+        return origin_point;
+    }
+    ...
+}
+    </pre>
+    <br> 但使用这种方法很容易导致指针的滥用，而智能指针又不能统计到这些资源的使用情况，这导致的情况就是，指针可能被释放，但还在其他地方被调用。
+    <br> 因此如果遇到这种使用场景，那么最好的办法还是使用 <code>get()</code>, 至少你在使用的时候知道自己是获取了一个智能指针的原始资源。
+    <br> 当然，如果你自己创建了一个资源管理类，你可能也需要考虑到这方面。
+</li>
+
+<li><strong>使用成对的 new 和 delete 时要采取相同形式</strong>
+    <br> 因为编译器存在的差异，你使用 <code>new []</code> 创建的对象可能并不能使用 <code>delete</code> 进行删除，因为 <code>new</code> 和 <code>delete</code> 是配对的。
+        而 <code>new []</code> 是和 <code>delete []</code> 配对的。
+    <br> 而 typedef 定义式很容易掩盖原来的类型，因此在编写代码的时候很容易忘记这一点，因此我们不建议使用 typedef 来对数组数据类型来做 alias。
+    <br> 另外一个方面，因为如果你在 class 内部使用指针规划成既可以指向数组，又可以指向普通对象，这时也要非常注意，在析构的时候需要妥善的做出处理。
+    <br> 相反 C++ STL 中提供了非常多的特性来处理数组的情况，比如 <code>string</code>， <code>vector</code>
+</li>·
+
+<li><strong>以独立语句将 newd 对象置入智能指针</strong>
+    <br> 加入有一个这样的两个函数：<code>int A();</code>, <code>void B( std::tr1::share_ptr&lt;C&gt; c, int a )</code>
+    <br> 然后我们需要完成这样一个操作： <code>B( std::tr1::share_ptr&lt;C&gt;( new C ), A() )</code>
+    <br> 但因为不同编译器的实现方式不同，<code>new C</code>, <code>std::tr1::share_ptr&lt;C&gt; c = </code>, <code>A()</code> 的调用顺序可能不一样
+    <br> 加入 <code>A()</code> 如果存在异常的话，那么就有可能导致 <code>new C</code> 泄漏
+    <br> 处理这种情况最妥善的办法就是将一二步骤独立出来，将上述表达式分成两个部分处理，如下所示：
+    <pre>
+std::tr1::share_ptr<C> c( new C );
+B( c, A() );
+    </pre>
 </li>
 
 </ol>

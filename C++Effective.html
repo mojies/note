@@ -449,7 +449,7 @@ public:
 </li>·
 
 <li><strong>以独立语句将 newd 对象置入智能指针</strong>
-    <br> 加入有一个这样的两个函数：<code>int A();</code>, <code>void B( std::tr1::share_ptr&lt;C&gt; c, int a )</code>
+    <br> 假如有一个这样的两个函数：<code>int A();</code>, <code>void B( std::tr1::share_ptr&lt;C&gt; c, int a )</code>
     <br> 然后我们需要完成这样一个操作： <code>B( std::tr1::share_ptr&lt;C&gt;( new C ), A() )</code>
     <br> 但因为不同编译器的实现方式不同，<code>new C</code>, <code>std::tr1::share_ptr&lt;C&gt; c = </code>, <code>A()</code> 的调用顺序可能不一样
     <br> 加入 <code>A()</code> 如果存在异常的话，那么就有可能导致 <code>new C</code> 泄漏
@@ -458,6 +458,86 @@ public:
 std::tr1::share_ptr<C> c( new C );
 B( c, A() );
     </pre>
+</li>
+
+<li><strong>让接口容易被正确的使用，不容易被错误使用</strong>
+    <br> 原文给的是一个关于设置日期的例子，如：<code>Data( int year, int day, int month )</code>, 而这个接口中参数类型都为 int 类型，因此调用的时候很容易写混，而且很容易也很越界。
+        我们当然可以在这个函数内部进行边界检查，而且这一般也是必要的，但是这一般要到运行时才发现。而如果这些参数是动态生成，测试程序覆盖不全面，有可能还会导致潜在的缺陷。
+    <br> 因此，一个比较好的方式是我们为每一个参数都设计一个独特的类型，让用户在编译阶段就将问题发现出来。
+    <br> 比如我们可以将这个接口设计成这样：<code>Data( const Year &. const Day &, const Month & )</code>。这从一方面规避了参数顺序弄混的问题：
+    <br> 而针对 Month 这种只有有限个数值的类型，我们甚至可以将数值封装成函数。进而将数值限定到固定的值域中，这种方法主要用于代替 enum, 因为 enum 实际上是一个整形，可以从整形强制转换得到。
+        方式如下：
+    <pre>
+class Month{
+public:
+    static Month Jan(){ return Month(1); };
+    static Month Feb(){ return Month(2); };
+    ...
+    static Month Dec(){ return Month(12); };
+    int getInt( void ) const{
+        return month;
+    }
+private:
+    int month;
+    explicit Month( int val ):
+        month( val ){
+        
+    };
+}
+// 可以直接这样调用
+Date( Month::Jan(), Day(30), Year(2015) );
+    </pre>
+    <br> 当然我们上面只是我们处理数据的一种方式，在 Day 和 Year 中可能还是得加参数检查才行。
+    <br>
+    <br> 另外一个让我们的代码更意使用的一点是，尽量保证代码风格一致，当然这离不开程序员对代码领域的熟练度。举几个很通用的例子：
+    <br> 1. STL 中的容器，同意义的操作基本上接口名称都一致，比如: <code>push_back</code>, <code>size()</code> ...
+    <br> 2. 在标准库字符串处理库中，靠前的参数为输出参数，靠后的参数为输入参数， 比如: <code>strcpy( dest, source )</code>, <code>snprintf( buf, len, patten, params... )</code>
+    <br> 当然使用正确的变量名和函数名称也是非常重要的。
+    <br>
+    <br> 最后，如果你有一个接口，这个接口会创建个对象，并返回其指针，那么怎么去释放该对象是你需要仔细考虑的问题。
+        而文中给出的答案就是，返回类型为 <code>tr1::share_ptr&lt;T&gt;</code>。 这至少会让调用者意识到，该指针需要而且可能会被回收。
+</li>
+
+<li><strong>设计 class 犹如设计 type</strong>
+    <br> 在你设计一个 class 的时候，你要意识到，重载，操作符，内存的分配和归还，对象的初始化和终结都是需要你考虑的，因此按照原文的说法：“你要带着和语言设计者当初设计原始内存时一样谨慎的态度来设计你的 class”。
+    <br> 下面是一个不完全的检查清单：
+    <ul>
+    <li>
+        对象应该如何被创建和销毁？
+    </li>
+    <li>
+        对象的初始化和对象的赋值应该有什么样的差别？这可能会涉及到：构造函数，赋值函数，拷贝复制函数
+    </li>
+    <li>
+        对象应该是以 passed by value 来传递还是 passed by refrence of const 来传递。
+    </li>
+    <li>
+        对象中属性的值域，函数入参的边界检查是否都准备妥善？
+    </li>
+    <li>
+        是是否继承了其他的 class, 你是否有遵守你继承 class 的规范 ( virtual, non-virtual )? 你的 class 是否会被其他 class 继承？如果可能被继承你是否要考虑你的函数申明（比如析构函数）？
+    </li>
+    <li>
+        你新的 type 需要怎样的转换？ 如果你需要，那么你是否有编写类型转换函数？比如你的构造函数可能被标注为 explicit
+    </li>
+    <li>
+        你的 class 应该具备那些操作符，和函数？你需要仔细思考这些操作符/函数的意义。
+    </li>
+    <li>
+        编译器默认给你生成的函数是你需要的吗？
+    </li>
+    <li>
+        什么是新 class 的"未声明接口" (undeclared interface)? 它对效率、异常安全性〈见条款 29) 以及资源运用(例如多任务锁定和动态内存)提供何种保证?
+        你在这些方面提供的保证将为你的 class 实现代码加上相应的约束条件。-- 原文复制
+    </li>
+    <li>
+        的新 class 有多么一般化? 或许你其实并非定义一个新 class, 而是定义一整个 class 家族。果真如此你就不该定义一个新 class, 而是应该定义一个新的 class template。-- 原文复制
+    </li>
+    <li>
+        真的需要一个新 class 吗? 如果只是定义新的 derived class 以便为既有的 class 添加机能，那么说不定单纯定义一或多个 non-member 函数或 templates. 更能够达到目标。-- 原文复制
+    </li>
+    </ul>
+
 </li>
 
 </ol>

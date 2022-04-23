@@ -231,7 +231,9 @@ img{
 
 
 <div class="breadboard">
-<div class="head head_1">原则: 让自己习惯 C++</div>
+<div class="head head_1">Effective C++ 笔记</div>
+
+<br>
 <div>
     <strong>
         下列原则对应原文章的分类：
@@ -273,24 +275,24 @@ img{
     </strong>
 </div>
 <ol>
-<li><strong>将 C++ 看成联邦语言</strong>
+<li><strong>1: 将 C++ 看成联邦语言</strong>
     <br> C++ 大体上可看坐 C, C with class, Temeplate, STL 的一个集合
 </li>
 
-<li><strong>尽量使用 <code>const</code>, <code>enum</code>, <code>inline</code>, <code>template</code> 代替宏定义 </strong>
+<li><strong>2: 尽量使用 <code>const</code>, <code>enum</code>, <code>inline</code>, <code>template</code> 代替宏定义 </strong>
     <br> 主要有以下三个问题：
     <br> 1. 因为宏定义如果出现为题编译其很难定位问题点
     <br> 2. 其次宏定义是全局性的无法进行区域化
     <br> 3. 最后我们在设计宏定义表达式的时候很容易出问题
 </li>
 
-<li><strong>多用 const</strong>
+<li><strong>3: 多用 const</strong>
     <br> const 语法虽然变化多端，但并不莫测高深。如果关键字 const 出现在星号左边，表示被指物是常量；如果出现在星号右边，表示指针自身是常量；如果出现在星号两边，表示被指物和指针两者都是常量。
     <br> const 修饰的函数，返回的值也应该是 const 类型的
     <br> 如果一定要在 const 函数中修改成员，那么可以使用 <code>mutable</code> 修饰该成员。
 </li>
 
-<li><strong>确保所有的变量在使用前都初始化了</strong>
+<li><strong>4: 确保所有的变量在使用前都初始化了</strong>
     <br> C part of C++ 类的变量不会确保初始化， non-C part of C++ 会确保初始化
     <br> 但你很难确保你记住这些规则，最好的方法就是在使用前先初始化所有变量。
     <br> 因为成员的初始化时更具申明的顺序来的，而不是根据初始化列表的顺序来的，这有时候会造成困惑，为了解决这种困惑，你应该尽量保证初始化列表中的顺序与类成员申明顺序一致。
@@ -301,7 +303,7 @@ img{
     <br> 如果 static 对象在多线程中访问，有可能会产生初始化竞态，从而导致不可知的程序错误，消除这种问题的一种方式是在对象单线程状态时，逐个调用一下每个静态函数的 refrence-returning 函数。
 </li>
 
-<li><strong>了解 C++ 默默编写并调用了哪些函数</strong>
+<li><strong>5: 了解 C++ 默默编写并调用了哪些函数</strong>
     <br> 如果你定义了一个类，即使你不对下列函数进行申明，但只要有人尝试调用它们，编译器会为你声明它们。这些函数有 default 构造函数, copy 构造函数, 析构函数, copy assignment 拷贝复制函数，如下所示：
 <pre>
 class Empty{
@@ -320,7 +322,7 @@ main.cpp:6:7: error: non-static const member ‘const int NameObject<int>::objec
     <br> non-static refrence 和 non-static const 只能在初始化列表进行初始化。
 </li>
 
-<li><strong>若不想使用编译器自动生成的函数，就该明确拒绝</strong>
+<li><strong>6: 若不想使用编译器自动生成的函数，就该明确拒绝</strong>
     <br> 将拷贝函数和拷贝复制函数申明为私有函数并不足以在所有条件下禁用编译自动生成的函数，因为友元函数和成员函数还是可以调用到。
     <br> 而解决办法就是，在申明为似有函数的基础上，不去实现此类函数。
     <br> 当然也可以去继承下面的类：
@@ -337,13 +339,13 @@ private:
 </pre>
 </li>
 
-<li><strong>为多态墓类声明 virtual 析构函数</strong>
+<li><strong>7: 为多态墓类声明 virtual 析构函数</strong>
     <br> 可能你将 new 的派生类给基类的指针，而在使用之后 delete 基类指针。此时如果基类析构函数为非虚函数，那么将会调用基类的析构函数，而不是派生类的析构函数。
     <br> 但是如果你将任何函数的析构函数都定义为虚函数，这会造成不必要的开销，因为一旦一个类中存在一个虚函数，则该类对象会存在一个析函数标指针。这将导致不必要的内存开销。
     <br> 此外 C++ 的很多内建类（比如 std::string ）的基类的析构函数都不是虚函数，因此如果你有类派生自这些内建类，千万要注意妥善的使用 delete。
 </li>
 
-<li><strong>到让异常逃离析构函数</strong>
+<li><strong>8: 到让异常逃离析构函数</strong>
     <br> 如果你有一个装在对象的容器，再容器销毁的时候，该容器中所有的对象的析构函数都应该被调用，而此时如果有异常发生，那么系统再同一时刻出现两个异常会导致导致意想不到的问题。
     <br> 而最好的办法是，不要让异常暴漏到析构函数之外。对此有两种操作：
     <br> 1. 捕获该异常，打印报错信息，退出程序
@@ -351,16 +353,16 @@ private:
     <br> 如果你在运行某个操作时候可能发生异常，那么最好的办法是，在析构函数之外简历一个操作函数，确保在析构之前该函数被调用，并将异常处理放在该函数内。
 </li>
 
-<li><strong>不要再构造和析构过程中调用 virtual 函数</strong>
+<li><strong>9: 不要再构造和析构过程中调用 virtual 函数</strong>
     <br> 因为假设你的基类的构造函数内有调用虚函数，那么此时在你申明一个派生类的时候，构造函数内调用的虚函数并不是派生类里面的虚函数，而是基类里面的虚函数。这可能不是你意料中的。
 </li>
 
-<li><strong>让 <code>opterator=</code> 返回一个 <code>refrence to *this</code></strong>
+<li><strong>10: 让 <code>opterator=</code> 返回一个 <code>refrence to *this</code></strong>
     <br> 这是实现连锁赋值的必要条件 ( a=b=c )，也是 C++ 内建库的通用规则
     <br> 该规则同样适用于 <code>+=</code>, <code>-=</code>, <code>*=</code> 等等
 </li>
 
-<li><strong>在 <code>operator=</code> 中处理自我复制</strong>
+<li><strong>11: 在 <code>operator=</code> 中处理自我复制</strong>
     <br> 首先你得识别哪些是自我复制。第一种情况是指针和引用之间的复制，比如 <code>*a = *b;</code>, <code>ref_a = *b</code>, <code>a[n] = a[m]</code> ....
     <br> 如果拷贝构造和拷贝赋值是系统生成的，一般没有什么问题（虽然这种自我复制仅仅是在浪费资源）。
     <br> 但是一旦这两个函数是你自己编写的，那么很有可能因为你的疏忽导致非常严重的后果。比如下面这种情况：
@@ -374,7 +376,7 @@ A &opterator=(const A &a){
     <br> 另外还一种情况时，当你的函数操作多个对象，而多个对象可能是同意对象的时候，要确保其行为依旧正确。 
 </li>
 
-<li><strong>复制对象时勿忘其每一个成员</strong>
+<li><strong>12: 复制对象时勿忘其每一个成员</strong>
     <br> 第一种情况是你编写了自己的拷贝函数，很完美，但后续你可能又为该类增加了一些成员，但在拷贝的时候又忘记了，像下面这种情况：
 <pre>
 class A{
@@ -411,7 +413,7 @@ public:
 
 </li>
 
-<li><strong>以对象管理资源</strong>
+<li><strong>13: 以对象管理资源</strong>
     <br> 为了防止内存泄漏，（也就是你申请的指针忘记释放），C++ 准备了两种机制帮助你解决这一担忧，但这两种机制都有自己的限制，你需要仔细权衡。
     <br> 一个是 auto_ptr 一个是 tr1::share_ptr
     <br> 其中 auto_ptr 不能有多个 auto_ptr 指向同一指针。因为 auto_ptr 会在离开作用域，释放资源的时候调用析构函数 delete 掉申请的内存，如果有两个 auto_ptr 指向同一个指针，则会导致内存释放多次的异常情况。
@@ -421,7 +423,15 @@ public:
     <br> 只要注意以上几点，share_ptr 还是能大大解放生产力的。
 </li>
 
-<li><strong>在资源管理类中提供对原始资源的访问</strong>
+<li><strong>14: 在资源管理类中小心 copy 行为</strong>
+    <br> 在某些时候我们可能需要自己创建资源管理类，为了确保资源被合理的利用，我们必须保证资源不会被提前释放或者泄露。因此这本书总结了几个原则：
+    <br> 1. 不允许拷贝（可以参考第六点），不会被拷贝，资源就不会存在管理资源泄露的风险
+    <br> 2. 如果允许多个对象持有一个资源，那么我们可能需要统计资源的使用情况（比如计数），当资源计数为 0 的时候自动将资源释放掉。需要特别注意的是，复制的时候你要带上公共的资源管理区域。
+    <br> 3. 如果你允许对资源进行复制，那么你需要确保对你管理的资源进行深度复制。
+    <br> 4. 如果你需要实现类似 auto_ptr 的功能，即统一时刻只允许一个对象持有资源，那么你需要妥善的做好资源的转移工作。
+</li>
+
+<li><strong>15: 在资源管理类中提供对原始资源的访问</strong>
     <br> 你可能经常使用智能指针来管理你的内存资源，但可能有时候你会要使用到原始资源的部分。那么智能指针针对这种情况提供了 <code>get()</code> 方法。
         如果你想更加自然的使用，也可以使用含有隐式转换的 <code>-></code> 和 <code>*</code>。
     <br> 或者使用隐式转换
@@ -440,7 +450,7 @@ public:
     <br> 当然，如果你自己创建了一个资源管理类，你可能也需要考虑到这方面。
 </li>
 
-<li><strong>使用成对的 new 和 delete 时要采取相同形式</strong>
+<li><strong>16: 使用成对的 new 和 delete 时要采取相同形式</strong>
     <br> 因为编译器存在的差异，你使用 <code>new []</code> 创建的对象可能并不能使用 <code>delete</code> 进行删除，因为 <code>new</code> 和 <code>delete</code> 是配对的。
         而 <code>new []</code> 是和 <code>delete []</code> 配对的。
     <br> 而 typedef 定义式很容易掩盖原来的类型，因此在编写代码的时候很容易忘记这一点，因此我们不建议使用 typedef 来对数组数据类型来做 alias。
@@ -448,7 +458,7 @@ public:
     <br> 相反 C++ STL 中提供了非常多的特性来处理数组的情况，比如 <code>string</code>， <code>vector</code>
 </li>·
 
-<li><strong>以独立语句将 newd 对象置入智能指针</strong>
+<li><strong>17: 以独立语句将 newd 对象置入智能指针</strong>
     <br> 假如有一个这样的两个函数：<code>int A();</code>, <code>void B( std::tr1::share_ptr&lt;C&gt; c, int a )</code>
     <br> 然后我们需要完成这样一个操作： <code>B( std::tr1::share_ptr&lt;C&gt;( new C ), A() )</code>
     <br> 但因为不同编译器的实现方式不同，<code>new C</code>, <code>std::tr1::share_ptr&lt;C&gt; c = </code>, <code>A()</code> 的调用顺序可能不一样
@@ -460,7 +470,7 @@ B( c, A() );
     </pre>
 </li>
 
-<li><strong>让接口容易被正确的使用，不容易被错误使用</strong>
+<li><strong>18: 让接口容易被正确的使用，不容易被错误使用</strong>
     <br> 原文给的是一个关于设置日期的例子，如：<code>Data( int year, int day, int month )</code>, 而这个接口中参数类型都为 int 类型，因此调用的时候很容易写混，而且很容易也很越界。
         我们当然可以在这个函数内部进行边界检查，而且这一般也是必要的，但是这一般要到运行时才发现。而如果这些参数是动态生成，测试程序覆盖不全面，有可能还会导致潜在的缺陷。
     <br> 因此，一个比较好的方式是我们为每一个参数都设计一个独特的类型，让用户在编译阶段就将问题发现出来。
@@ -498,7 +508,7 @@ Date( Month::Jan(), Day(30), Year(2015) );
         而文中给出的答案就是，返回类型为 <code>tr1::share_ptr&lt;T&gt;</code>。 这至少会让调用者意识到，该指针需要而且可能会被回收。
 </li>
 
-<li><strong>设计 class 犹如设计 type</strong>
+<li><strong>19: 设计 class 犹如设计 type</strong>
     <br> 在你设计一个 class 的时候，你要意识到，重载，操作符，内存的分配和归还，对象的初始化和终结都是需要你考虑的，因此按照原文的说法：“你要带着和语言设计者当初设计原始内存时一样谨慎的态度来设计你的 class”。
     <br> 下面是一个不完全的检查清单：
     <ul>
@@ -540,11 +550,300 @@ Date( Month::Jan(), Day(30), Year(2015) );
 
 </li>
 
+<li><strong>20: 宁以 pass-by-refrence-to-const 替换 pass-by-value</strong>
+    <br> 原因很简单，就是 <code>pass-by-refrence-to-const</code> 在底层的实现为指针的传递，而 <code>pass-by-value</code> 则是需要通过拷贝构造函数生成一个新的对象进行传递。
+    <br> 原因之一是：在大部分场景下你的 class 执行一次拷贝构造函数的开销往往是要远远大于指针的传递的，而且别忘了你在离开函数作用域的时候还需要调用析构函数
+    <br> 原因之二是：如果你有一个派生类对象，而你想把这个对象传递给一个基类对象类型的函数，这是，在传递参数时调用的就是基类的拷贝构造函数，而最后构造出来的对象可能已经和你之前传递进去的那个对象相距甚远了。
+    <br> 但是这也有一些例外的情况，比如 int 类型。
+
+</li>
+
+<li><strong>21: 必须返回对象时，别妄想返回其 refrence</strong>
+    <br> 这里我们先用反正法。你可能可以以下面的方式返回 refrence, 但都会在一些场景存在问题。如下所示：
+    <pre>
+// 1
+T &func(){
+    T a;
+    return a;    
+}
+// 该函数返回值早已经释放，其行为是未定义的
+
+// 2
+T &func(){
+    T *a = new T;
+    return *a;
+}
+// 该函数会存在两个问题
+// a. 该地址由谁释放
+// b. 存在 T a = func(b) * func(c) * func(d); 这种场景，会存在内存泄露
+
+
+// 3
+T &func(){
+    static T a;
+    // or private T a in your class
+    return a;
+}
+// 假如 a 和 b 都是该函数返回的 refrence, 在这种场景下会存在问题 ( a*b == c*d )
+    </pre>
+
+</li>
+
+<li><strong>22: 将成员都声明为 private</strong>
+    <br> 1. 首先声明为 private 是为了类的封装性，如果被设置成 public, 那么成员将会在任何时间出现任何值，这将大大增加误用和异常的概率。
+    <br> 2. 其次大部分情况下成员的读和写是不同角色操作的，这时候我们可能需要为成员设置只读，只写。读写来管理成员的访问权限。
+    <br> 3. 如果我们将成员以函数的形式暴露出去，即便以后表达该成员的意义存在变化（比如说之前只需要一个成员表达，后续可能需要通过一系列函数进行推导），
+        那么对于使用者而言，都不需要做任何其他的操作。（比如说一个图形应用项目初期，你可能只需要展示一张静态的背景图片，而到后期，你可能需要根据不同的条件现实不同的背景图片）
+    <br> 4. 如果你的类会有一大批继承者，那么这个时候如果你需要修改或者取消一个成员，想想这会牵扯多大的改动？？？我想这应该是你不愿意看到的。
+    <br> 另外，对成员标注成 protected 在继承情况下的效用其实和 public 是一样的，因此给你的选择是将你的成员函数设置成 private 吧。
+
+</li>
+
+<li><strong>23: 宁以 non-member, non-friend 替换 member 函数</strong> 
+    <br> 注意，并不是完全抛弃成员函数，按照之前的规则， class 不能抛出成员变量，然后 class 又不能从 class 中抛出接口函数，这个 class 就与世隔绝了。
+    <br> 这里的观点主要是说明，如果一个成员，或者一个过程，已经被抛出一次了，那么你应该尽量少的在额外的接口涉及到这些成员或者过程。
+    <br> 这里主要涉及的是 class 的封装性，一旦一个成员或者过程被从越多的接口暴露，那么用户就会有更多的途径来访问这些封装的资源，这主要会有两个问题：
+    <br> 1. 如果以后你要修改这些资源，你会要花更多的尽力去检查你的改动是否合理（因为分支变多了）
+    <br> 2. 因为你从多个角度为一个资源提供了访问接口，此时 class 的封装性会大大降低，这也会限制 class 的可扩展性
+    <br> 而文中提供的方法即是将那些必要的逻辑放到 class 的 namespace 空间中。
+    <br> 而文中列举的例子如下： 
+    <pre>
+namespace A_SPACE{
+
+class A{
+    ...
+    void B(){
+
+    };
+    void C(){
+
+    };
+    void D(){
+
+    };
+    ...
+    // F 并不明智
+    void F(){
+        B();
+        C();
+        D();
+    }
+}
+
+// 这个 F_... 更明智
+void F_inspace( A &a ){
+    a.B();
+    a.C();
+    a.D();
+}
+
+}
+    </pre>
+    <br> 但我觉得这一跳有点牵强，因为大部分的其他语言都不允许在 class  之外建立函数。虽然以上两点是实际开发中会遇到的问题，但是对于熟悉 java 开发者，这可能有点做过头了。
+    <br>
+</li>
+
+<li><strong>24: 如果有大量的参数需要类型转换，请使用 non-member 函数</strong>
+    <br> 虽然该条规则从表面上看是一个普世规则，但是这本书中提到的例子却是一个特例，而我又没有更多这方面的经验，因此先将该例子标注在这里，以后遇到此类问题，万一还记得的话，再完善之。
+    <br> 虽然在构造函数一般推荐标注为显示的（ <code>explicit</code> ), 但是在数值计算领域却是一个特例，因为隐式转换经常会让你的表达式看起来非常的简洁美观，当然也更方便开发去运用。
+    <br> 但在实际设计类的时候也很容易想到面向对象的原则，但这个原则在实现操作符号的时候可能存在一个问题，例子如下：
+    <pre>
+
+
+class A{
+    A( int val );
+    
+    ...
+    A operation*( A &t );
+    ...
+
+}
+
+int a = 1;
+A b( 2 );
+A c = a*t; // 成功
+A d = t*a; // 失败，因为编译器找不到 int::operation*( A ) 的方法，也找不到 ::operation( T t, A a ) 的方法
+    </pre>
+    <br> 因此，这个时候我们用 A 的非成员函数（ non-membere ) 可以非常轻易的解决这个问题，如下：
+    <pre>
+A operation( int val, A a ){
+    ...
+};
+
+A operation( A a, int val ){
+    ...
+};
+
+// 或者使用模板，前提条件是 A 要实现可能的从 T 到对象 A 的构造函数
+template&lt; typename T &gt;
+A operation( T val, A a ){
+    ...
+};
+
+A operation( A a, T val ){
+    ...
+};
+
+    </pre>
+</li>
+
+<li><strong>25: 考虑写出一个不抛异常的 swap 函数</strong>
+
+</li>
+
+<li><strong>26: 尽可能延后变量定义式的出现时间</strong>
+
+</li>
+
+<li><strong>27: 尽量少做转型动作</strong>
+
+</li>
+
+<li><strong>28: 避免返回 handles 指向对象内部成分</strong>
+
+</li>
+
+<li><strong>29: 为 “异常安全” 而努力是值得的</strong>
+
+</li>
+
+<li><strong>30: 透彻了解 inlining 的里里外外</strong>
+
+</li>
+
+<li><strong>31: 将文件间的编译依赖关系降至最低</strong>
+
+</li>
+
+<li><strong>32: 确定你的 public 继承服从 <code>is a</code> 的关系</strong>
+
+</li>
+
+<li><strong>33: 避免覆盖继承带来的名称</strong>
+
+</li>
+
+<li><strong>34: 区分接口继承和实现继承</strong>
+
+</li>
+
+<li><strong>35: 考虑虚函数以外的其他选择</strong>
+
+</li>
+
+<li><strong>36: 绝不重新定义继承而来的 non-virtual 函数</strong>
+
+</li>
+
+<li><strong>37: 绝不重新定义继承而来的默认参数值</strong>
+
+</li>
+
+<li><strong>38: 服从 <code>has a</code> 或者 <code>is-implemented-in-terms-of</code> 模型</strong>
+
+</li>
+
+<li><strong>39: 明智而审慎的使用 private 继承</strong>
+
+</li>
+
+<li><strong>40: 明智而审慎的使用多重继承</strong>
+
+</li>
+
+<li><strong>41: 了解隐式接口和编译器多态</strong>
+
+</li>
+
+<li><strong>42: 了解 typename 的双重意义</strong>
+
+</li>
+
+<li><strong>43: 学习处理模板化基类内的名称</strong>
+
+</li>
+
+<li><strong>44: 将与参数无关的代码抽离 templates</strong>
+
+</li>
+
+<li><strong>45: 运用成员函数模板，接受所有兼容类型</strong>
+
+</li>
+
+<li><strong>46: 需要类型转换时请为模板定义非成员函数</strong>
+
+</li>
+
+<li><strong>47: 请用 traits classes 表现类型信息</strong>
+
+</li>
+
+<li><strong>48: 认识 template 元编程</strong>
+
+</li>
+
+<li><strong>49: 了解 new-handler 的行为</strong>
+
+</li>
+
+<li><strong>50: 了解 new 和 delete 的合理替换时机</strong>
+
+</li>
+
+<li><strong>51: 编写 new 和 delete 时需固守常规</strong>
+
+</li>
+
+<li><strong>52: 写了 placement new 也要写 placement delete</strong>
+
+</li>
+
+<li><strong>53: 不要轻易忽视编译器警告</strong>
+
+</li>
+
+<li><strong>54: 让自己熟悉 TR1 在内的标准程序库</strong>
+
+</li>
+
+<li><strong>55: 让自己熟悉 bootst</strong>
+
+</li>
+
+
+
+
 </ol>
 
 </div>
 
 
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">其他</div>
+<ul>
+
+<li><strong>string</strong> 并不是一个类
+    <br> string 是 <code>basic_string&lt;char&gt;</code> 的一个 typedef。
+</li>
+
+<li><strong>RAII ( Resource Acquisition Is Initialization ) 获取资源即初始化</strong>
+    <br> C++ 中管理资源的一种技术，即在构造函数中创建资源，然后析构函数中创建资源
+    <br> 这种技术有个好处，就是，就算发生了异常， C++ 也能够保证资源的释放。
+    <br> 常见的 RAII 类有，<code>std::lock_guard</code>, <code>std::auto_ptr</code>, <code>std::tr1::share_ptr</code> ...
+    <br> 用户也可以创建自己的 RAII 类。
+
+</li>
+
+</ul>
+</div>    
 
 
 

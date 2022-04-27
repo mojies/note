@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>竞态</title>
+</head>
+<body>
+
+<style id="style_area" >
+a{
+    text-decoration:none;
+}
+p{
+    line-height: 1.4em;
+    /* text-indent:2em; */
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0.3em 0;
+}
+li{
+    padding: 0.3em 0;
+}
+.gray-line{
+    color:#F77;
+    font-weight: 100;
+    font-style: oblique;
+    font-size: 0.8em;
+}
+code{
+    line-height: 24px;
+    border-bottom: rgb(253, 191, 186) solid 2px;
+    margin: 3px 0.5em;
+    padding: 2px;
+
+    font-weight: 400;
+    font-size: 12px;
+    font-style: oblique;
+    border-radius: 3px;
+    backdrop-filter: blur(2px);
+    color: rgb(231,76,60);
+}
+/* code{
+    line-height: 20px;
+    margin: 3px;
+    padding: 2px;
+    border-radius: 3px;
+    color: #eb3f2f;
+    font-weight: bold;
+    font-size: 12px;
+    margin: 3px;
+    background-color:#f0f0f0;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #a9a9a9;
+    backdrop-filter: blur(2px);
+} */
+pre{
+    border-radius: 4px;
+    background-color: rgb(247,247,247,0.3);
+    border: 1px solid #aaa;
+    line-height: 1.182em;
+    overflow: auto;
+    font-size: 11px;
+    padding: 16px;
+    margin: 10px;
+}
+img{
+    opacity:1;
+    margin: 10px;
+}
+.breadboard{
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.37);
+    margin: 5px 2% 45px;
+    padding: 10px;
+}
+
+.head_index{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+}
+.head_1{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 4px #133152 solid;
+    width: 99%;
+    margin-top: 1.5em;
+}
+.head_2{
+    color: #163a60;
+    font-size: 25px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 2px #163a60 solid;
+    width: 99%;
+    margin-top: 1.25em;
+}
+.head_3{
+    color: #1a426e;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.head_4{
+    color: #1d4a7b;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.div_2{
+    margin: 5px 2% 45px;
+    padding: 40px;
+    height: 100px;
+    text-align: center;
+
+}
+
+.img_center{
+    text-align: center;
+}
+.img_left{
+    text-align: left;
+    margin-left: 4em;
+}
+.note_msg{
+    color: #eb3f2f;
+    font-weight: 600;
+}
+
+.offset_1em{margin-left: 1em;}
+.offset_2em{margin-left: 2em;}
+.offset_3em{margin-left: 3em;}
+.offset_4em{margin-left: 4em;}
+.offset_5em{margin-left: 5em;}
+.offset_6em{margin-left: 6em;}
+.offset_7em{margin-left: 7em;}
+.offset_8em{margin-left: 8em;}
+.offset_9em{margin-left: 9em;}
+.offset_10em{margin-left: 10em;}
+
+.green_text{
+    color: green;
+}
+.red_text{
+    color: red;
+}
+.purple_text{
+    color: purple;
+}
+
+.limit_window_size{
+    /* overflow:auto; */
+    max-height:30em;
+    overflow-y:auto;
+    word-wrap:break-word;
+    word-break: normal;
+    white-space: pre-wrap;
+    margin:10px;
+}
+
+.child_red2_key li strong{
+    color: red;
+}
+.child_red1_key li strong{
+    color: red;
+}
+.child_red2_key li strong{
+    color: #F77;
+}
+.child_red3_key li strong{
+    color: #Faa;
+}
+
+.foot_panel{
+    position:fixed;
+    right:3em;
+    bottom: 3em;
+    width:6em;
+    height:30px;
+    padding:15px 5px 5px 15px;
+    background-color:rgb( 157, 157, 157, 0.618 );
+    border-radius: 8px;
+}
+#foot_panel_top{
+    display: inline;
+    border-right: 5px solid #eee;
+}
+#foot_panel_top a{
+    width:4em;
+}
+#foot_panel_bottom {
+    display: inline;
+    margin-left: 5px;
+}
+#foot_panel_top a{
+    width:4em;
+}
+
+#main_index li{
+    line-height: 17px;
+    font-size: 16px;
+}
+</style>
+
+
+
+
+<div class="breadboard">
+<div class="head_index">目录</div>
+<div><ol id="main_index">
+</ol></div>
+</div>
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">关于竞态</div>
+<p>
+    我们都知道，竞态的形成即是资源的争用。而资源存在非常多的形式，比如变量，对象， CPU, buffer, 网络，磁盘（文件）， 外设的所有权，服务等。
+</p>
+<p>
+    而对资源的不恰当利用可能导致程序低效的运行，资源泄漏，死机，崩溃等。
+</p>
+<p>
+    本文为笔者的一些经验总结，当然也参考了不少文档。试图详尽的介绍与此相关的问题。
+</p>
+<p>
+    当然要做到全面是非常难的，毕竟现实生活中遇到的问题五花八门，完全不知道会在什么时候会出现一个吓你一跳的黑天鹅。
+</p>
+
+<div class="head head_1">并发</div>
+<p>
+    并发，指同一个系统拥有多个计算进程（或者进程），这些进程有同时执行与的潜在交互特性，因此系统会有相当多个执行路径且结果可能具有不确定性。并发计算可能会在具备多核心的同一个芯片中交错运行，以优先分时线程在同一个处理器中执行，或在不同的处理器执行。 -- wikipedia
+</p>
+<p>
+    解决并发过程出现的竞态我所知道的有两个方法：方法之一是给资源上锁；方法二是使用异步单线程方式实现（ node.js ）。
+</p>
+<p>
+    异步暂时不再此文讨论范畴，因此这里简要介绍一下异步单线程编程的一些需要注意的问题。
+</p>
+<ol>
+<li>
+    无法利用多核性能。
+</li>
+<li>
+    需要严格控制过程的是时间片，防止某些过程获取不到资源。
+</li>
+<li>
+    虽然不要原子性，但是还是需要妥善的对资源进行管理。最好的办法是进入过程获取资源，退出过程释放资源。其次你需要一些管理资源的手段，方便你随时查看当前资源的使用情况（比如说状态变量，计数器）；
+</li>
+<li>
+    不能存在 while 轮询，你只能依靠下一次 CPU 资源什么时候轮到你，因此你也不能够相对精确的在某个时间点去做某件事。这个其实和第 2 点是一致的。
+</li>
+</ol>
+<p>
+    我理解的异步单线程编程即单线程事件编程。
+</p>
+<p>
+    下面是一个用伪代码实现的例子：
+</p>
+<pre>
+
+    task1_private_data
+    task1(){
+        ...
+        PUSH_TASK( taskX, taskX_private_data )
+        ...
+    }
+
+
+    INTRO(){
+        // do what you do        
+        PUSH_TASK( task1, task1_private_data )
+    }
+
+    THREAD{
+        INTRO()
+
+
+        LOOP{
+            WAIT_WAKE_UP（）
+            LOOP{
+                GET TASK & TASK_PRIVARE_DATA from TASK_LIST
+                CALL TASK( TASK_PRIATE_DATA )
+            }
+        }
+    }
+
+    PUSH_TASK( TASH, TASK_PRIVATE_DATA ){
+        PUSH TASK & TASK_PRIATE_DATA PAIRE to TASK_LIST
+        WAKE_UP THREAD
+    }
+</pre>
+
+<div class="head head_1">资源泄漏</div>
+
+<div class="head head_1">状态异常</div>
+
+<div class="head head_1">锁</div>
+
+
+<div class="head head_1">单线程死锁</div>
+<p>
+    首先，我们先来讨论一下死锁这个问题。我自己把死锁分成了以下这几个类别：单线程死锁，多线程死锁，不完全死锁。
+</p>
+<p>
+    首先看单线程死锁，单线程死锁的模式如下所示：
+</p>
+<pre>
+    THREAD{
+        LOCK A
+        ...
+        LOCK A
+        ...
+    }
+</pre>
+<p>
+    我觉得有一定经验的人一般不会傻到写出这种代码，但是下面这种情况嘞：
+</p>
+<pre>
+    CLASS A{
+        LOCK self
+        LOCK_RESOURCE(){
+            self_lock.lock()
+
+            return ....
+        }
+
+        UNLOCK_RESOURCE(){
+            self_lock.unlock()
+        }   
+    }
+
+    class B{
+        A a;
+        DO_PROCESS_1(){
+            a.LOCK_RESOURCE();
+        }
+        ...
+        DO_PROCESS_n(){
+            b.UNLOCK_RESOURCE();
+        }
+
+    }
+
+    // 这种例子
+    THREAD_1{
+        B b;
+
+        b.DO_PROCESS_1();
+        ...
+        b.DO_PROCESS_1();
+
+    }
+
+    // 还有这种例子
+    B b;
+    THREAD_2 or PROCESS_2{
+        b.DO_PROCESS_1();
+
+        ...
+        if CONDITION_1:
+            return;
+            
+        ...
+        b.DO_PROCESS_n();
+    }
+</pre>
+<p>
+    还有一种情况，如下所示：
+</p>
+<pre>
+    // in PROCESS_1
+    LOCK *A = new LOCK;
+
+    // in PROCESS_2
+    LOCK *B  = A;
+
+    // in PROCESS_3
+    delete A;
+
+    // in PROCESS_4
+    LOCK B; // 死锁 -- 因为 B 指向的地址已经被释放，因此 B 地址指向的数据可能是任意状态的。
+</pre>
+
+<p>
+    当然如果有这种问题，在项目前期也许很容易暴漏，但如果 THREAD_2 or PROCESS_2 中的 CONDITION_1 很难满足，而你的测试样例又没有覆盖到的话，那么这可能就成为你应用中的一个炸弹了。
+</p>
+<p>
+    上面列举的例子还仅仅是锁，锁的话发现问题了还比较方便定位。如果上面被阻塞的不是锁，而是文件（O_EXCL 或者 "wx" "wbx" "w+x" "wb+x" "w+bx" 模式打开的文件）？一个网络阻塞性的 read 函数？一个可被设置为独占的驱动，外设？那有怎么办嘞？
+</p>
+<p>
+    因此，你不仅仅是需要对你所使用的语言烂熟于心，还必须对你模块中涉及到的所有可能会阻塞或者因条件而阻塞的地方，以及模块于模块之间的业务逻辑（交互逻辑）心知肚明。
+</p>
+
+<div class="head head_1">多线程死锁</div>
+<p>
+    下面我们再来看一看多线程的例子，死锁的通用形式如下所示：
+</p>
+<pre>
+    LOCK a;
+    LOCK b;
+
+    THREAD_1{
+        ...
+        a.lock()
+        ...
+        b.lock()
+        ...
+        b.unlock()
+        ...
+        a.unlock()
+        ...
+    }
+
+    THREAD_2{
+        ...
+        b.lock();
+        ...
+        a.lock();
+
+        ...
+        a.unlock();
+        ...
+        b.unlock();
+    }
+</pre>
+<p>
+    当然，这些 lock 可能会隐藏再各种判断条件下，或者藏在各种调用的方法过程中，这些设计，可能会将这个模式隐藏德很深。甚至躲过你自信满满的，不完全的测试样例。
+</p>
+<p>
+    再看这个例子，这个例子我们看不到以一个锁，但是 THREAD_3 可能就一直停在那里，（也可能偶尔能运行一下，让你甚是糊涂）：
+</p>
+<pre>
+    THREAD_1:{
+        LOOP(){
+            WAIT LIST_A MESSAGE;
+            GET msg FROM LIST_A
+            DO SOMETHING 
+                PUSH to LIST_B
+        }
+    }
+
+    THREAD_2:{
+        LOOP(){
+            WAIT LIST_B MESSAGE;
+            GET msg FROM LIST_B
+            DO SOMETHING
+        }
+    }
+
+    THREAD_3{
+        PUSH msg to LIST_A
+        WAIT msg result from B
+
+        // or
+        PUSH msg to LIST_B
+        WAIT msg result from A
+
+    }
+</pre>
+<p>
+    我从这些例子里面得到的感悟是基础是
+</p>
+<p>
+    1. 千里之行，始于足下。千里之堤，溃于蚁穴。基础是很重要的，细节也很重要。我们需要不断的熟练自己的技能。才能如庖丁解牛，游刃有余。
+</p>
+<p>
+    2. 设计模式不仅仅是书上明确的那些既定的东西，它是一种思维工具， 是刀，是锯，是改锥，也是你自己总结提炼的最佳实践。良好的设计风格是非常重要，多学多想多思考，沉淀出属于自己的一套设计模式是很重要的。
+</p>
+<p>
+    3. 良好设计的关键在于对问题的深入认识，而不是提供了多少高级的特征。 -- 当然更不是不假思索的找了一个解决当前问题的方案即可。因此深入理解业务逻辑是非常重要的。
+</p>
+
+<div class="head head_1">参考资料</div>
+<ul>
+<li>
+    <br> <a href="http://ifeve.com/perfbook/">《深入理解并行编程》中文版</a>
+</li>
+<li>
+    <br> 《LINUX设备驱动程序》 第四章
+</li>
+</ul>
+
+
+</div>    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="../js/PrePost.js"></script>
+</html>

@@ -505,6 +505,161 @@ dependencies {
 
 
 
+<div class="head head_1">Android init</div>
+<p>
+    Android Init 文件中主要存在五类对象： Actions、Commands、Services、Options 和 Imports。init 文件中可用 <code>#</code> 进行注释，并且可以使用 <code>${property.name}</code> 来使用系统属性
+    （如：<code>import /init.recovery.${ro.hardware}.rc</code> ）。
+</p>
+<p>
+    init 程序会在加载之后第一时间加载 <code>/system/etc/init/hw/init.rc</code> 中的配置，随后会加载 <code>/{system,system_ext,vendor,odm,product}/etc/init/</code> 中的 <code>.rc</code> 文件。
+</p>
+<p>
+    其中，<code>/system/etc/init/</code> 中存放 Android 核心组件的一些启动配置文件；<code>/vendor/etc/init/</code> 用于存放厂商的核心 SoC 功能所需的操作或守护程序。
+</p>
+
+<div class="head head_1">init Services</div>
+<div class="head head_1">service 选项（option）</div>
+<ul>
+<li><strong>socket /name /type /perm [ /user [ /group [ /seclabel ] ] ]</strong>
+    <br>
+    Create a UNIX domain socket named /dev/socket/name and pass its fd to the launched process. type must be “dgram”, “stream” or “seqpacket”. type may end with “+passcred” to enable SO_PASSCRED on the socket. User and group default to 0. ‘seclabel’ is the SELinux security context for the socket. It defaults to the service security context, as specified by seclabel or computed based on the service executable file security context. For native executables see libcutils android_get_control_socket().
+</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="head head_1">其他</div>
+<ul>
+<li><strong>将 system 以读写的方式挂载</strong>
+    <pre>
+adb root 
+adb disable-verity
+adb reboot
+adb root
+adb remount
+    </pre>
+
+</li>
+
+
+<li><strong>向 toybox 中添加我们所需支持的命令</strong>
+    <ol>
+    <li>
+        工具在 external/toybox 中，打开 Android.bp 文件，找到你需要增加的命令（比如 brctl ），然后找到该命令关联的文件，find -name "brctl*" , 现在找到这个文件 brctl.c
+    </li>
+    <li>
+        将该文件添加到 Android.bp 的 device_srcs 中 -- 注意添加的顺序，这里面的文件都按照字母顺序排序。
+    </li>
+    <li>
+        并且在 toybox_symlinks 中加入 brctl ，让编译工具在编译的时候自动创建 brctl 这个软连接文件。
+    </li>
+    <li>
+        检查 Android.bp 中 cc_defaults，可以观察到与 Android 相关的配置头文件在 android/device 路劲中。
+    </li>
+    <li>
+        因此我们还要在 android/device 路径的 generated/config.h 中将我们想要的命令添加到 toybox 中。如下所示：
+        <pre>
+-#define CFG_BRCTL 0
+-#define USE_BRCTL(...)
++#define CFG_BRCTL 1         // 使能 brctl
++#define USE_BRCTL(...) __VA_ARGS__         // 将 brctl 添加到 toybox 中
+        </pre>
+    </li>
+    </ol>
+</li>
+
+<li><strong>向 Android 工程中加入一个我们自己的程序</strong>
+    <br> 首先你需要将你的代码仓库迁移到 extern 目录，比如 <code>brctl-utils</code>。
+    <br>  其次你需要为该仓库编写 <code>Android.bp</code> 文件。<code>Android.bp</code> 如何编写可以参考本章下面 <code>Android.bp</code> 小节。
+    <br> 如果你想将 <code>brctl-utils</code> 编进你的平台中，你需要在你平台相应的 <code>AndroidBoard.mk</code> 中的 <code>PRODUCT_PACKAGES</code> 变量加上该 package 名称。
+        文件可能在一个类似于这样 <code>device/rockchip/rk3588/xxx</code> 的路径中。
+</li>
+
+<li><strong>Android.bp 文件格式</strong>
+    <br> 以模块类型开头，模块类型参考 <a href="https://ci.android.com/builds/submitted/8499938/linux/latest/view/soong_build.html">该文档</a>，
+        每个模块类型中需要设置相应的属性，点击参考文档里面相应的模块类型可以跳转到该类型的更加详细的说明。
+    <br> 如下是一个集成 brctl-utils 的例子：
+    <pre>
+all_srcs = [
+    "libbridge/libbridge_devif.c",
+    "libbridge/libbridge_misc.c",
+    "libbridge/libbridge_init.c",
+    "libbridge/libbridge_if.c",
+    "brctl/brctl.c",
+    "brctl/brctl_cmd.c",
+    "brctl/brctl_disp.c",
+]
+
+cc_binary {
+    name: "brctl",
+    // defaults: ["brctl-defaults"],
+    host_supported: true,
+    // recovery_available: true,
+    vendor_ramdisk_available: true,
+    srcs: all_srcs,
+
+    cflags: [
+        "-Os",
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-parameter",
+        "-Wno-unused-result",
+    ],
+
+    // cppflags: [],
+
+    local_include_dirs: [
+        "libbridge"
+    ],
+
+    // header_libs: [ ],
+    // static_libs: [ ],
+    // shared_libs: [ ],
+    // export_include_dirs: [ ],
+
+    target: {
+        android: {
+            // local_include_dirs: [],
+
+            // shared_libs: [],
+
+            // symlinks: [],
+        },
+    },
+}
+    </pre>
+</li>
+</ul>
+
+
+
+
+
+
+
+<div class="head head_1">参考文档</div>
+<ul>
+<li><strong>toybox</strong>
+    <br> <a href="http://landley.net/toybox/about.html">busybox 的替代品， License 是 BSD 的。现在广泛应用于 Android 系统中。</a>
+</li>
+<li><strong>Beyond Linux® From Scratch (System V Edition)</strong>
+    <br> <a href="https://www.linuxfromscratch.org/blfs/view/svn/index.html">一个与 Linux kernel 强相关的资源网站，拥有</a>
+    <br> <a href="https://www.linuxfromscratch.org/blfs/view/svn/basicnet/basicnet.html">Networking</a> 是这个网站网络部分的资料，
+         <a href="https://www.linuxfromscratch.org/blfs/view/svn/basicnet/netprogs.html">Networking Programs </a> 网络工具。
+</li>
+</ul>
+
+
+
 
 
 

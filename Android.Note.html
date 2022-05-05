@@ -505,6 +505,7 @@ dependencies {
 
 
 
+<div class="breadboard">
 <div class="head head_1">Android init</div>
 <p>
     Android Init 文件中主要存在五类对象： Actions、Commands、Services、Options 和 Imports。init 文件中可用 <code>#</code> 进行注释，并且可以使用 <code>${property.name}</code> 来使用系统属性
@@ -521,10 +522,40 @@ dependencies {
 <div class="head head_1">service 选项（option）</div>
 <ul>
 <li><strong>socket /name /type /perm [ /user [ /group [ /seclabel ] ] ]</strong>
-    <br>
+    <br> 该选项将会创建一个 unix domain socket 给 init 脚本。位置在 <code>/dev/socket/name</code>
+    <br> type 的值必须是 <code>dgram</code>， <code>stream</code>， <code>seqpacket</code> 这几个选项
+    
     Create a UNIX domain socket named /dev/socket/name and pass its fd to the launched process. type must be “dgram”, “stream” or “seqpacket”. type may end with “+passcred” to enable SO_PASSCRED on the socket. User and group default to 0. ‘seclabel’ is the SELinux security context for the socket. It defaults to the service security context, as specified by seclabel or computed based on the service executable file security context. For native executables see libcutils android_get_control_socket().
 </li>
 </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">Android init</div>
+<p>
+    Netd 是 Android 系统中专门负责网络管理和控制的后台 daemon 程序，主要三块功能。
+</p>
+<ul>
+<li> 网络设置：
+    设置防火墙 ( Firewall )、网络地址转换 ( NAT ) 、带宽控制、无线网卡软接入点 (Soft Access Point) 控制, 网络设备绑定 ( Tether ) 等。
+</li>
+<li> Android 系统中 DNS 信息的缓存和管理。
+</li>
+<li>服务：
+    网络服务搜索 ( Net Service Discovery, 简称NSD ) 功能, 包括服务注册( Service Registration )、服务搜索( Service Browse )和服务名解析 ( Service Resolv )等。
+</li>
+</ul>
+
+</div>    
 
 
 
@@ -537,6 +568,8 @@ dependencies {
 
 
 
+
+<div class="breadboard">
 <div class="head head_1">其他</div>
 <ul>
 <li><strong>将 system 以读写的方式挂载</strong>
@@ -639,6 +672,7 @@ cc_binary {
     </pre>
 </li>
 </ul>
+</div>
 
 
 
@@ -646,6 +680,7 @@ cc_binary {
 
 
 
+<div class="breadboard">
 <div class="head head_1">参考文档</div>
 <ul>
 <li><strong>toybox</strong>
@@ -656,8 +691,12 @@ cc_binary {
     <br> <a href="https://www.linuxfromscratch.org/blfs/view/svn/basicnet/basicnet.html">Networking</a> 是这个网站网络部分的资料，
          <a href="https://www.linuxfromscratch.org/blfs/view/svn/basicnet/netprogs.html">Networking Programs </a> 网络工具。
 </li>
-</ul>
+<li><strong>NetD</strong>
+    <br> <a href="https://blog.csdn.net/love_xsq/article/details/77983969">android netd的工作流程解析</a>
 
+</li>
+</ul>
+</div>
 
 
 

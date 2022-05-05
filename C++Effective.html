@@ -688,11 +688,67 @@ A operation( A a, T val ){
 </li>
 
 <li><strong>25: 考虑写出一个不抛异常的 swap 函数</strong>
+    <br> swap 即置换两个对象，意思是将两个对象的值赋予对方。默认情况下该动作是由标准程序库提供的 swap 算法完成的。其典型的实现如下所示：
+    <pre>
+namespace std{
+    template&lt;typename T&gt;
+    void swap( T& a, T& b ){
+        T temp(a);          // 该处用到了赋值函数
+        a = b;              // 该处用到了拷贝赋值
+        b = temp;           // ...
+    }
 
+}
+    </pre>
+    <br> 你可能注意到，默认 swap 函数会直接调用 copy 和 copy assignment 函数进行交换。但在你的应用场景中很可能你的 class 只有极少数需要交换的属性，那使用系统默认的方法可能导致你的 swap 过程浪费过多的系统资源，
+        甚至你还要承受 temp 对象的构造与析构过程。此时你可能想要编写一个定制化的 swap 函数。此时你需要做的事情如下所示。
+    <ol>
+    <li>
+        提供一个 public swap 成员函数，让之高效的置换你的类型的两个对象的值。
+    </li>
+    <li>
+        在你的 class 或者 template 所在的命名空间提供一个非成员( non-member ) swap 并令之调用上述 swap 成员函数。
+    </li>
+    <li>
+        如果你调用 swap, 可以使用一个 <code>using namespace_name::swap</code> 来暴漏你定义的方法，之后你可以在当前的作用域中不加 namespace 的方式来调用该 swap 函数。
+    </li>
+    </ol>
+    <br> 最后看起来可能想这样：
+    <pre>
+narnespace WidgetStuff {
+    ...
+
+    template<typenarne T>
+    class Widget { ... };
+
+    ...
+
+    template<typenarne T>
+    void swap( Widget<T>& a ,
+                Widget<T>& b){
+        a.swap(b) ;
+    }
+}
+
+template<typename T>
+void doSomething(T& objl, T& obj2)
+{
+using std:: swap; // 令 std::swap 在此函数内可用
+
+...
+swap(objl, obj2);
+...
+
+}
+
+    </pre>
 </li>
 
 <li><strong>26: 尽可能延后变量定义式的出现时间</strong>
-
+    <br> 该条规则比较容易理解，原文如下：
+    <br> 只要你定义了一个变量而其类型带有一个构造函数或析构函数，那么当程序的控制流 (control flow) 到达这个变量定义式时，你便得承受构造成本:当这个变量离开其作用域时，你便得承受析构成本。
+        即使这个变量最终并未被使用，仍需耗费这些成本，所以你应该尽可能避免这种情形。
+    <br> PS: 但对于传统 C 语言开发者可能会遇到一个问题，如果你用的编译器是 C99 以前的编译器（比如 C89 ），那么如果你要考虑 C/C++ 代码的可复用性，你必须将所有的变量定义在其他逻辑操作之前。
 </li>
 
 <li><strong>27: 尽量少做转型动作</strong>

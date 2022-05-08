@@ -12,7 +12,7 @@ a{
 }
 p{
     line-height: 1.4em;
-    text-indent:2em;
+    /* text-indent:2em; */
     margin-top: 0;
     margin-bottom: 0;
     padding: 0.3em 0;
@@ -516,10 +516,101 @@ dependencies {
 </p>
 <p>
     其中，<code>/system/etc/init/</code> 中存放 Android 核心组件的一些启动配置文件；<code>/vendor/etc/init/</code> 用于存放厂商的核心 SoC 功能所需的操作或守护程序。
+    而 <code>/odm/etc/init/</code> 目录则存放设备制造商的启动文件，如外设或者传感器的守护进程或初始化动作。
+</p>
+<p>
+    Action 和 Service 指示一个 section 的开始，所有的命令或者选项都属于先前定义的最近一个 section , 第一个区块以前的命令和选项将会被忽略。
+</p>
+<p>
+    另外 service 的名字必须被忽略，如果出现第二个同名的 service 名字，那么这个 service 将会被忽略，并且会答应 error 日志。
+</p>
+<p>
+    之前对于 Legacy devices 没有 first stage mount 机制，因此可以在 mount_all 阶段去导入 init 脚本，但是在后续版本中该特性被作废了，并且不允许在 Q 之后启动设备。
+</p>
+<p>
+    system / vendor / odm 分区的所有服务的可执行二进制文件或者脚本都应该在与之相关联的 .rc 文件都应该安装到所在分区的 <code>/etc/init</code> 目录中，并且每一个 .rc 文件应该包含其申明的服务的所有操作。
+    文件可以申明在 Android.mk 的 <code>LOCAL_INIT_RC</code> 宏中，编译的时候会自动安装到相应的目录。Android.pb 的编译代码如下所示：
+</p>
+<pre>
+prebuilt_etc {
+    name: "init_recovery.rc",
+    filename: "init.rc",
+    src: "etc/init.rc",
+    sub_dir: "init/hw",
+    recovery: true,
+}
+</pre>
+<p>
+    一个 logcat 例子， logcat 的代码位于 <code>system/core/logcat</code> 目录， logcatd.rc 也在其中。
+    在改目录下有一个  Android.mk 文件，文件中指定了 LOCAL_INIT_RC 宏，在编译的时候将 logcatd.rc 安装到 /system/etc/init 目录中。
+    init 将在 mount_all 期间加载 logcatd.rc ，而其将会在系统启动过程的适当时机被执行。
+</p>
+<p>
+    每个服务拥有自己 .rc 文件的方式优于以前一个大 init.rc 的方式，一方面在代码的管理方面，冲突会大大减少，另外 .rc 文件跟着工程走，这保证了我们可以非常方便的查找定位问题。 
+</p>
+<p>
+    因为 APEX 会应用到多个 Android 主线版本上，此时不同版本的 init.rc 可能不一致，由此在 APEX 中以 init.#rc 的方式命名了各个不同版本的 init.rc 文件，其中 # 为支持的 SDK 版本号（比如 init.rc, init.32rc, init.35rc ）。
+    而在编译的时候，编译器会找出最大的，最接近当前 SDK 版本的 init.rc 安装进去。(如果你的 SDK 为 32,33,34 则会选择 init.32rc, 而如果你的 SDK 版本 >= 35, 那么会选择 init.35rc)
 </p>
 
-<div class="head head_1">init Services</div>
-<div class="head head_1">service 选项（option）</div>
+<div class="head head_2">Actions</div>
+<p>
+    Action 是一系列指令的名字， Action 中有一个 trigger 字段，该字段标识该 action 在何时被调用。
+    动作被添加到队列中并根据包含它们的文件被解析的顺序执行（参见 import 部分），然后在单个文件中按顺序执行。
+</p>
+<p>    
+    Each action in the queue is dequeued in sequence and each command in that action is executed in sequence.
+     Init handles other activities (device creation/destruction, property setting, process restarting) “between” the execution of the commands in activities.
+</p>
+<p>
+    Action 的通用形式如下所示：
+</p>
+<pre>
+on \trigger [&& \trigger]*
+   \command
+   \command
+   \command
+</pre>
+<p>
+    比如下面这个例子：
+</p>
+<pre>
+on boot
+   setprop a 1
+   setprop b 2
+
+on boot && property:true=true
+   setprop c 1
+   setprop d 2
+
+on boot
+   setprop e 1
+   setprop f 2
+</pre>
+<p>
+    当 属性 true 的值为 true 时，执行的顺序如下所示：
+</p>
+<pre>
+    setprop a 1
+    setprop b 2
+    setprop c 1
+    setprop d 2
+    setprop e 1
+    setprop f 2
+</pre>
+
+<div class="head head_2">Services</div>
+<p>
+    Services 是一个在开机时需要启动的一个程序，其可以指定是否在程序退出时，自动重启。 Service 的格式如下所示：
+</p>
+<pre>
+service \name \pathname [ \argument ]*
+   \option
+   \option
+   ...
+</pre>
+
+<div class="head head_2">Options</div>
 <ul>
 <li><strong>socket /name /type /perm [ /user [ /group [ /seclabel ] ] ]</strong>
     <br> 该选项将会创建一个 unix domain socket 给 init 脚本。位置在 <code>/dev/socket/name</code>
@@ -528,6 +619,14 @@ dependencies {
     Create a UNIX domain socket named /dev/socket/name and pass its fd to the launched process. type must be “dgram”, “stream” or “seqpacket”. type may end with “+passcred” to enable SO_PASSCRED on the socket. User and group default to 0. ‘seclabel’ is the SELinux security context for the socket. It defaults to the service security context, as specified by seclabel or computed based on the service executable file security context. For native executables see libcutils android_get_control_socket().
 </li>
 </ul>
+
+<div class="head head_2">参考文档</div>
+<ul>
+<li>
+    <a href="https://android.googlesource.com/platform/system/core/+/master/init/README.md">Andrid init 官方说明文档。</a>
+</li>
+</ul>
+
 </div>
 
 
@@ -540,7 +639,7 @@ dependencies {
 
 
 <div class="breadboard">
-<div class="head head_1">Android init</div>
+<div class="head head_1">Android NetD</div>
 <p>
     Netd 是 Android 系统中专门负责网络管理和控制的后台 daemon 程序，主要三块功能。
 </p>
@@ -554,6 +653,14 @@ dependencies {
     网络服务搜索 ( Net Service Discovery, 简称NSD ) 功能, 包括服务注册( Service Registration )、服务搜索( Service Browse )和服务名解析 ( Service Resolv )等。
 </li>
 </ul>
+
+<p>
+    Netd 接收并处理来自 Framework 层中 NetworkManagementService 或 NsdService 的命令。
+    这些命令最终由 Netd 中对应的 Command 对象去处理。Net 接收并解析来自 Kernel 的 UEvent 消息, 然后再转发给 Framework 层中对应 Service 去处理。
+</p>
+<p>
+    Netd 进程由 init 进程根据 init.rc 的对应配置项而启动。
+</p>
 
 </div>    
 
@@ -671,6 +778,10 @@ cc_binary {
 }
     </pre>
 </li>
+<li><strong>APEX</strong>
+
+</li>
+
 </ul>
 </div>
 

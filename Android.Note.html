@@ -507,6 +507,12 @@ dependencies {
 
 <div class="breadboard">
 <div class="head head_1">Android init</div>
+https://android.googlesource.com/platform/system/core/+/master/init/README.md
+http://gityuan.com/2016/02/05/android-init/
+https://segmentfault.com/a/1190000023184321
+<p>
+    init 程序的源码位于 <code>system/core/init</code> 中。而解析 init.rc 文件的函数入口为 <code>parse_config_file</code>。.rc 中的 service 信息会被存放在 server_list 中。
+</p>
 <p>
     Android Init 文件中主要存在五类对象： Actions、Commands、Services、Options 和 Imports。init 文件中可用 <code>#</code> 进行注释，并且可以使用 <code>${property.name}</code> 来使用系统属性
     （如：<code>import /init.recovery.${ro.hardware}.rc</code> ）。

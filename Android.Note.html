@@ -661,6 +661,29 @@ service \name \pathname [ \argument ]*
 </ul>
 
 <p>
+    Netd 启动的时候会创建这么几个 socket:
+    netd / mdns -- Framework 层中的 NetworkManagementService 和 NsdService 将分别和 netd 及 mdns 监听 socket 建立链接并交互;
+    dnsproxyd -- 每一个调用和域名解析相关的 socket API (如 getaddrinfo 或 gethostbyname 等) 的进程都会借由 dnsproxyd 监听 socket 与 netd 建立链接;
+    fwmarkd -- fwmarkd 和底层 kernel 交互, 防火墙 firewall 会对进来的包做标记。
+    如下所示：
+</p>
+<pre>
+rk3588_firefly_itx_3588j:/system # cat etc/init/netd.rc
+service netd /system/bin/netd
+    class main
+    capabilities CHOWN DAC_OVERRIDE DAC_READ_SEARCH FOWNER IPC_LOCK KILL NET_ADMIN NET_BIND_SERVICE NET_RAW SETUID SETGID
+    socket dnsproxyd stream 0660 root inet
+    socket mdns stream 0660 root system
+    socket fwmarkd stream 0660 root inet
+    onrestart restart zygote
+    onrestart restart zygote_secondary
+    # b/121354779: netd itself is not updatable, but on startup it dlopen()s the resolver library
+    # from the DNS resolver APEX. Mark it as updatable so init won't start it until all APEX
+    # packages are ready.
+    updatable
+</pre>
+
+<p>
     Netd 接收并处理来自 Framework 层中 NetworkManagementService 或 NsdService 的命令。
     这些命令最终由 Netd 中对应的 Command 对象去处理。Net 接收并解析来自 Kernel 的 UEvent 消息, 然后再转发给 Framework 层中对应 Service 去处理。
 </p>
@@ -785,6 +808,12 @@ cc_binary {
     </pre>
 </li>
 <li><strong>APEX</strong>
+
+</li>
+
+<li><strong>内存测试</strong>
+    <br> <a href="https://github.com/stressapptest/stressapptest">stressapptest</a>
+    <br> 
 
 </li>
 

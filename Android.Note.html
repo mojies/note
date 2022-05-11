@@ -643,6 +643,40 @@ service \name \pathname [ \argument ]*
 
 
 
+<div class="breadboard">
+<div class="head head_1">Service</div>
+<p>
+    了解 Service 你可能需要先了解 Binder, 这里有一篇解释 Binder 的文章写得还挺详细的：<a href="https://zhuanlan.zhihu.com/p/35519585">写给 Android 应用工程师的 Binder 原理剖析</a>
+</p>
+<div class="head head_1">publishBinderService和publishLocalService区别</div>
+<p>
+    参考文档：<a href="https://blog.csdn.net/u010871962/article/details/120047716">publishBinderService和publishLocalService区别</a>
+</p>
+<p>
+    摘要： 1. 通过 publishBinderService 方法发布的 Service 上层可以访问对应服务 Manager; 2. 通过 publishLocalService 方法发布的 Service, 上层不可以访问对应服务 Manager, 只能 System 进程访问。
+</p>
+<p>
+    查看 Android 系统中启动的 service 可以使用： <code>service list</code>
+</p>
+<ul>
+<li>
+
+</li>
+</ul>
+
+<ul>
+<li><strong>./frameworks/base/core/java/android/os/ServiceManager.java</strong>
+    <br> <code>public static IBinder getService(String name)</code>
+</li>
+</ul>
+
+</div>    
+
+
+
+
+
+
 
 <div class="breadboard">
 <div class="head head_1">Android NetD</div>
@@ -689,6 +723,43 @@ service netd /system/bin/netd
 </p>
 <p>
     Netd 进程由 init 进程根据 init.rc 的对应配置项而启动。
+</p>
+
+<p>
+    NetdService
+</p>
+<p>
+    假定你已经熟悉 ServiceManager 相关知识，
+    假定你已经熟悉基本的网络知识： ethnet, wifi, 七层架构，四层架构，路由，常规网络管理知识， IPV4/IPV6, DNS, DHCP ...
+</p>
+
+<ol>
+<li><strong>./system/netd/server/binder/android/net/INetd.aidl</strong>
+    <br> <code>./system/netd</code> 下定义了好几个版本的 INetd.aidl 请仔细甄别使用的是哪一个
+
+</li>
+<li><strong>./frameworks/base/services/net/java/android/net/util/NetdService.java</strong>
+    <br> 返回 Netd service 实例： <code>final INetd netdInstance = INetd.Stub.asInterface(ServiceManager.getService(Context.NETD_SERVICE));</code>
+</li>
+<li><strong>./frameworks/libs/net/client-libs/netd/com/android/net/module/util/NetdUtils.java</strong>
+    <br> 该类主要提供一些功能函数的封装，借由 netd 赖对 interface 进行一些基本的操作，其中包括： 获取和设置 interface 的配置 <code>getInterfaceConfigParcel</code> <code>setInterfaceConfig</code>,
+         up/down interface <code>setInterfaceUp</code>, <code>setInterfaceDown</code>
+</li>
+
+<li><strong>./frameworks/opt/net/ethernet/java/com/android/server/ethernet/EthernetNetworkFactory.java</strong>
+    <br> 提供操作 Ethnet 的一些基础函数，包括： <code>hasInterface</code>, <code>updateIpConfiguration</code>, <code>getIpAddress</code>, <code>getNetmask</code> ...
+    <br> 其中 updateIpConfiguration 可以直接设置 Ethnet 的一些配置，比如说 DHCP
+</li>
+
+<li><strong>./frameworks/opt/net/ethernet/java/com/android/server/ethernet/EthernetTracker.java</strong>
+    <br> 该类在创建之后调用 <code>void start()</code> 会调用 <code>mNMService.registerObserver(new InterfaceObserver());</code> 向 INetworkManagementService 注册 <code>BaseNetworkObserver</code> 观察者。
+        该 Observer 主要用于监听网络的状态变化（如： <code>interfaceLinkStateChanged</code>, <code>interfaceAdded</code>, <code>interfaceRemoved</code> ）。
+</li>
+
+
+</ol>
+<p>
+    为解决的问题： framework 各个目录中 net 的关系是如何的
 </p>
 
 </div>    
@@ -814,6 +885,18 @@ cc_binary {
 <li><strong>内存测试</strong>
     <br> <a href="https://github.com/stressapptest/stressapptest">stressapptest</a>
     <br> 
+
+</li>
+
+<li><strong>Java 语言 ublic, protected, private, 不加修饰符 的区别</strong>
+    <br>
+    <table>
+        <thead><tr><th>修饰符</th><th>类内部</th><th>同个包（package）</th><th>子类</th><th>其他范围</th></tr></thead>
+        <tbody><tr><td>public</td><td>Y</td><td>Y</td><td>Y</td><td>Y</td></tr>
+            <tr><td>protected</td><td>Y</td><td>Y</td><td>Y</td><td>N</td></tr>
+            <tr><td>无修饰符</td><td>Y</td><td>Y</td><td>Y或者N(见说明)</td><td>N</td>
+            </tr><tr><td>private</td><td>Y</td><td>N</td><td>N</td><td>N</td></tr></tbody></table>
+    <br> 说明：需要特别说明“无修饰符”这个情况，子类能否访问父类中无修饰符的变量/方法，取决于子类的位置。如果子类和父类在同一个包中，那么子类可以访问父类中的无修饰符的变量/方法，否则不行。
 
 </li>
 

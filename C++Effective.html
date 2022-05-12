@@ -752,6 +752,85 @@ swap(objl, obj2);
 </li>
 
 <li><strong>27: 尽量少做转型动作</strong>
+    <br> C++ 规则的设计目标之一是，保证"类型错误"绝不可能发生。理论上如果你的程序很"干净地"通过编译，就表示它并不企图在任何对象身上执行任何不安全、无意义、愚蠢荒谬的操作。这是一个极具价值的保证，可别草率地放弃它。 -- 原文
+    <br> 不幸的是，转型 (casts) 破坏了类型系统 (type system) 。那可能导致任何种类的麻烦，有些容易辨识，有些非常隐晦。如果你来自 C / Java / C# 阵营，请特别注意，
+        因为那些语言中的转型 ( casting ) 比较必要而无法避免，也比较不危险(与 C++ 相较)。但 C++ 不是 C ，也不是 Java 或 C#。在 C++ 中转型是一个你会想带着极大尊重去亲近的一个特性。
+    <br> C++ 支持 C 的转型风格，如 <code>(T)expression</code> ；也支持函数转型风格，如 <code>T(expression)</code>。 这两种形式并无太大的区别，纯粹是小括号摆放位置不同。
+    <br> 同时 C++ 还支持四种新的转型方式( C++11 引入 ): <code>const_cast&lt;T&gt;(expression)</code>, <code>dynamic_cast&lt;T&gt;(expression)</code>, 
+        <code>reinterpret_cast&lt;T&gt;(expression)</code>, <code>static_cast&lt;T&gt;(expression)</code>
+    <br> canst_cast 通常被用来将对象的常量性转除( cast away the constness )。它也是唯一有此能力的 C++-style 转型操作符。
+    <br> dynamic_cast 主要用来执行 "安全向下转型" ( safe downcasting )，也就是用来决定某对象是否归属继承体系中的某个类型。
+        它是唯一无法由旧式语法执行的动作，也是唯一可能耗费重大运行成本的转型动作(稍后细谈〉。
+    <br> reinterpret_cast 意图执行低级转型，实际动作(及结果)可能取决于编译器，这也就表示它不可移植，例如将一个 pointer to int 转型为一个 int。
+        这一类转型在低级代码以外很少见。本书只使用一次，那是在讨论如何针对原始内存 (raw memory) 写出一个调试用的分配器 (debugging allocator) 时，见条款 50。
+    <br> static_cast 用来强迫隐式转换 (implicit conversions) ，例如将 non-const 对象转为 const 对象(就像条款 3 所为) ，或将 int 转为 double 等等。
+        它也可以用来执行上述多种转换的反向转换, 例如将 void* 指针转为 typed* 指针，将 pointer-to-base 转为 pointer-to-derived。
+        但它无挂将 const 转为 non-canst (这个动作只有 canst cast 才办得到）。
+
+    <br>
+    <br> 为什么要搞这么复杂？老式转型不香吗？原因其一在于将在开发过程中我们会将转型进行人为的分类，从而在类型转换出问题的时候更加方便定位问题；
+        原因之二是方便编译器诊断错误（比如，你不能在无意识的情况下将一个 const 类型转化为 non-const 类型， 除非你使用 const_cast ）。
+    <br> 程序员往往会存在一个误区，认为转型只是告诉编译器如何处理代码，但实际上其实不是。举一个很简单的例子， int 和 double 在内存中的表示方式完全不同，因此编译器在编译的过程中会为止生成一个转换过程，如下所示：
+    <pre>
+int i = 0;
+double y = static_cast&lt;T&gt;(i);
+    </pre>
+    <br> 或许这个例子非常的明显，但是下面这两个例子嘞？派生类指向的地址可不能直接赋值给基类指针（往往会存在偏移）。
+    <pre>
+// 这个嘞
+class base{...};
+class derived: public base{...};
+derived d;
+base *b = &amp;b;  // err, 因为基类中可能存在虚函数
+
+// 上面那个不够明显那么这个嘞
+// 这个嘞， 不会 base1 和 base2 的指针都是一个吧
+class base1{...};
+class base2{...};
+class derived: public base{...};
+derived d;
+base1 *b1 = &amp;b; // err
+base2 *b2 = &amp;b; // err
+    </pre>
+    <br> 下面是原文中一段发人深省的一段话：“但请注意，我说的是有时候需要一个偏移量。对象的布局方式和它们的地址计算方式随编译器的不同而不同，
+        那意味"由于知道对象如何布局"而设计的转型，在某一平台行得通，在其他平台并不一定行得通。这个世界有许多悲惨的程序员，他们历经千辛万苦才学到这堂课。”
+
+    <br>
+    <br> 有时候我们还会写一些误认为正确的代码，比如下面这样：
+    <pre>
+class A{
+public:
+    int a;
+    virtual void set_a(void){
+        a = 10;
+    }
+
+};
+
+class B: public A{
+public:
+    int a;
+
+    void set_a(void){
+        a = 1;
+        static_cast&lt;A&gt;(*this).set_a();
+        std::cout &lt;&lt; a &lt;&lt; std::endl; // err; variable a still equal 1
+    }
+};
+
+// 如果上面不明显，那么下面这样写嘞？
+class B: public A{
+public:
+    int a;
+
+    void set_a(void){
+        A ca = static_cast<A>(*this);
+        ca.set_a();
+        std::cout &lt;&lt; a &lt;&lt; std::endl;
+        std::cout &lt;&lt; ca.a &lt;&lt; std::endl;
+    }
+};
+    </pre>
 
 </li>
 

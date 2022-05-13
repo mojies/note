@@ -901,6 +901,34 @@ cc_binary {
 
 </li>
 
+<li><strong>Android 的启动流程</strong>
+    <br> bootloader -> Linux 内核 -> init 进程 -> init 配置文件 -> zygote (JVM / JNI) -> SystemServer
+    <br> SystemServer -> 开 Binder 线程池 + SystemServiceManager -> (AMS / WMS / PMS / CS / SS ...)
+    <br>  AMS -> Lancher.java -> 
+    <br> 应用启动： Lancher.java -> 冷启动/热启动 -> AMS -> Zygote ->fork -> ActivityThread.java
+    <br>
+    <br> init -> system/core/init -> init.cpp
+    <br> init.rc -> system/core/rootdir
+    <br> Android 的基础服务是从 init.zygote*.rc 配置中启动的
+    <br> Lancher.java -> packages/apps/Lancher*
+    <br> 冷启动用 Instramentation， 热启动用 bindler
+    <br> AMS -> Instramentation -> Activity/fragment/application
+    <br> 
+    
+</li>
+<li><strong>Android 的启动流程</strong>
+
+</li>
+<li><strong>Android 的启动流程</strong>
+
+</li>
+<li><strong>Android 的启动流程</strong>
+
+</li>
+<li><strong>Android 的启动流程</strong>
+
+</li>
+
 </ul>
 </div>
 

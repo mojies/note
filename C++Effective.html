@@ -229,6 +229,100 @@ img{
 
 
 
+<div class="breadboard">
+<div class="head head_1">基础知识</div>
+<p>
+    此处仅会记录我在学习过程中遇到的一些自己在某个阶段容易弄混的概念，因此这是一个并不完备的知识点集合，也是一个看上去有点混乱的集合。
+</p>
+
+<div class="head head_2">C++ 模板特化</div>
+<p>
+    首先摘抄一段模板的定义：“模板就是实现代码重用机制的一种工具，它可以实现类型参数化，即把类型定义为参数， 从而实现了真正的代码可重用性。模版可以分为两类，一个是函数模版，另外一个是类模版。” From: 
+    <a href="https://zhuanlan.zhihu.com/p/346400616">C++ 模板 全特化与偏特化</a>
+</p>
+<p>
+    那么什么是模板的特化？模板特化是模板的一个特殊情况，比如说，你之前已经定义了一个模板，但是在定义的模板中并不支持某种特殊情况，那么这个时候可能我们需要对模板再这种特殊情况做特殊说明。
+</p>
+<p>
+    举个例子，比如你先定义了一个求两个参数是否相等的模板，如下所示：
+</p>
+<pre>
+template&lt;typename T&gt;
+bool EQ(T a, T b){
+    return a == b;
+}
+</pre>
+<p>
+    但你知道这个函数并不能处理 T == float 的情况，因此，此时我们需要对 float 类型做一个特殊的处理，如下所示：
+</p>
+<pre>
+template&lt;&gt;
+bool EQ(float a, float b)
+{
+ return ( abs(a-b) &lt; 10e-3 );
+}
+</pre>
+
+<p>
+    <strong>而模板分为函数模板和类模板，模板的特化分为全特化和偏特化，其中类模板支持全特化和偏特化，而函数模板仅支持全特化。</strong> 
+</p>
+<p>
+    接下来介绍一下全特化和偏特化。全特化即需要制定模板中所有模板参数的具体类型，而片特化只需要制定其中的一部分。如下所示：
+</p>
+<pre>
+存在模板
+template&lt;typename T1, typename T2&gt;
+class A{
+public:
+    void func1( T1 a, T2 b ){
+        ...
+    }
+    ...
+};
+
+template&lt;typename T1, typename T2&gt;
+void func1( T1 a, T2 b ){
+    ...
+}
+
+// 全特化
+template&lt;&gt;
+class A&lt;float, int&gt;{
+    void func1( float a, int b ){
+        ...
+    }
+    ...
+}
+
+template&lt;&gt;
+void func1( float a, int b ){
+    ...
+}
+
+// 偏特化
+template&lt;T&gt;
+class A&lt;float, T&gt;{
+    void func1( float a, T b ){
+        ...
+    }
+    ...
+}
+</pre>
+<p>
+    此外，还找到一篇感觉讲解比较全的文章：<a href="https://sg-first.gitbooks.io/cpp-template-tutorial/content/jie_te_hua_yu_pian_te_hua.html">深入理解特化与偏特化</a>，
+</p>
+</div>    
+
+
+
+
+
+
+
+
+
+
+
 
 <div class="breadboard">
 <div class="head head_1">Effective C++ 笔记</div>

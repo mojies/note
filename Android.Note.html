@@ -345,59 +345,77 @@ ndk.dir=D\:\\AndroidSDK\\ndk\\24.0.8215888
     <br> 在 top 目录进行建构，其可指定特定的名称来建构指定模块
     <br> 这些名称在哪里找？
 </li>
-<li><strong>mm</strong>
+<li><strong>mm</strong> 和 <strong>mma</strong>
     构建当前目录中的工程
 </li>
-<li><strong>mmm</strong>
-</li>
-<li><strong>mma</strong>
-    构建当前目录中的所有模块及其依赖项。
-</li>
-<li><strong>mmma</strong>
+<li><strong>mmm</strong> 和 <strong>mmma</strong>
+    构建和安装指定目录中的所有 modules 以及它们的依赖。可用 <code>mmm dir/:target1,target2</code> 来限制构建的对象。
 </li>
 <li><strong>provision</strong>
+    Flash device with all required partitions. Options will be passed on to fastboot.
 </li>
 <li><strong>cgrep</strong>
+    Greps on all local C/C++ files
 </li>
 <li><strong>ggrep</strong>
+    Greps on all local Gradle files
 </li>
 <li><strong>gogrep</strong>
+    Greps on all local Go files
 </li>
 <li><strong>jgrep</strong>
+    Greps on all local Java files.
 </li>
 <li><strong>ktgrep</strong>
+    Greps on all local Kotlin files
 </li>
 <li><strong>resgrep</strong>
+    Greps on all local res/*.xml files
 </li>
 <li><strong>mangrep</strong>
+    Greps on all local AndroidManifest.xml files
 </li>
 <li><strong>mgrep</strong>
+    Greps on all local Makefiles and *.bp files
 </li>
 <li><strong>owngrep</strong>
+    Greps on all local OWNERS files
 </li>
 <li><strong>rsgrep</strong>
+    Greps on all local Rust files
 </li>
 <li><strong>sepgrep</strong>
+    Greps on all local sepolicy files
 </li>
 <li><strong>sgrep</strong>
+    Greps on all local source files
 </li>
 <li><strong>godir</strong>
+    Go to the directory containing a file
 </li>
 <li><strong>allmod</strong>
+    List all modules
 </li>
 <li><strong>gomod</strong>
+    Go to the directory containing a module
 </li>
 <li><strong>pathmod</strong>
+    Get the directory containing a module
 </li>
 <li><strong>outmod</strong>
+    Gets the location of a module's installed outputs with a certain extension
 </li>
 <li><strong>dirmods</strong>
+    Gets the modules defined in a given directory.
 </li>
 <li><strong>installmod</strong>
+    Adb installs a module's built APK.
 </li>
 <li><strong>refreshmod</strong>
+    Refresh list of modules for allmod/gomod/pathmod/outmod/installmod.
 </li>
 <li><strong>syswrite</strong>
+    Remount partitions (e.g. system.img) as writable, rebooting if necessary
 </li>
 
 </ul>
@@ -405,6 +423,10 @@ ndk.dir=D\:\\AndroidSDK\\ndk\\24.0.8215888
     <code>envsetup.sh</code> 
 </p>
 
+<p>
+    <code>TARGET_DEVICE_DIR</code> 保存当前板级编译配置的路径。
+    比如我编译的板级为 <code>rk3588_firefly_itx_3588j-userdebug</code>， 那么 <code>TARGET_DEVICE_DIR</code> 的值为 <code>device/rockchip/rk3588/rk3588_firefly_itx_3588j</code>
+</p>
 </div>
     
 

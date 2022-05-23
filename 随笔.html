@@ -12,7 +12,7 @@ a{
 }
 p{
     line-height: 1.4em;
-    text-indent:2em;
+    /* text-indent:2em; */
     margin-top: 0;
     margin-bottom: 0;
     padding: 0.3em 0;
@@ -242,6 +242,299 @@ img{
 <div class="head head_1">DTS 如何加载一个 DTS</div>
 
 </div>
+
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">iperf3</div>
+<div class="head head_2">介绍</div>
+<p>
+    iPerf3 是一种用于主动测量 IP 网络上可实现的最大带宽的工具。 它支持多种参数的调试，如 timing, buffers, protocols( TCP, UDP, IPv4 / IPv6 的 SCTP )。 
+    对于每个测试，它都会报告带宽、丢包率和一些其他的参数。 这是一个新的实现，它与原始 iPerf 不共享任何代码，也不向后兼容。
+    iPerf was orginally developed by NLANR/DAST. iPerf3 is principally developed by ESnet / Lawrence Berkeley National Laboratory. It is released under a three-clause BSD license。
+    详细信息参考：
+    <a href="https://iperf.fr/">iperf3 官网</a>
+</p>
+<p>
+    iperf3 支持测试 TCP 的带宽, MSS/MTU, 另外还支持调整 socket buffer 和的窗口大小。对于 UDP, 支持测量带宽，丢包率, delay/jitter, 以及多播能力。
+</p>
+<p>
+    其支持多种客户端可以直接再官网上下载 bin 文件或者自行编译： Windows, Linux, Android, MacOS X, FreeBSD, OpenBSD, NetBSD, VxWorks, Solaris,...
+</p>
+
+<div class="head head_2">参数列表</div>
+<p>
+    Linux 端支持的参数列表和 Windows 端支持的参数列表是不一样的，而这里仅仅支持常用的一些，对于各个平台的差异还请自己查询官方文档。
+</p>
+<p>
+    下面介绍以 server 模式运行时的独有参数：
+</p>
+<ul>
+<li><strong>-s</strong> / <strong>--server</strong>
+    <br> 以 server 模式运行
+</li>
+<li><strong>-D</strong> / <strong>--daemon</strong>
+    <br> 以 daemon 的形式与逆行 server
+</li>
+<li><strong>-1</strong> / <strong>--one-off</strong>
+    <br> 处理完一个 client 之后就退出
+</li>
+</ul>
+
+<p>
+    下面介绍以 Client 模式运行时的独有参数：
+</p>
+<ul>
+<li><strong>-c</strong> / <strong>--client</strong>
+    <br> 以 client 模式运行，后指定 host 地址
+</li>
+<li><strong>-u</strong> / <strong>--udp</strong>
+    <br> 测量 UDP 数据，否则测量 TCP 数据
+</li>
+<li><strong>-b</strong> / <strong>--bandwidth</strong>
+    <br> 指定带宽，单位为 bits/seconds 
+    <br> 可接受 [K/M/G] 单位（忽略大小写）
+    <br> 如果不指定，默认 UDP 为 1M, TCP 无限制
+    <br> 如果设置为 0 则代表不限制
+    <br> 如果再 brust 模式，则可追加 [/#] 进行数据包计数
+</li>
+<li><strong>-t</strong> / <strong>--time</strong>
+    <br> 指定测量事件，默认为 10s
+    <br> 单位为 seconds
+</li>
+<li><strong>-n</strong> / <strong>--bytes</strong>
+    <br> 指定总共传输多少个 byte , 该参数会覆盖 <code>-t</code>
+    <br> 可接受 [K/M/G] 单位（忽略大小写）
+
+</li>
+<li><strong>-k</strong> / <strong>--blockcount</strong>
+    <br> 指定传输多少个 blocks( packages )
+    <br> 将会覆盖 <code>-t</code> 和 <code>-n</code> 两个参数
+    <br> 可接受 [K/M/G] 单位（忽略大小写）
+</li>
+<li><strong>-l</strong> / <strong>--len</strong>
+    <br> 指定读写 buffer
+    <br> 默认 TCP 为 128KB, UDP 为 8KB
+    <br> 可接受 [K/M/G] 单位（忽略大小写）
+</li>
+<li><strong>-cport</strong>
+    <br> 指定绑定 client 端的端口
+</li>
+<li><strong>-P</strong> / <strong>--parallel</strong>
+    <br> 指定并行运行的 client 数量
+</li>
+<li><strong>-R</strong> / <strong>--reservse</strong>
+    <br> 工作在 server 发送 client 接收的模式
+</li>
+<li><strong>-w</strong> / <strong>--windwo</strong>
+    <br> 指定窗口大小 / socket buffer size
+    <br> 可接受 [K/M/G] 单位（忽略大小写）
+</li>
+<li><strong>-M</strong> / <strong>--set-mss</strong>
+    <br> 指定 TCP/SCTO 的最大分段大小
+</li>
+<li><strong>-N</strong> / <strong>--no-delay</strong>
+    <br> 设置 TCP/IP 的 no delay 模式， 禁止 Nagle's 算法
+</li>
+<li><strong>-4</strong> / <strong>--version4</strong>
+    <br> only use IPv4
+</li>
+<li><strong>-6</strong> / <strong>--version6</strong>
+    <br> only use IPv6
+</li>
+<li><strong>-S</strong> / <code>--tos</code>
+    <br> 指定出战数据包的 `type-of-service` 字段（但注意，很多路由器会忽略这个字段）
+    <br> IPTOS_LOWDELAY     minimize delay        0x10
+    <br> IPTOS_THROUGHPUT   maximize throughput   0x08
+    <br> IPTOS_RELIABILITY  maximize reliability  0x04
+    <br> IPTOS_LOWCOST      minimize cost         0x02
+</li>
+<li><strong>-Z</strong> / <strong>--zerocopy</strong>
+    <br> 使用零拷贝的方式来发送数据
+</li>
+<li><strong>-O</strong> / <strong>--omit</strong>
+    <br> 忽略前 n 秒的数据
+    <br> 主要跳过 TCP 的慢启动阶段
+</li>
+<li><strong>-T</strong> / <strong>--title</strong>
+    <br> 给每一行测试数据加上前缀字符串
+</li>
+<li><strong>--get-server-output</strong>
+    <br> 从 server 端获取测试结果
+</li>
+<li><strong>--udp-counters-64bit</strong>
+    <br> 在 UDP 测试中使用 64bit 的计数器
+</li>
+</ul>
+
+<p>
+    下面介绍共有的一些参数：
+</p>
+<ul>
+<li><strong>-v/--version</strong>
+    <br> 展示版本号
+</li>
+<li><strong>-p</strong> / <strong>--port</strong>
+    <br> 指定监听或者连接的端口
+</li>
+<li><strong>-f</strong> / <strong>--format</strong>
+    <br> 报告格式
+    <br> 可接受 [K/M/G] 单位（忽略大小写）
+</li>
+<li><strong>-i</strong> / <strong>--interval</strong>
+    <br> 报告测试结果的间隔
+    <br> 默认为 1 seconds
+</li>
+<li><strong>-F</strong> / <strong>--file</strong>
+    <br> 指定发送或者接收的文件
+</li>
+<li><strong>-B</strong> / <strong>--bind</strong>
+    <br> 指定绑定的 interface
+</li>
+<li><strong>-J</strong> / <strong>--json</strong>
+    <br> 以 JSON 格式输出
+</li>
+</ul>
+
+<div class="head head_2">使用方法</div>
+<p>
+    以下例子测试 TCP 传输性能，并在统计数据中去除前几秒的影响。
+</p>
+<pre>
+// ---------------------------------------------------------------------------------> SERVER PART
+pi@raspberrypi:~ $ iperf3 -s
+-----------------------------------------------------------
+Server listening on 5201
+-----------------------------------------------------------
+
+// ---------------------------------------------------------------------------------> CLIENT PART
+$ ./iperf3.exe -c  172.16.20.74 -p 5201 -b 10M -O 3 --get-server-output
+Connecting to host 172.16.20.74, port 5201
+[  4] local 10.1.114.200 port 10908 connected to 172.16.20.74 port 5201
+[ ID] Interval           Transfer     Bandwidth
+[  4]   0.00-1.00   sec  1.25 MBytes  10.5 Mbits/sec                  (omitted)
+[  4]   1.00-2.00   sec   512 KBytes  4.19 Mbits/sec                  (omitted)
+[  4]   2.00-3.00   sec   384 KBytes  3.15 Mbits/sec                  (omitted)
+[  4]   0.00-1.00   sec   512 KBytes  4.19 Mbits/sec
+[  4]   1.00-2.00   sec   512 KBytes  4.19 Mbits/sec
+[  4]   2.00-3.00   sec   512 KBytes  4.20 Mbits/sec
+[  4]   3.00-4.00   sec   384 KBytes  3.14 Mbits/sec
+[  4]   4.00-5.00   sec  0.00 Bytes  0.00 bits/sec
+[  4]   5.00-6.00   sec   128 KBytes  1.05 Mbits/sec
+[  4]   6.00-7.00   sec   512 KBytes  4.20 Mbits/sec
+[  4]   7.00-8.00   sec   256 KBytes  2.10 Mbits/sec
+[  4]   8.00-9.00   sec   896 KBytes  7.35 Mbits/sec
+[  4]   9.00-10.00  sec   640 KBytes  5.24 Mbits/sec
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth
+[  4]   0.00-10.00  sec  4.25 MBytes  3.56 Mbits/sec                  sender
+[  4]   0.00-10.00  sec  4.17 MBytes  3.50 Mbits/sec                  receiver
+
+Server output:
+-----------------------------------------------------------
+Server listening on 5201
+-----------------------------------------------------------
+Accepted connection from 10.1.114.200, port 10907
+[  5] local 172.16.20.74 port 5201 connected to 10.1.114.200 port 10908
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  1.02 MBytes  8.53 Mbits/sec                  (omitted)
+[  5]   1.00-2.00   sec   549 KBytes  4.49 Mbits/sec                  (omitted)
+[  5]   2.00-3.00   sec   426 KBytes  3.49 Mbits/sec                  (omitted)
+[  5]   0.00-1.00   sec   443 KBytes  3.63 Mbits/sec
+[  5]   1.00-2.00   sec   492 KBytes  4.03 Mbits/sec
+[  5]   2.00-3.00   sec   531 KBytes  4.34 Mbits/sec
+[  5]   3.00-4.00   sec   369 KBytes  3.03 Mbits/sec
+[  5]   4.00-5.00   sec  62.7 KBytes   514 Kbits/sec
+[  5]   5.00-6.00   sec   118 KBytes   969 Kbits/sec
+[  5]   6.00-7.00   sec   590 KBytes  4.84 Mbits/sec
+[  5]   7.00-8.00   sec   171 KBytes  1.40 Mbits/sec
+[  5]   8.00-9.00   sec   909 KBytes  7.44 Mbits/sec
+[  5]   9.00-10.00  sec   580 KBytes  4.75 Mbits/sec
+[  5]  10.00-10.08  sec  4.28 KBytes   436 Kbits/sec
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-10.08  sec  4.17 MBytes  3.47 Mbits/sec                  receiver
+
+
+iperf Done.
+</pre>
+<p>
+    下面的例子用于测试 UDP 传输性能，并评估环境中的丢包率：
+</p>
+<pre>
+$ ./iperf3.exe -c  172.16.20.74 -p 5201 -b 10M -u --get-server-output
+Connecting to host 172.16.20.74, port 5201
+[  4] local 10.1.114.200 port 63273 connected to 172.16.20.74 port 5201
+[ ID] Interval           Transfer     Bandwidth       Total Datagrams
+[  4]   0.00-1.00   sec  1.09 MBytes  9.10 Mbits/sec  139
+[  4]   1.00-2.00   sec  1.27 MBytes  10.7 Mbits/sec  163
+[  4]   2.00-3.00   sec  1.18 MBytes  9.90 Mbits/sec  151
+[  4]   3.00-4.00   sec  1.24 MBytes  10.4 Mbits/sec  159
+[  4]   4.00-5.00   sec  1.10 MBytes  9.25 Mbits/sec  141
+[  4]   5.00-6.00   sec  1.20 MBytes  10.0 Mbits/sec  153
+[  4]   6.00-7.00   sec  1.16 MBytes  9.76 Mbits/sec  149
+[  4]   7.00-8.00   sec  1.30 MBytes  10.9 Mbits/sec  167
+[  4]   8.00-9.00   sec  1.12 MBytes  9.37 Mbits/sec  143
+[  4]   9.00-10.00  sec  1.23 MBytes  10.3 Mbits/sec  157
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Jitter    Lost/Total Datagrams
+[  4]   0.00-10.00  sec  11.9 MBytes  9.97 Mbits/sec  1.460 ms  919/1516 (61%)
+[  4] Sent 1516 datagrams
+
+Server output:
+-----------------------------------------------------------
+Server listening on 5201
+-----------------------------------------------------------
+Accepted connection from 10.1.114.200, port 11025
+[  5] local 172.16.20.74 port 5201 connected to 10.1.114.200 port 63273
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-1.00   sec  1.08 MBytes  9.04 Mbits/sec  0.987 ms  0/138 (0%)
+[  5]   1.00-2.00   sec   432 KBytes  3.54 Mbits/sec  1.479 ms  88/142 (62%)
+[  5]   2.00-3.00   sec   400 KBytes  3.28 Mbits/sec  1.317 ms  103/153 (67%)
+[  5]   3.00-4.00   sec   408 KBytes  3.34 Mbits/sec  1.539 ms  101/152 (66%)
+[  5]   4.00-5.00   sec   400 KBytes  3.28 Mbits/sec  0.851 ms  103/153 (67%)
+[  5]   5.00-6.00   sec   400 KBytes  3.28 Mbits/sec  0.989 ms  103/153 (67%)
+[  5]   6.00-7.00   sec   400 KBytes  3.28 Mbits/sec  1.466 ms  102/152 (67%)
+[  5]   7.00-8.00   sec   400 KBytes  3.28 Mbits/sec  1.183 ms  103/153 (67%)
+[  5]   8.00-9.00   sec   400 KBytes  3.28 Mbits/sec  5.698 ms  99/149 (66%)
+[  5]   9.00-10.00  sec   392 KBytes  3.21 Mbits/sec  1.384 ms  107/156 (69%)
+[  5]  10.00-10.34  sec  40.0 KBytes   953 Kbits/sec  1.460 ms  10/15 (67%)
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-10.34  sec  4.66 MBytes  3.78 Mbits/sec  1.460 ms  919/1516 (61%)  receiver
+
+
+iperf Done.
+
+</pre>
+
+
+<div class="head head_2">Termis</div>
+<ul>
+<li><strong>MTU</strong>
+    <br> 一个网络包的最大长度，以太网中一般为 1500 字节；
+</li>
+<li><strong>MSS</strong>
+    <br> 去 IP 和 TCP 头部之后，一个网络包所能容纳的 TCP 数据的最大长度；
+    <br> IPV4 中 MSS 的大小为 MTU 的大小减去 40 bytes
+</li>
+</ul>
+
+</div>
+    
+
+
+
+
+
 
 
 

@@ -50,3 +50,24 @@ done
     <br> 提取数组某个区间的元素： <code>$(A[@]:start:stop)</code>
 </li>
 
+<li><strong>shift</strong>
+    <br> 当你直接执行 <code>shift</code> 那么你输入的参数会向左移动一位，也就是 $1 会消失， $2 会变成 $1, 当你执行 $# 时， $1 参数将会消失。
+    <br> 当你执行 <code>shift number</code>, 比如 <code>shift 2</code>, 那么参数就会左移两位，也就是 $3 会变成 $1。
+    <br> 但，无论如何执行 shift. 但都不会影响 $0。
+    <br> 另外，如果你将 shift 使用到函数中，那么影响的是 function 中传入的函数。
+
+</li>
+
+<li><strong>${REPLY}</strong>
+    <br> 当你没有为 <code>read</code> 指定变量的时候，命令行输入的数据，将会直接赋值给 <code>${REPLY}</code> 变量。
+        你可以直接从 <code>${REPLY}</code> 中取得命令行输入。比如：
+        <pre>
+...
+read
+if [[ "${REPLY}" != "yes" ]] ; then
+    return 1
+fi
+...
+        </pre>
+
+</li>

@@ -326,8 +326,7 @@ class A&lt;float, T&gt;{
 
 <div class="breadboard">
 <div class="head head_1">Effective C++ 笔记</div>
-
-<br>
+<div class="head head_2">总览</div>
 <div>
     <strong>
         下列原则对应原文章的分类：
@@ -363,12 +362,8 @@ class A&lt;float, T&gt;{
 </li>
 </ol>
 
-<div>
-    <strong>
-        下面是具体的原则：
-    </strong>
-</div>
-<ol>
+<div class="head head_2">细则</div>
+<ul>
 <li><strong>1: 将 C++ 看成联邦语言</strong>
     <br> C++ 大体上可看坐 C, C with class, Temeplate, STL 的一个集合
 </li>
@@ -918,7 +913,7 @@ public:
     int a;
 
     void set_a(void){
-        A ca = static_cast<A>(*this);
+        A ca = static_cast&lt;A&gt;(*this);
         ca.set_a();
         std::cout &lt;&lt; a &lt;&lt; std::endl;
         std::cout &lt;&lt; ca.a &lt;&lt; std::endl;
@@ -1013,10 +1008,100 @@ public:
 </li>
 
 <li><strong>33: 避免覆盖继承带来的名称</strong>
+    <br> 有时候你会有意无意的覆盖调基类中的函数，像下面这种情况，
+    <pre>
+#include &lt;iostream&gt;
+using namespace std;
+
+class A{
+public:
+    int a;
+    virtual void func1(void) = 0;
+    virtual void func1( int val ){
+        a = 2;
+    }
+};
+
+class B: public A{
+public:
+    using A::func1;
+    virtual void func1(void){
+        a = 3;
+    }
+};
+
+int main( int argc, char *argv[] ){
+    B b;
+
+    b.func1();
+    b.func1( 0 );
+    return 0;
+}
+    </pre>
+    <br> 如果你忘记加上 <code>using A::func1;</code>, 那 <code>b.func1( 0 )</code> 就会调用失败。而且无论 func1 是虚函数还是非虚函数都会出现这种现象。
+    <br> 而其原因就是 C++ 中以作用域为基础的 “名称遮掩规则” ，因此基类中的 func1 被派生类的 func1 遮蔽住了。
+    <br> 但我觉得这不是一个很大的问题，因为如果你真的遇到了这个问题，编译器在编译阶段就会给你像下面这样的提醒，但前提是你需要知道产生这个错误的原因，否则你可能会深深陷入抱怨 C++ 的心境了。
+    <pre>
+> g++ -o test main.cpp&& ./test
+main.cpp: In function ‘int main(int, char**)’:
+main.cpp:30:12: error: no matching function for call to ‘B::func1(int)’
+   30 |     b.func1( 0 );
+      |     ~~~~~~~^~~~~
+main.cpp:18:18: note: candidate: ‘virtual void B::func1()’
+   18 |     virtual void func1(void){
+      |                  ^~~~~
+main.cpp:18:18: note:   candidate expects 0 arguments, 1 provided
+    </pre>
+    <br> 当然，有时候基类可能为我们准备了非常多的重载函数，但在派生类中我们可能并不需要，并不想要继承这么多函数，那使用上面的方法可能就显得不妥了，而自己实现一遍似乎也是非常低效的。
+        此时此刻，我们需要用到一个名为 "转交函数" 的技术（ forwarding function ）。如下所示：
+    <pre>
+#include &lt;iostream&gt;
+using namespace std;
+
+class A{
+public:
+    int a;
+
+    A():a(0){
+    }
+    virtual void func1(void){
+        a = 1;
+    };
+    virtual void func1( int val ){
+        a = 2;
+    }
+    virtual void func1( double val ){
+        a = 3;
+    }
+};
+
+class B: public A{
+public:
+    // using A::func1;
+    virtual void func1(void){
+        A::func1( 0.1 );        // forwarding function
+        // a == 3;
+    }
+};
+
+int main( int argc, char *argv[] ){
+    B b;
+    b.func1();
+    return 0;
+}
+    </pre>
 
 </li>
 
 <li><strong>34: 区分接口继承和实现继承</strong>
+    <br> 类的继承可拆分为两个维度，继承接口和继承实现。在设计类的时候我们需要清楚的考虑好我们自己的需求：
+    <br> 如果我们仅仅想要派生类集成接口，那么我们可以将该函数设计为纯虚函数；
+    <br> 如果我们想要派生类继承接口，但必要的时候也可以提供默认函数供调用。那么此时我们可以有两种方案。
+        第一种是提供一个纯虚函数，另外提供一个 protected 的默认非虚函数，如果用户想要调用默认实现，则可以直接调用；
+        第二种是提供一个纯虚函数，并且提供一个纯虚函数，并为之提供一个默认的实现（是的，你没看错，纯虚函数也可以被实现，编译器不会被报错，只是调用该实现的时候一定要制定类名）。
+    <br> 最后，如果我们不想要派生类重新实现某个函数，我们可以将该函数设置为非虚函数。（当然你可以重写非虚函数，但这会造成你用基类指针调用派生类时产生相当可怕的灾难）。
+    <br> 其实最后一项还体现在变量上，如果在基类和派生类中同时申明了同名变量，这时使用基类指针访问到的是基类的变量，而派生类 hander 访问到的是派生类的变量。
+        而对于这一点，很可惜，我们没有什么可应付的技术。
 
 </li>
 
@@ -1107,7 +1192,7 @@ public:
 
 
 
-</ol>
+</ul>
 
 </div>
 
@@ -1137,7 +1222,6 @@ public:
 
 <li><strong>多重继承中同名函数</strong>
     <br> 
-
 </li>
 
 </ul>
@@ -1171,7 +1255,7 @@ public:
 </tr></table>
 <div class="div_2" id="AuthorizationWarning">
 <div class="Text_ZZ">原创文章，版权所有，转载请获得作者本人允许并注明出处</div>
-<div class="Text_LB">我是留白；我是留白；我是留白；（重要的事情说三遍）</div>
+<div class="Text_LB">我是留白；我是留白；我是留白；</div>
 </div>
 <div class="foot_panel" id="foot_panel">
     <div id="foot_panel_top" >
@@ -1183,5 +1267,5 @@ public:
 </div>
 </body>
 
-<script src="../js/PrePost.js"></script>
+<script src="js/PrePost.js"></script>
 </html>

@@ -175,3 +175,15 @@ transition-duration: 0.6s;
 externalLinks();
 autoCreateIndex();
 // autoGenSideIndex();
+
+(function(){
+    if( katex == null ) return;
+    id_prefix = 'latex_str_'
+    id_count = 0
+    e_fomula = document.getElementsByClassName( 'latex_str' )
+    for( var i=0; i<e_fomula.length; i++ ){
+        e = e_fomula[i]
+        e.id = id_prefix + i
+        katex.render( e.innerHTML, e )
+    }
+})()

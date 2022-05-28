@@ -3,6 +3,9 @@
 <head lang="en">
 <meta charset="UTF-8">
 <title>随笔</title>
+ <!-- <script defer src="./js/katex.min.js" ></script> -->
+ <link rel="stylesheet" href="katex/katex.min.css" >
+ <script type="text/javascript" src="katex/katex.min.js" ></script>
 </head>
 <body>
 
@@ -600,15 +603,39 @@ iperf Done.
     <br> <a href="https://www.cl.cam.ac.uk/~rja14/">https://www.cl.cam.ac.uk/~rja14/</a>
 
 </li>
+<li><strong>HTML 数学公式代码生成器</strong>
+    <br> <a href="https://webdemo.myscript.com/views/math/index.html#">https://webdemo.myscript.com/views/math/index.html#</a>
+    <br> <a href="https://www.mathmlcentral.com/Tools/ToMathML.jsp">https://www.mathmlcentral.com/Tools/ToMathML.jsp</a>
+</li>
+<li><strong>Latex</strong>
+    <br> <a href="https://xjay.net/201902/latex-syntax-for-math-equation/">LaTeX 数学公式语法</a>
+
+</li>
+<li><strong>搜书网站</strong>
+    <br> <a href="http://library.lol/">http://library.lol/</a>
+    <br> <a href="http://libgen.rs/">http://libgen.rs/</a>
+    <br> <a href="https://zh.3lib.net/">zlibrary</a>
+
+</li>
+<li><code>katex 运用</code>
+    <br>
+    <span class="latex_str" >
+        \overline{PSNR}=
+            \sum^K_{k=1}min\left[
+                 20\log 10\left(
+                    \dfrac{255}{ \sqrt{
+                        \dfrac{1}{M*N}
+                        \sum^{M-1}_{i=0}
+                        \sum^{N-1}_{j=0}
+                        [Y_{origin}(i,j) - Y_{code}(i,j)]^{2} } }
+                \right); 50
+            \right]
+    </span>
+    
+
+</li>
 </ul>
 </div>
-
-
-
-
-
-
-
 
 
 
@@ -637,5 +664,8 @@ iperf Done.
 </div>
 </body>
 
-<script src="../js/PrePost.js"></script>
+<script src="js/PrePost.js"></script>
+
+
+
 </html>

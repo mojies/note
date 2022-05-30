@@ -1099,6 +1099,7 @@ int main( int argc, char *argv[] ){
     <br> 如果我们想要派生类继承接口，但必要的时候也可以提供默认函数供调用。那么此时我们可以有两种方案。
         第一种是提供一个纯虚函数，另外提供一个 protected 的默认非虚函数，如果用户想要调用默认实现，则可以直接调用；
         第二种是提供一个纯虚函数，并且提供一个纯虚函数，并为之提供一个默认的实现（是的，你没看错，纯虚函数也可以被实现，编译器不会被报错，只是调用该实现的时候一定要制定类名）。
+    <br> （其实是有三种方案，还有一种是将接口定义为一个非纯虚的虚函数，只不过这种很容易被误调用）
     <br> 最后，如果我们不想要派生类重新实现某个函数，我们可以将该函数设置为非虚函数。（当然你可以重写非虚函数，但这会造成你用基类指针调用派生类时产生相当可怕的灾难）。
     <br> 其实最后一项还体现在变量上，如果在基类和派生类中同时申明了同名变量，这时使用基类指针访问到的是基类的变量，而派生类 hander 访问到的是派生类的变量。
         而对于这一点，很可惜，我们没有什么可应付的技术。
@@ -1106,15 +1107,99 @@ int main( int argc, char *argv[] ){
 </li>
 
 <li><strong>35: 考虑虚函数以外的其他选择</strong>
+    <br> 虚函数主要用于，派生类可能需要依照自身特性来改变基类默认行为的场合，而这个需求有几种替代方案，有时不妨考虑一下：
+    <br> 方案一：使用非虚 public 函数调用 private 的虚函数，基类依据自身场景看是否需要重写虚函数的默认实现，这种方法主要用于可能需要在虚函数提供的功能前后执行某些调用过程，
+        比如权限访问控制，锁控制，日志记录等场景。
+        当然虚函数也不一定是要 private 的，但为了防止某些代码越界调用，破坏系统的整体设计，最好还是设计成 private。
+    <br> 方案二： 使用函数指针替换虚函数，基类可在构造函数中依具体情况设置默认实现，或者接受派生类的替换，甚至在运行时可动态切换方法；
+    <br> 方案三： 使用 <code>tr::function</code> 替换虚函数，该方案是方案二的增强版本，该方案可兼容存在隐式转换的各种函数，如：（普通的函数指针可达不到此效果）
+    <pre>
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;tr1/functional&gt;
 
+using namespace std;
+
+int func1( const char *str ){
+    cout &lt;&lt; str &lt;&lt; endl;
+    return 1;
+}
+
+short func2( const char *str ){
+    cout &lt;&lt; str &lt;&lt; endl;
+    return 2;
+}
+
+short func3( string str ){
+    cout &lt;&lt; str &lt;&lt; endl;
+    return 3;
+}
+
+
+int main( int argc, char *argv[] ){
+
+    <strong>tr1::function&lt;int (const char *)&gt; f1;</strong>
+
+    f1 = func1;
+    cout &lt;&lt; "test func1 ret -&gt; " &lt;&lt; f1( "Enter func1" ) &lt;&lt; endl;
+
+    f1 = func2;
+    cout &lt;&lt; "test func2 ret -&gt; " &lt;&lt; f1( "Enter func2" ) &lt;&lt; endl;
+
+    f1 = func3;
+    cout &lt;&lt; "test func3 ret -&gt; " &lt;&lt; f1( "Enter func3" ) &lt;&lt; endl;
+
+}
+    </pre>
+    <br> 方案四： 如果一个方法需要派生类重新定义，那么是否有可能该方法并不属于该类，或者可以单独抽象成另外一个方法类？
+        该方案即是将方法做成一个单独的类，之后再将该方法类申明为原来那个类的成员，派生类可以将该成员替换成自己的实现。
+        (我能想到的一个例子是 java 中的线程类)
+    <br> 这里需要注意的是，将功能从类中迁移到类外的一个缺点是方法不能再访问到类内部的成员了。
 </li>
 
 <li><strong>36: 绝不重新定义继承而来的 non-virtual 函数</strong>
-
+    <br> 这一点很好理解，像下面这个例子，当你以基类指针访问派生类对象的一个非虚（ non-virtual ）函数时候，你可能以为你访问的是派生类的非虚函数，而你实际上访问的是基类的非虚函数，
+        原因是因为非虚函数都是静态绑定的，在编译的时候就已经计算好调用的函数地址，而从基类指针进行访问的函数，很明显会被编译器识别为基类对象的某个函数，
+    <pre>
+class A{
+public:
+    void func1(void){
+        // do something
+    }
+};
+class B: public A{
+public:
+    void func1( void ){
+        // do other thing
+    }
+};
+    </pre>
 </li>
 
 <li><strong>37: 绝不重新定义继承而来的默认参数值</strong>
+    <br> 这一点与 36 点类似，默认值是静态绑定的，像下面这个例子， 当你以基类指针去调用派生类对象的某个拥有默认参数的虚函数的时候，调用的过程是派生类的，但给的默认参数是基类的，
+        我想这应该不是你想看到的效果。
+    <pre>
+class A{
+public:
+    virtual void func1( int val = 1 ){
+        cout &lt;&lt; "A def count: " &lt;&lt; val &lt;&lt; endl;
+    }
+};
+class B: public A{
+public:
+    virtual void func1( int val = 2 ){
+        cout &lt;&lt; "B def count: " &lt;&lt; val &lt;&lt; endl;
+    }
+};
+B b;
+A *a;
+a = &amp;b;
+a-&gt;func1();
 
+// 输出：
+//    B def count: 1
+    </pre>
 </li>
 
 <li><strong>38: 服从 <code>has a</code> 或者 <code>is-implemented-in-terms-of</code> 模型</strong>

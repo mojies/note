@@ -33,11 +33,11 @@ code{
     padding: 2px;
 
     font-weight: 400;
-    font-size: 12px;
+    font-size: 13px;
     font-style: oblique;
     border-radius: 3px;
     backdrop-filter: blur(2px);
-    color: rgb(231,76,60);
+    color: rgb(227, 103, 90);
 }
 /* code{
     line-height: 20px;
@@ -67,6 +67,21 @@ img{
     opacity:1;
     margin: 10px;
 }
+table, th, td {
+    font-size: 12px;
+    border: 1px solid #aaa;
+    padding: 2px 0.5em;
+    border-collapse: collapse;
+}
+th{
+    font-size: 16px;
+}
+
+.ps{
+    margin: 2px;
+    font-size: 11px;
+    font-style: italic;
+}
 .breadboard{
     box-shadow: 0 1px 4px 0 rgba(0,0,0,0.37);
     margin: 5px 2% 45px;
@@ -81,7 +96,7 @@ img{
 }
 .head_1{
     color: #133152;
-    font-size: 30px;
+    font-size: 32px;
     font-weight: bold;
     text-align: left;
 
@@ -92,7 +107,7 @@ img{
 }
 .head_2{
     color: #163a60;
-    font-size: 25px;
+    font-size: 28px;
     font-weight: bold;
     text-align: left;
 
@@ -103,15 +118,21 @@ img{
 }
 .head_3{
     color: #1a426e;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+.head_4{
+    color: #1d4a7bc2;
     font-size: 20px;
     font-weight: bold;
     text-align: left;
     margin: 32px 0 10px 0;
 }
-
-.head_4{
-    color: #1d4a7b;
-    font-size: 20px;
+.head_5{
+    color: #0d4886d2;
+    font-size: 16px;
     font-weight: bold;
     text-align: left;
     margin: 32px 0 10px 0;
@@ -148,13 +169,16 @@ img{
 .offset_9em{margin-left: 9em;}
 .offset_10em{margin-left: 10em;}
 
-.green_text{
+.green_t{
     color: green;
 }
-.red_text{
+.red_t{
     color: red;
 }
-.purple_text{
+.blue_t{
+    color: blue;
+}
+.purple_t{
     color: purple;
 }
 
@@ -180,7 +204,6 @@ img{
 .child_red3_key li strong{
     color: #Faa;
 }
-
 .foot_panel{
     position:fixed;
     right:3em;
@@ -191,6 +214,8 @@ img{
     background-color:rgb( 157, 157, 157, 0.618 );
     border-radius: 8px;
 }
+/* .latex_str{
+} */
 #foot_panel_top{
     display: inline;
     border-right: 5px solid #eee;
@@ -677,7 +702,62 @@ service \name \pathname [ \argument ]*
 <p>
     了解 Service 你可能需要先了解 Binder, 这里有一篇解释 Binder 的文章写得还挺详细的：<a href="https://zhuanlan.zhihu.com/p/35519585">写给 Android 应用工程师的 Binder 原理剖析</a>
 </p>
-<div class="head head_1">publishBinderService和publishLocalService区别</div>
+<p>
+    Android 的所有系统服务都在 <code>base/services/java/com/android/server/SystemServer.java</code> 中加载。
+    <code>SystemServer.java</code> 中包含 java 的函数入口 <code>public static void main(String[] args)</code>, zygote 启动的时候会 fork 出 SystemServer 进程，在最后通过反射机制调用到了 <code>SystemServer.main()</code> 函数。
+    SystemServer 类中的初始化过程如下所示: <code>SystemServer.main</code> -> <code>SystemServer.run</code> -> <code>startBootstrapServices(t) && startCoreServices(t) && startOtherServices(t)</code>。
+
+    <span class="red_t">具体的 SystemServer 启动过程可以参考本章文后参考文档 3。</span>
+</p>
+<p>
+    其中 Android 的 core service 包括， <code>SystemConfigService</code>, <code>BatteryService</code>, <code>UsageStatsService</code>, <code>WebViewUpdateService</code>, <code>CachedDeviceStateService</code>,
+    <code>BinderCallsStatsService</code>, <code>LooperStatsService</code>, <code>RollbackManagerService</code>, <code>NativeTombstoneManagerService</code>, <code>BugreportManagerService</code>, <code>GpuService</code>。
+    这些服务都是在 <code>startOtherServices</code> 函数中启动的。
+</p>
+<p>
+    startOtherServices 中启动的 service 有： <code>KeyAttestationApplicationIdProviderService</code>, <code>KeyChainSystemService</code>, <code>SchedulingPolicyService</code>, <code>TelecomLoaderService</code>,
+    <code>TelephonyRegistry</code>, <code>EntropyMixer</code>( 可能算不上 service ), <code>AccountManagerService$Lifecycle</code>, <code>ContentService$Lifecycle</code>, <code>DropBoxManagerService</code>,
+    <code>RoleService</code>, <code>VibratorManagerService.Lifecycle</code>, <code>DynamicSystemService</code>, <code>ConsumerIrService</code>, <code>AlarmManagerService</code>, <code>InputManagerService</code>,
+    <code>DeviceStateManagerService</code>, <code>CameraServiceProxy</code>, <code>WindowManagerService</code>, <code>VrManagerService</code>, <code>BluetoothService</code>, 
+    <code>PinnerService</code>, <code>IorapForwardingService</code>, <code>ProfcollectForwardingService</code>, <code>AppIntegrityManagerService</code>,
+    <code>MultiClientInputMethodManagerService.Lifecycle</code>, <code>InputMethodManagerService.Lifecycle</code>, <code>AccessibilityManagerService$Lifecycle</code>, <code>StorageManagerService$Lifecycle</code>,
+    <code>StorageStatsService$Lifecycle</code>, <code>UiModeManagerService</code>, <code>LockSettingsService$Lifecycle</code>, <code>PersistentDataBlockService</code>, <code>TestHarnessModeService</code>,
+    <code>OemLockService</code>, <code>DeviceIdleController</code>, <code>DevicePolicyManagerService</code>, <code>StatusBarManagerService</code>, <code>MusicRecognitionManagerService</code>,
+    <code>SpeechRecognitionManagerService</code>, <code>AppPredictionManagerService</code>, <code>ContentSuggestionsManagerService</code>, <code>SearchUiManagerService</code>, <code>SmartspaceManagerService</code>,
+    <code>FontManagerService.Lifecycle</code>, <code>TextServicesManagerService.Lifecycle</code>, 
+    <code>SystemUpdateManagerService</code>,
+    <code>UpdateLockService</code>, <code>RkDisplayDeviceManagementService</code>, <code>RkAudioSettingService</code>, <code>NotificationManagerService</code>, <code>DeviceStorageMonitorService</code>,
+    <code>LocationManagerService</code>, <code>CountryDetectorService</code>, <code>TimeDetectorService$Lifecycle</code>, <code>TimeZoneDetectorService$Lifecycle</code>,
+    <code>LocationTimeZoneManagerService$Lifecycle</code>, <code>GnssTimeUpdateService$Lifecycle</code>, <code>SearchManagerService$Lifecycle</code>, <code>WallpaperManagerService$Lifecycle</code>,
+    <code>AudioService.Lifecycle</code>, <code>SoundTriggerMiddlewareService.Lifecycle</code>, <code>BroadcastRadioService</code>, <code>DockObserver</code>, <code>MidiService$Lifecycle</code>,
+    <code>adb.AdbService$Lifecycle</code>, <code>usb.UsbService$Lifecycle</code>, <code>SerialService</code>, <code>HardwarePropertiesManagerService</code>, <code>TwilightService</code>,
+    <code>ColorDisplayService</code>, <code>JobSchedulerService</code>, <code>SoundTriggerService</code>, <code>TrustManagerService</code>, <code>BackupManagerService$Lifecycle</code>,
+    <code>appwidget.AppWidgetService</code>, <code>voiceinteraction.VoiceInteractionManagerService</code>, <code>apphibernation.AppHibernationService</code>, <code>GestureLauncherService</code>,
+    <code>SensorNotificationService</code>, <code>ContextHubSystemService</code>, <code>DiskStatsService</code>, <code>RuntimeService</code>, <code>RulesManagerService$Lifecycle</code>,
+    <code>NetworkTimeUpdateService</code>, <code>EmergencyAffordanceService</code>, <code>BlobStoreManagerService</code>, <code>DreamManagerService</code>, <code>GraphicsStatsService</code>,
+    <code>CoverageService</code>, <code>PrintManagerService</code>, <code>CompanionDeviceManagerService</code>, <code>RestrictionsManagerService</code>, <code>MediaSessionService</code>, <code>HdmiControlService</code>,
+    <code>TvInputManagerService</code>, <code>TunerResourceManagerService</code>, <code>MediaResourceMonitorService</code>, <code>TvRemoteService</code>, <code>MediaRouterService</code>, <code>FaceService</code>,
+    <code>IrisService</code>, <code>FingerprintService</code>, <code>BiometricService</code>, <code>AuthService</code>, <code>BackgroundDexOptService</code>, <code>DynamicCodeLoggingService</code>,
+    <code>PruneInstantAppsJobService</code>, <code>ShortcutService</code>, <code>LauncherAppsService</code>, <code>CrossProfileAppsService</code>, <code>PeopleService</code>, <code>MediaMetricsManagerService</code>,
+    <code>SliceManagerService$Lifecycle</code>, <code>IoTSystemService</code>, <code>StatsCompanion$Lifecycle</code>, <code>RebootReadinessManagerService$Lifecycle</code>, <code>StatsPullAtomService</code>,
+    <code>IncidentCompanionService</code>, <code>MmsServiceBroker</code>, <code>AutofillManagerService</code>, <code>TranslationManagerService</code>, <code>ClipboardService</code>, <code>AppBindingService.Lifecycle</code>,
+    <code>TracingServiceProxy</code>, <code>PermissionPolicyService</code>, <code>R.array.config_deviceSpecificSystemServices</code> 中指定的服务, <code>GameManagerService$Lifecycle</code>,
+    <code>uwb.UwbService</code>, <code>AppSearchManagerService</code>, <code>MediaCommunicationService</code>, <code>CarServiceHelperService</code>
+</p>
+<p>
+    startOtherServices 中启动的和网络相关的 service 有： 
+    <code>IpConnectivityMetrics</code>, <code>NetworkWatchlistService</code>, <code>NetworkManagementService</code>, <code>IpSecService</code>, <code>NetworkScoreService.Lifecycle</code>,
+    <code>NetworkStatsService</code>,  <code>NetworkPolicyManagerService</code>, <code>wifi.WifiService</code>, <code>wifi.scanner.WifiScanningService</code>, <code>wifi.rtt.RttService</code>,
+    <code>wifi.aware.WifiAwareService</code>, <code>wifi.p2p.WifiP2pService</code>, <code>lowpan.LowpanService</code>, <code>ethernet.EthernetService</code>, <code>PacProxyService</code>,
+    <code>ConnectivityServiceInitializer</code>, <code>VpnManagerService</code>, <code>VcnManagementService</code>, <code>NsdService</code>, 
+</p>
+<p>
+    startOtherServices 中启动的和手表相关的 service 有：<code>ThermalObserver</code>, 
+    <code>MediaProjectionManagerService</code>, <code>WearPowerService</code>, <code>WearConnectivityService</code>, <code>WearDisplayService</code>,
+    <code>WearTimeService</code>, <code>WearLeftyService</code>, <code>GlobalActionsService</code>
+</p>
+
+<div class="head head_1">publishBinderService 和 publishLocalService 区别</div>
 <p>
     参考文档：<a href="https://blog.csdn.net/u010871962/article/details/120047716">publishBinderService和publishLocalService区别</a>
 </p>
@@ -687,17 +767,27 @@ service \name \pathname [ \argument ]*
 <p>
     查看 Android 系统中启动的 service 可以使用： <code>service list</code>
 </p>
-<ul>
-<li>
-
-</li>
-</ul>
 
 <ul>
 <li><strong>./frameworks/base/core/java/android/os/ServiceManager.java</strong>
     <br> <code>public static IBinder getService(String name)</code>
 </li>
 </ul>
+
+<ol>
+<li>
+    <a href="https://github.com/jeanboydev/Android-ReadTheFuckingSourceCode/blob/master/article/android/framework/01_system_start.md">图解 Android 系列（一）揭秘 Android 系统启动过程</a>
+</li>
+<li>
+    <a href="https://github.com/jeanboydev/Android-ReadTheFuckingSourceCode/blob/master/article/android/framework/02_init_zygote.md">图解 Android 系列（二）深入理解 init 与 zygote 进程</a>
+</li>
+<li>
+    <a href="https://github.com/jeanboydev/Android-ReadTheFuckingSourceCode/blob/master/article/android/framework/03_system_server_01.md">图解 Android 系列（三）探索 SystemServer 进程创建过程</a>
+</li>
+
+
+
+</ol>
 
 </div>    
 
@@ -791,6 +881,119 @@ service netd /system/bin/netd
 <p>
     为解决的问题： framework 各个目录中 net 的关系是如何的
 </p>
+
+<div class="head head_2">netd 如何提供服务的</div>
+<p>
+    netd 的服务存在一个类 <code>class NetdNativeService</code>, 该类继承自 <code>public BinderService&lt;NetdNativeService&gt;, public BnNetd</code>, 也意味着它是一个 binder service。
+</p>
+<p>
+    netd 启动的时候执行以下代码启动该服务:
+</p>
+<pre>
+    if ((ret = NetdNativeService::start()) != android::OK) {                                                                                                                                                                                                                         ALOGE("Unable to start NetdNativeService: %d", ret);
+        exit(1);
+    }
+</pre>
+
+
+<div class="head head_2">ndc</div>
+<p>
+    ndc 工具是属于 netd 的一部分，在调试 netd 的时候非常有帮助。 netd 工程地址在 <code>system/netd</code>。
+</p>
+<p>
+    其中与 ndc 相关的配置在 <code>system/netd/server/Android.pb</code> 文件中，如下所示：
+</p>
+<pre>
+cc_binary {
+    name: "ndc",                                                                                                                                                                                                                                                                 defaults: ["netd_defaults"],
+    include_dirs: [
+        "system/netd/include",
+    ],
+    header_libs: [
+        "libnetd_client_headers",
+    ],
+    shared_libs: [
+        "libbase",
+        "libnetdutils",
+        "libnetutils",
+        "libcutils",
+        "liblog",
+        "libutils",
+        "libbinder",
+        "dnsresolver_aidl_interface-V7-cpp",
+        "netd_aidl_interface-V6-cpp",
+    ],
+    srcs: [
+        "ndc.cpp",
+        "UidRanges.cpp",
+        "NdcDispatcher.cpp",
+    ],
+    sanitize: {
+        cfi: true,
+        memtag_heap: true,
+    },
+}
+</pre>
+<p>
+    <code>server/ndc.cpp</code> 中包含了 ndc 的入口，如下所示。
+</p>
+<pre>
+int main(int argc, char** argv){
+    android::net::NdcDispatcher nd;
+    exit(nd.dispatchCommand(argc - 1, argv + 1));
+}
+</pre>
+<p>
+    ndc 支持下表所列的一些指令。
+    这些指令从 <code>server/NdcDispatcher.cpp</code> 注册到每一个指令的专属类中，这些类的定义在 <code>server/NdcDispatcher.h</code> 中。
+    <code>ndc</code> 收到命令行输入的数据之后会直接调用 <code>NdcDispatcher::dispatchCommand</code> 方法，该方法会在注册到 <code>NdcDispatcher::mCommands</code> 的命令类中找到对应的命令类，
+    并调用该命令类的 <code>NdcNetdCommand::runCommand</code> 将指令分发出去。
+</p>
+<p>
+   <code>NdcNetdCommand</code> 为各个命令类的基类，每个派生类都会实现一次 <code>NdcDispatcher::_xxx_::runCommand</code>。
+    而 <code>runCommand</code> 会负责检查参数的合法性，并调用 <code>sp&lt;INetd&gt; mNetd</code> 通过 binder 将要操作的指令发给 netd 去处理。
+</p>
+<div class="tb_format">
+    {
+        "head": [ "指令", "说明" ],
+        "data": [
+        [ "<code>interface</code>", "支持的指令有 <code>list</code>, <code>getcfg</code>, <code>setcfg</code>, <code>clearaddrs</code>, <code>ipv6privacyextensions</code>, <code>ipv6</code>, <code>enable</code>, <code>setmtu</code> " ],
+        [ "<code>ipfwd</code>", "支持的指令有 <code>status</code>, <code>enable</code>, <code>add</code>, <code></code> " ],
+        [ "<code>tether</code>", "支持的指令有 <code>stop</code>, <code>status</code>, <code>interface</code>, <code>start</code>, <code>dns</code>, <code></code> " ],
+        [ "<code>nat</code>", "支持的指令有 <code>enable</code>, <code>disable</code> " ],
+        [ "<code>bandwidth</code>", "支持的指令有 <code>removeiquota | riq</code>, <code>setiquota | siq</code>, <code>addnaughtyapps | ana</code>, <code>removenaughtyapps | rna</code>, <code>addniceapps | aha</code>, <code>removeniceapps | rha</code>, <code>setglobalalert | sga</code>, <code>setinterfacealert | sia</code>, <code>removeinterfacealert | ria</code> " ],
+        [ "<code>idletimer</code>", "支持的指令有 <code>add</code>, <code>remove</code>  " ],
+        [ "<code>firewall</code>", "支持的指令有 <code>enable</code>, <code>set_interface_rule</code>, <code>set_uid_rule</code>, <code>enable_chain</code>, <code>disable_chain</code> " ],
+        [ "<code>clatd</code>", "支持的指令有 <code>stop</code>, <code>start</code> " ],
+        [ "<code>strict</code>", "支持的指令有 <code>set_uid_cleartext_policy</code> " ],
+        [ "<code>network</code>", "支持的指令有 <code>route</code>, <code>interface</code>, <code>create</code>, <code>destroy</code>, <code>default</code>, <code>permission</code>, <code>users</code>, <code>protect</code> " ]
+        ]
+    }
+</div>
+<p>
+    下面是一些例子：
+</p>
+<ul>
+<li><span>列举系统中存在的网络 interface</span>
+    <code>ndc interface list</code>
+</li>
+<li><span>获取 eth0 的配置</span>
+    <code>ndc interface getcfg eth0</code>
+</li>
+<li><span>配置 eth0 down</span>
+    <code>ndc interface setcfg eth0 down</code>
+</li>
+<li><span>配置 eth0 up</span>
+    <code>ndc interface setcfg eth0 up</code> or
+    <code>ndc interface setcfg eth0 0.0.0.0 up</code>
+</li>
+</ul>
+
+<div class="head head_2">关于 interface 的操作</div>
+<p>
+
+</p>
+
 
 </div>    
 
@@ -920,12 +1123,23 @@ cc_binary {
 
 <li><strong>Java 语言 ublic, protected, private, 不加修饰符 的区别</strong>
     <br>
-    <table>
+    <div class="tb_format">
+        {
+            "head": [ "修饰符", "类内部", "同个包（package）", "子类", "其他范围"  ],
+            "data": [
+                [ "public", "Y", "Y", "Y", "Y" ],
+                [ "protected", "Y", "Y", "Y", "N" ],
+                [ "无修饰符", "Y", "Y", "Y或者N(见说明)", "N" ],
+                [ "private", "Y", "N", "N", "N" ]
+            ]
+        }
+    </div>
+    <!-- <table>
         <thead><tr><th>修饰符</th><th>类内部</th><th>同个包（package）</th><th>子类</th><th>其他范围</th></tr></thead>
         <tbody><tr><td>public</td><td>Y</td><td>Y</td><td>Y</td><td>Y</td></tr>
             <tr><td>protected</td><td>Y</td><td>Y</td><td>Y</td><td>N</td></tr>
             <tr><td>无修饰符</td><td>Y</td><td>Y</td><td>Y或者N(见说明)</td><td>N</td>
-            </tr><tr><td>private</td><td>Y</td><td>N</td><td>N</td><td>N</td></tr></tbody></table>
+            </tr><tr><td>private</td><td>Y</td><td>N</td><td>N</td><td>N</td></tr></tbody></table> -->
     <br> 说明：需要特别说明“无修饰符”这个情况，子类能否访问父类中无修饰符的变量/方法，取决于子类的位置。如果子类和父类在同一个包中，那么子类可以访问父类中的无修饰符的变量/方法，否则不行。
 
 </li>
@@ -990,6 +1204,25 @@ Makefile or Android.mk --> kati --> Ninja
 
 
 
+
+<div class="breadboard">
+
+
+</div>    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <div class="breadboard">
 <div class="head head_1">参考文档</div>
 <ul>
@@ -1020,7 +1253,6 @@ Makefile or Android.mk --> kati --> Ninja
 
 </ul>
 </div>
-
 
 
 

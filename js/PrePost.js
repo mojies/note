@@ -171,13 +171,44 @@ transition-duration: 0.6s;
     }
 
 }
-
-externalLinks();
-autoCreateIndex();
-// autoGenSideIndex();
-
-(function(){
-    if( katex == null ) return;
+function formate_table(){
+    tbs = document.getElementsByClassName('tb_format')
+    console.log( '---> 0 ', tbs.length )
+    for( var i = 0; i < tbs.length; i++ ){
+        p = tbs[i]
+        tb_txt = p.innerHTML
+        if( tb_txt == null ) return;
+        js_body = JSON.parse( tb_txt )
+        if( js_body == null ) return;
+        tb = document.createElement('table')
+        if( js_body.head != null && js_body.head.length != 0 ){
+            head = js_body.head
+            tb_tr = document.createElement('tr')
+            for( var j = 0; j < head.length; j++ ){
+                tb_th = document.createElement('th')
+                tb_th.innerHTML = head[j];
+                tb_tr.appendChild( tb_th )
+            }
+            tb.appendChild( tb_tr )
+        }
+        if( js_body.data != null && js_body.data.length != 0 ){
+            data = js_body.data
+            for( var j = 0; j < data.length; j++ ){
+                tb_tr = document.createElement('tr')
+                for( var k = 0; k < data[j].length; k++ ){
+                    tb_td = document.createElement('td')
+                    tb_td.innerHTML = data[j][k];
+                    tb_tr.appendChild( tb_td )
+                }
+                tb.appendChild( tb_tr )
+            }
+        }
+        p.innerHTML = null
+        p.appendChild( tb )
+    }
+}
+function format_math_fomula(){
+    if( typeof(katex) == "undefined" ) return;
     id_prefix = 'latex_str_'
     id_count = 0
     e_fomula = document.getElementsByClassName( 'latex_str' )
@@ -186,4 +217,11 @@ autoCreateIndex();
         e.id = id_prefix + i
         katex.render( e.innerHTML, e )
     }
-})()
+}
+
+
+externalLinks();
+autoCreateIndex();
+formate_table();
+format_math_fomula();
+

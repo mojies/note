@@ -311,6 +311,39 @@ class A&lt;float, T&gt;{
 <p>
     此外，还找到一篇感觉讲解比较全的文章：<a href="https://sg-first.gitbooks.io/cpp-template-tutorial/content/jie_te_hua_yu_pian_te_hua.html">深入理解特化与偏特化</a>，
 </p>
+
+<div class="head head_2">C++ 11 <strong>default</strong></div>
+<p>
+    原文： <a href="https://blog.csdn.net/fengbingchun/article/details/52475155">https://blog.csdn.net/fengbingchun/article/details/52475155</a>
+</p>
+<p>
+    在 C+11 中, 对于 defaulted 函数, 编译器会为其自动生成默认的函数定义体, 从而获得更高的代码执行效率, 也可免除程序员手动定义该函数的工作量。
+</p>
+<p>
+    C++ 的类有四类特殊成员函数，它们分别是：<code>默认构造函数</code> / <code>析构函数</code> / <code>拷贝构造函数</code> / <code>拷贝赋值运算符</code>。
+    这些类的特殊成员函数负责创建、初始化、销毁，或者拷贝类的对象。如果程序员没有显式地为一个类定义某个特殊成员函数，而又需要用到该特殊成员函数时，则编译器会隐式的为这个类生成一个默认的特殊成员函数。
+    当存在用户自定义的特殊成员函数时，编译器将不会隐式的自动生成默认特殊成员函数，而需要程序员手动编写，加大了程序员的工作量。并且手动编写的特殊成员函数的代码执行效率比编译器自动生成的特殊成员函数低。
+</p>
+<p>
+    C++11 标准引入了一个新特性: defaulted 函数。程序员只需在函数声明后加上 "=default", 就可将该函数声明为 defaulted 函数, 编译器将为显式声明的 defaulted 函数自动生成函数体。
+</p>
+<p>
+    defaulted 函数特性仅适用于类的特殊成员函数，且该特殊成员函数没有默认参数。
+</p>
+<p>
+    defaulted 函数既可以在类体里(inline)定义，也可以在类体外(out-of-line)定义。
+</p>
+<p>
+    如下所示：
+</p>
+<pre>
+class Foo
+{
+	Foo(int x);         // Custom constructor
+	Foo() = default;    // The compiler will now provide a default constructor for class Foo as well
+}
+</pre>
+
 </div>    
 
 

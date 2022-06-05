@@ -1235,12 +1235,14 @@ a-&gt;func1();
     </pre>
 </li>
 
-<li><strong>38: 服从 <code>has a</code> 或者 <code>is-implemented-in-terms-of</code> 模型</strong>
-
+<li><strong>38: Model <code>has-a</code> or <code>is-implemented-in-terms-of</code> through composition</strong>
+    <br> 我觉得中文翻译太晦涩了，因此在此处我保留英文的原文
+    <br> A 继承 B, 可能意味着 A 是一种 B ( 规则 32 ), 但也可能表示 A 包含 B ( has-a ), 比如每个人都有一个地址，但我们不能说人是一个地址。
+    <br> 另一个概念是， A 是由 B 实现出来的 ( is-implemented-in-terms-of ), 比如我们可以使用链表实现一个集合（请查看原文）
 </li>
 
 <li><strong>39: 明智而审慎的使用 private 继承</strong>
-
+    <br> 
 </li>
 
 <li><strong>40: 明智而审慎的使用多重继承</strong>

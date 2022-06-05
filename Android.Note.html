@@ -757,7 +757,7 @@ service \name \pathname [ \argument ]*
     <code>WearTimeService</code>, <code>WearLeftyService</code>, <code>GlobalActionsService</code>
 </p>
 
-<div class="head head_1">publishBinderService 和 publishLocalService 区别</div>
+<div class="head head_2">publishBinderService 和 publishLocalService 区别</div>
 <p>
     参考文档：<a href="https://blog.csdn.net/u010871962/article/details/120047716">publishBinderService和publishLocalService区别</a>
 </p>
@@ -773,6 +773,9 @@ service \name \pathname [ \argument ]*
     <br> <code>public static IBinder getService(String name)</code>
 </li>
 </ul>
+
+
+<div class="head head_2">参考文档</div>
 
 <ol>
 <li>
@@ -894,6 +897,37 @@ service netd /system/bin/netd
         exit(1);
     }
 </pre>
+
+<div class="head head_2">netd 提供的服务</div>
+<div class="head head_3">获取 interface List</div>
+<p>
+    调用路径如下所示：
+    <code>@utf8InCpp String[] interfaceGetList();</code> -> <code>NetdNativeService::interfaceGetList</code> -> <code>InterfaceController::getIfaceNames</code> 。
+</p>
+<p>
+    <code>InterfaceController::getIfaceNames</code> 会打开 <code>/sys/class/net</code> 目录，并查看该目录下的接口有哪些。并将这些接口存储到
+    <code>std::vector<std::string> ifaceNames</code> 中，然后返回给调用者。
+</p>
+<div class="head head_3">获取某个 interface 的配置</div>
+<p>
+    调用路径如下所示：
+    <code>InterfaceConfigurationParcel interfaceGetCfg(in @utf8InCpp String ifName);</code> -> <code>NetdNativeService::interfaceGetCfg</code> -> <code>InterfaceController::getCfg</code>。
+</p>
+<p>
+    <code>InterfaceController::getCfg</code> 函数会获取到接口的 MAC 地址, IP 地址，掩码， UP/DOWN 等信息。为了获取这些信息，首先要打开一个 socket ( <code>socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0)</code> ),
+    然后调用 <code>ioctl(fd, SIOCGIFHWADDR, &ifr)</code> 获取接口的硬件地址，调用 <code>ioctl(fd, SIOCGIFADDR, &ifr)</code> 获取接口的 IP 地址以及类型，调用 <code>ioctl(fd, SIOCGIFNETMASK, &ifr)</code> 获取接口掩码，
+    调用 <code>ioctl(fd, SIOCGIFFLAGS, &ifr)</code> 获取目前接口状态，并通过检查 <code>IFF_UP</code> 查看接口是否被使能。同时还可以检查如下状态 <code>IFF_BROADCAST</code>, <code>IFF_LOOPBACK</code>, <code>IFF_POINTOPOINT</code>,
+    <code>IFF_RUNNING</code>, <code>IFF_MULTICAST</code>。
+</p>
+<div class="head head_3">设置 interface</div>
+<p>
+    set 的接口和 get 的接口类似，调用流程如下所示：
+    <code>void interfaceSetCfg(in InterfaceConfigurationParcel cfg)</code> -> <code>NetdNativeService::interfaceSetCfg</code> -> <code>InterfaceController::setCfg</code> 。
+</p>
+<p>
+    set 的时候 ioctl 带的 request id 分别为， <code>SIOCSIFADDR</code> ( 设置 IP 地址 ). <code>SIOCSIFFLAGS</code> ( 将接口 UP or DOWN )。
+</p>
+
 
 
 <div class="head head_2">ndc</div>

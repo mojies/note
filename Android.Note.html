@@ -774,6 +774,31 @@ service \name \pathname [ \argument ]*
 </li>
 </ul>
 
+<div class="head head_2">NetworkManagementService</div>
+<p>
+    NetworkManagementService 位于 <code>frameworks/base/services/core/java/com/android/server/NetworkManagementService.java</code> 位置。
+</p>
+<p>
+    <code>framework/base/services/java/com/android/server/SystemServer.java</code> 在初始化的时候在 <code>private void startOtherServices(@NonNull TimingsTraceAndSlog t)</code> 函数会初始化网络相关服务，
+    之后再初始化大多数基础模块之后会对 <code>NetworkManagementService</code> 进行初始化。
+    如下所示：
+</p>
+<pre>
+    ...
+
+    networkManagement = NetworkManagementService.create(context);
+    ServiceManager.addService(Context.NETWORKMANAGEMENT_SERVICE, networkManagement);
+    ...
+    final NetworkManagementService networkManagementF = networkManagement;
+    ...
+    if (networkManagementF != null) {
+        networkManagementF.systemReady();
+    }
+</pre>
+<p>
+    SystemServer 调用 NetworkManagementService 的 systemReady 之后, NetworkManagementService 会调用 <code>private void prepareNativeDaemon()</code> 进行一系列的网络初始化工作。
+</p>
+
 
 <div class="head head_2">参考文档</div>
 

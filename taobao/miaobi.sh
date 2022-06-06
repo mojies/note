@@ -3,7 +3,7 @@
 
 while true
 do
-	if [ $1 = "zhifubao" ]; then
+	if [ "$1" = "zhifubao" ]; then
 		# adb shell input draganddrop 399 1400 500 1500 200
 		adb shell input tap 201 1782
 		sleep 3
@@ -22,7 +22,7 @@ do
 	echo "adb input tab"
 	# adb shell input tap 914 1179
 
-	if [ $1 = "zhifubao" ]; then
+	if [ "$1" = "zhifubao" ]; then
 		adb shell input draganddrop 866 652 950 658 200
 	else
 		adb shell input draganddrop  829 1296 922 1303 200

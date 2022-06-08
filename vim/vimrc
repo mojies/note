@@ -89,6 +89,7 @@ set ignorecase
 syntax on
 set mouse=r
 
+set tags=./tags;
 
 function CreateTags()
     exec ':!ctags -R -f ./tags'

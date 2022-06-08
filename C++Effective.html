@@ -1242,7 +1242,55 @@ a-&gt;func1();
 </li>
 
 <li><strong>39: 明智而审慎的使用 private 继承</strong>
-    <br> 
+    <br> 对于 private 继承，编译器并不会自动的将一个派生类对象转换为基类对象；
+    <br> 而且基类内所有 public 和 protected 的属性都将变成 private 属性，并且无法访问基类中 private 成员；
+    <br> 一般而言， private 继承是非必须的，因为这可以通过在类中定义某个类的变量来实现，如下所示，其中 B 和 C 都能达到同样的效果：
+    <pre>
+class A{
+public:
+    void func1( void ) {
+        printf( "A func1" );
+    }
+};
+
+class B: private A{
+public:
+    void func4( void ) {
+        func1();
+    }
+};
+
+class C{
+    A a;
+public:
+    void func4( void ) {
+        a.func1();
+    }
+};
+    </pre>
+    <br> 当然可能如果基类中存在虚函数，并且你需要继承并实现该类，这可能是你使用 private 的一个好理由，但是也并不是没有解决方法，如下所示：
+    <pre>
+class C{
+public:
+    virtual void func5( void ) = 0;
+};
+
+class D{
+    class E: public C{
+    public:
+        virtual void func5( void ) {
+            printf( "func5" );
+        }
+    };
+
+    E e;
+public:
+    void func6(){
+        e.func5();
+    }
+};
+
+    </pre>
 </li>
 
 <li><strong>40: 明智而审慎的使用多重继承</strong>

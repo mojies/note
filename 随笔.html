@@ -257,7 +257,21 @@ img{
 
 
 <div class="breadboard">
-<div class="head head_1">网络工具</div>
+<div class="head head_1">网络相关</div>
+<div class="head head_2">proc 下和网络相关的一些配置</div>
+<ul>
+<li><strong>/proc/sys/net/ipv4/ip_forward</strong>
+    <br> 设置 1 使能 ip_forward
+    <br> Forward Packets between interfaces
+    <br> 将此属性配置为 1 将导致所有的 <code>net.ipv4.conf.INTERFACE.forwarding</code> 都变成 1
+</li>
+<li><strong>net.ipv4.conf.INTERFACE.accept_local</strong>
+    <br>
+</li>
+</ul>
+https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt
+https://sysctl-explorer.net/net/ipv4/
+
 <div class="head head_2">iperf3</div>
 <div class="head head_3">介绍</div>
 <p>
@@ -642,6 +656,8 @@ iperf Done.
 <ul>
 <li><a href="https://blog.csdn.net/weixin_51468875/article/details/114023012">Iptables防火墙策略详解</a></li>
 <li>LINUX: man iptables</li>
+<li><a href="https://wangchujiang.com/linux-command/c/iptables.html">iptables</a></li>
+<li><a href=""></a></li>
 </ul>
 
 

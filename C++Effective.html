@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <title>C++ Effective</title>
 </head>
-<body>
 
+<body style="font-family: Courier New, Arial, Microsoft YaHei, sans-serif;" >
 <style id="style_area" >
 a{
     text-decoration:none;
@@ -1334,7 +1334,109 @@ void func1( T t ){
 </pre>
 
 <div class="head head_2">43: 学习处理模板化基类内的名称</div>
+<br> 本章主要介绍使用模板过程中比较复杂的一种情况，即当你要继承一个模板类并调用基模板类中的方法时出现的一些情况。如下所示：
+<br> 什么时候你有可能需要用到本章的这种方案，例子之一是，可能你有类似 A 的 n 种类（ 比如 A1, A2 ... An ), 但你想使用一个模板 B 了来统一管理这些类似的类。
+    A1, A2 ... An 有可能并不是由 A 派生而来，而仅仅是拥有 A 中类似的几个同名函数/变量。
+<br> 在上面的条件下，有可能你还需要构建一个额外的日志类型 C 来管理和记录模板类 B 的使用情况， 此时你在 C 中可能需要调用到模板 B 中的一些内部方法/属性。
+    此时你有三种方法可以调用（如下方代码所示）。但第三种方法会有一定限制（请查看下方代码详情了解）。
+<pre>
+#include &lt;iostream&gt;
 
+using namespace std;
+
+class A{
+public:
+    void func1( void ){
+        printf( "A:func1\n" );
+    }
+    void func2( void ){
+        printf( "A:func2\n" );
+    }
+};
+class A1:public A{};
+class A2:public A{};
+
+template&lt; typename T &gt;
+class B{
+public:
+    T t;
+    virtual void show_func1( void ){
+        t.func1();
+    }
+    virtual void show_func2( void ){
+        t.func2();
+    }
+};
+
+template&lt; typename T &gt;
+class C: public B&lt;T&gt;{
+public:
+    using B&lt;T&gt;::t;
+    virtual void show_func1( void ){
+        printf( "C refector -&gt; " );
+        t.func1();
+    }
+    virtual void show_func2( void ){
+        printf( "C refector -&gt; " );
+        t.func2();
+    }
+
+
+#if 0
+    // method 2
+    void record_show_func1( void ){
+        this-&gt;show_func1();
+    }
+    // print: C refector -&gt; A:func1
+
+    void record_show_func2( void ){
+        this-&gt;show_func2();
+    }
+    // print: C refector -&gt; A:func2
+#endif
+#if 0
+    // method 2
+    using B&lt;T&gt;::show_func1;
+    using B&lt;T&gt;::show_func2;
+    void record_show_func1( void ){
+        show_func1();
+    }
+    // print: C refector -&gt; A:func1
+
+    void record_show_func2( void ){
+        show_func2();
+    }
+    // print: C refector -&gt; A:func2
+#endif
+#if 0
+    // method 3
+    void record_show_func1( void ){
+        B&lt;T&gt;::show_func1();
+    }
+    // print: A:func1
+
+    void record_show_func2( void ){
+        B&lt;T&gt;::show_func2();
+    }
+    // print: A:func2
+#endif
+};
+
+int main( int argc, char *argv[] ){
+
+    B&lt;A1&gt; ba;
+    ba.show_func1();    // print: A:func1
+    B&lt;A2&gt; ba;
+    ba.show_func1();    // print: A:func1
+
+    C&lt;A&gt; ca;
+    ca.record_show_func1();
+    ca.record_show_func2();
+
+
+    return 0;
+}
+</pre>
 
 
 <div class="head head_2">44: 将与参数无关的代码抽离 templates</div>

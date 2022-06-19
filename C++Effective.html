@@ -1440,11 +1440,151 @@ int main( int argc, char *argv[] ){
 
 
 <div class="head head_2">44: 将与参数无关的代码抽离 templates</div>
+<p>
+    对于模板定义中的每个函数，编译器在实例化的时候会因为输入的模板参数值（类型模板参数或者非类型模板参数）的不同，而生成不同的函数代码块，
+    如果你在乎最终生成的可执行程序大小，那么那些与模板参数无关的代码逻辑最好独立出来，再在模板中引用该独立出来的函数。
+</p>
+<p>
+    因非类型模板参数 (non-type template parameters) 而造成的代码膨胀，往往可消除，做法是以函数参数或 class 成员变量替换 template 参数。
+</p>
+<p>
+    类型参数(type parameters) 而造成的代码膨胀，往往可降低，做法是让带有完全相同二进制表述 (binary representations) 的具现类型 (instantiation types)共享实现码。
+</p>
+<p>
+    我的测试代码如下所示，膨胀部分只与模板参数涉及到的部分相关。像带模板参数的那个例子，增加 func2 / func3 实际并不会增加代码量（除非你调用过这些代码），因为编译器会优化掉你不调用的代码。
+    但在函数中携带进模板参数，则会导致编译器实例化出调用数量那么多的函数，而在非模板那个例子中则不会出现这个现象（那还用说吗？）：
+</p>
+<pre>
+#include &lt;iostream&gt;
 
+using namespace std;
+
+#if 0
+template&lt; int L &gt;
+class A{
+    int size;
+public:
+    void func1( void ){
+        size = L;
+        printf( "func1 :%d", L );
+    }
+    void func2(void){
+        printf( "func2" );
+    }
+    void func3(void){
+        printf( "func3" );
+    }
+};
+
+int main( int argc, char *argv[] ){
+
+    A&lt;__LINE__&gt; a0; A&lt;__LINE__&gt; a1; A&lt;__LINE__&gt; a2; A&lt;__LINE__&gt; a3;
+    A&lt;__LINE__&gt; a4; A&lt;__LINE__&gt; a5; A&lt;__LINE__&gt; a6; A&lt;__LINE__&gt; a7;
+    A&lt;__LINE__&gt; a8; A&lt;__LINE__&gt; a9;
+    a0.func1();
+    a1.func1();
+    a2.func1();
+    a3.func1();
+    a4.func1();
+    a5.func1();
+    a6.func1();
+    a7.func1();
+    a8.func1();
+    a9.func1();
+
+    return 0;
+}
+#else
+class B{
+    int size;
+public:
+    void func1( int len ){
+        size = len;
+        printf( "func1 :%d", len );
+    }
+    void func2(void){
+        printf( "func2" );
+    }
+    void func3(void){
+        printf( "func3" );
+    }
+};
+
+int main( int argc, char *argv[] ){
+
+    B b0, b1, b2,b3,b4,b5,b6,b7,b8,b9;
+    b0.func1( 0 );
+    b1.func1( 1 );
+    b2.func1( 2 );
+    b3.func1( 3 );
+    b4.func1( 4 );
+    b5.func1( 5 );
+    b6.func1( 6 );
+    b7.func1( 7 );
+    b8.func1( 8 );
+    b9.func1( 9 );
+
+    return 0;
+}
+#endif
+</pre>
+<p>
+    PS: 下面例子在我的电脑上编译出来的结果如下所示：
+</p>
+<pre>
+// 带模板参数的例子
+> g++ -o test main.cpp && ls -l test
+-rwxr-xr-x 1 mojies mojies 21064 Jun 19 03:46 test
+
+// 带不带模板参数的例子
+> g++ -o test main.cpp && ls -l test
+-rwxr-xr-x 1 mojies mojies 20968 Jun 19 03:46 test
+</pre>
 
 
 <div class="head head_2">45: 运用成员函数模板，接受所有兼容类型</div>
+<p>
+    有的时候你有一个基类 ( A ) 和一个派生类 ( B ), 而且你还有一个模板类 ( C ), 你想要将 C&lt;B&gt; 自由的转换成 C&lt;A&gt;,
+    比如 share_ptr&lt;B&gt; 可以自动的赋值给 share_ptr&lt;A&gt;。
+    你如何处理呢？
+</p>
+<p>
+    本文 ( 也是 share_ptr ) 提供的方法是使用 <strong>泛化的拷贝构造函数</strong> 和 <strong>泛化的拷贝赋值函数</strong> 这两个形式来处理的。如下所示：
+</p>
+<pre>
+template&lt;typename T&gt;
+class share_ptr{
+    T *held_ptr;
+public:
+    // 泛化的拷贝构造函数
+    template&lt;class Y&gt;
+    share_ptr( Y* p ){
+        ...
+        held_ptr = p;
+        ...
+    }
+    share_ptr( share_ptr&lt;Y&gt; const &Y ){
+        ...
+        held_ptr = Y.get();     // 注意： 这个手法会让编译器自动的帮我们检查 Y 和 T 之间的转换是否合法
+        ...
+    }
+    ...
 
+    shared-ptr& operator=(shared_ptr const& r); 
+    // 泛化的拷贝赋值函数
+    template&lt;class Y&gt;
+    shared-ptr& operator=(shared_ptr&lt;Y&gt; const& r);
+    ...
+};
+</pre>
+<p>
+    但是请记住： member templates 并不改变语言规则，而语言规则说，如果程序需要一个 copy 构造函数，你却没有声明它，编译器会为你暗自生成一个。
+    在 class 内声明泛化 copy 构造函数(是个 member template ) 并不会阻止编译器生成它们自己的 copy 构造函数( 一个 non-template ),
+    所以如果你想要控制 copy 构造的方方面面, 你必须同时声明泛化 copy 构造函数和 "正常的" copy 构造函数。相同规则也适用于赋值 ( assignment) 操作。
+</p>
+<p>
+    当然，这里说的成员模板函数并不仅仅是只能用于这两种场景，因此请更具你自己的情况合理使用这条规则。
+</p>
 
 
 <div class="head head_2">46: 需要类型转换时请为模板定义非成员函数</div>

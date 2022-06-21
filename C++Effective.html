@@ -12,10 +12,10 @@ a{
 }
 p{
     line-height: 1.4em;
-    text-indent:2em;
+     /* text-indent:2em; */
     margin-top: 0;
     margin-bottom: 0;
-    padding: 0.3em 0;
+    padding: 0.2em 0;
 }
 li{
     padding: 0.3em 0;
@@ -355,6 +355,84 @@ class A{
         xxx
     };
 };
+</pre>
+
+<div class="head head_2">友元函数</div>
+<p>
+    以下的解释摘自： <a href="http://c.biancheng.net/view/169.html">http://c.biancheng.net/view/169.html</a>
+</p>
+<p>
+    私有成员只能在类的成员函数内部访问，如果想在别处访问对象的私有成员，只能通过类提供的接口（成员函数）间接地进行。这固然能够带来数据隐藏的好处，利于将来程序的扩充，但也会增加程序书写的麻烦。
+</p>
+<p>
+    C++ 是从结构化的C语言发展而来的，需要照顾结构化设计程序员的习惯，所以在对私有成员可访问范围的问题上不可限制太死。
+</p>
+<p>
+    C++ 设计者认为， 如果有的程序员真的非常怕麻烦，就是想在类的成员函数外部直接访问对象的私有成员，那还是做一点妥协以满足他们的愿望为好，这也算是眼前利益和长远利益的折中。因此，C++ 就有了友元（friend）的概念。打个比方，这相当于是说：朋友是值得信任的，所以可以对他们公开一些自己的隐私。
+</p>
+<p>
+    友元分为两种：友元函数和友元类。
+</p>
+<p>
+    下面是一个友元函数的例子，其中函数 A.func1 和全局函数 func3 为 B 的友元函数，可以访问 B 中默认的 private 数据/接口。
+</p>
+<pre>
+class A{
+public:
+    void func1( void );
+};
+
+class B{
+private:
+    int p_member;
+    int func2( void );
+
+    friend void A::func1(void);
+    friend void func3(void);
+};
+
+void A::func1( void ){
+    B       b;
+    int     tmp1;
+
+    tmp1 = b.p_member;
+    b.func2();
+}
+
+void func3(void){
+    B       b;
+    int     tmp1;
+
+    tmp1 = b.p_member;
+    b.func2();
+}
+</pre>
+
+<p>
+    下面是一个友元类的例子，其中类 A 为 B 的友元类， A 中所有的接口都可以访问 B 中的 private 数据/接口。
+</p>
+<pre>
+class A{
+public:
+    void func1( void );
+};
+
+class B{
+private:
+    int p_member;
+    int func2( void );
+
+    friend class A;
+};
+
+void A::func1( void ){
+    B       b;
+    int     tmp1;
+
+    tmp1 = b.p_member;
+    b.func2();
+}
+</pre>
 </pre>
 
 </div>    
@@ -1638,25 +1716,29 @@ public:
 
 <div class="breadboard">
 <div class="head head_1">其他</div>
-<ul>
 
 <div class="head head_2">string</strong> 并不是一个类</div>
-    <br> string 是 <code>basic_string&lt;char&gt;</code> 的一个 typedef。
+<p>
+    string 是 <code>basic_string&lt;char&gt;</code> 的一个 typedef。
+</p>
 
 
 <div class="head head_2">RAII ( Resource Acquisition Is Initialization ) 获取资源即初始化</div>
-    <br> C++ 中管理资源的一种技术，即在构造函数中创建资源，然后析构函数中创建资源
-    <br> 这种技术有个好处，就是，就算发生了异常， C++ 也能够保证资源的释放。
-    <br> 常见的 RAII 类有，<code>std::lock_guard</code>, <code>std::auto_ptr</code>, <code>std::tr1::share_ptr</code> ...
-    <br> 用户也可以创建自己的 RAII 类。
+<p>
+    C++ 中管理资源的一种技术，即在构造函数中创建资源，然后析构函数中创建资源
+</p>
+<p>
+    这种技术有个好处，就是，就算发生了异常， C++ 也能够保证资源的释放。
+</p>
+<p>
+    常见的 RAII 类有，<code>std::lock_guard</code>, <code>std::auto_ptr</code>, <code>std::tr1::share_ptr</code> ...
+</p>
+<p>
+    用户也可以创建自己的 RAII 类。
+</p>
 
 
 
-<div class="head head_2">多重继承中同名函数</div>
-    <br> 
-
-
-</ul>
 </div>    
 
 

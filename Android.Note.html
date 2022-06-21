@@ -785,7 +785,7 @@ service \name \pathname [ \argument ]*
 </p>
 <p>
     <code>framework/base/services/java/com/android/server/SystemServer.java</code> 在初始化的时候在 <code>private void startOtherServices(@NonNull TimingsTraceAndSlog t)</code> 函数会初始化网络相关服务，
-    之后再初始化大多数基础模块之后会对 <code>NetworkManagementService</code> 进行初始化。
+    之后再初始化大多数基础模块之后会调用 <code>NetworkManagementService</code> 进行初始化。
     如下所示：
 </p>
 <pre>
@@ -801,8 +801,23 @@ service \name \pathname [ \argument ]*
     }
 </pre>
 <p>
-    SystemServer 调用 NetworkManagementService 的 systemReady 之后, NetworkManagementService 会调用 <code>private void prepareNativeDaemon()</code> 进行一系列的网络初始化工作。
+    SystemServer 调用 <code>NetworkManagementService.systemReady</code> 之后, <code>systemReady</code> 会调用 <code>private void prepareNativeDaemon()</code> 进行一系列的网络初始化工作。
 </p>
+<p>
+    NetworkManagementService 继承自 <code>INetworkManagementService</code>, <code>INetworkManagementService</code> 定义于 <code>./frameworks/base/core/java/android/os/INetworkManagementService.aidl</code> 文件中。
+</p>
+<p>
+    NetworkManagementService 提供的接口包括：注册监听网络事件接口； get/set/config 网络接口的接口； 对网络接口进行 IPV6 设置的接口； 操作共享网络的接口； 为 Uid 设置网络接口的权限； 设置防火墙的一些接口; ...
+</p>
+<p>
+    如何打开 NetworkManagerService 的调试信息？方法之一是直接修改 <code>NetworkManagementService.java</code> 中 <code>DBG</code> 成员的值为 <code>true</code>。下面是一个自动编译安装的脚本。
+</p>
+<pre>
+ssh ${PRJ_HOST} "cd ${PRJ_HOME}; source build/envsetup.sh; lunch ${PRJ_PLT}-userdebug; make services -j 32"
+scp ${PRJ_HOST}:${PRJ_HOME}/out/target/product/${PRJ_PLT}/system/framework/services.jar /tmp/services.jar
+adb root && adb remount && adb push /tmp/services.jar //system/framework/services.jar && adb shell sync && adb reboot
+rm -rf /tmp/services.jar
+</pre>
 
 
 <div class="head head_2">参考文档</div>
@@ -1089,7 +1104,7 @@ int main(int argc, char** argv){
 
 <div class="breadboard">
 <div class="head head_1">SELinux</div>
-<div class="head head_1">简介</div>
+<div class="head head_2">简介</div>
 <p>
     关于 SELinux 再 Android 中的简要介绍可以查看<a href="https://source.android.com/security/selinux">Android 官方关于 SELinux 的介绍</a>。
     AOSP 的 SELinux 仓库位于<a href="https://android.googlesource.com/platform/external/selinux/">https://android.googlesource.com/platform/external/selinux/</a>。
@@ -1128,23 +1143,93 @@ int main(int argc, char** argv){
 </p>
 
 
-<div class="head head_1">一些使用 SElinux 的场景</div>
+<div class="head head_2">一些使用 SElinux 的场景</div>
 <p>
     可以参考 <a href="https://source.android.com/security/selinux/implement#use_cases">Google 官方提供的参考用例</a> 查看。（非完备清单）
 </p>
 
-<div class="head head_1">参考资料</div>
+<div class="head head_2">一些经验</div>
 <ul>
+<li><strong>单独编译 SELinux policy</strong>
+    <br> 在经过 <code>source build/envsetup.sh</code> 和 <code>lunch xxx-xxx</code> 之后 执行 <code>make selinux_policy</code> 即可单独编译 SELinux 的 Policy
+
+</li>
 <li><strong>如何查看进程和文件的安全标签</strong>
     <br> 查看进程的 SELinux 标签： <code>ps -Z</code>
     <br> 查看文件的 SELinux 标签： <code>ls -Z</code>
 </li>
+<li><strong>TE 文件格式的敏感性</strong>
+    <br> 我们都知道 Windows 下的格式为 CRLF, 而 Linux 下位 LF, 我在编译的过程中发现 SElinux 的检查程序报告大量的 te 文件格式错误信息（如下所示），
+        这时你可能需要注意一下，你的文件是否为 LF 格式的。如果不是你可能需要使用 IDE 工具（比如说 vscode ）将你的文件转换为 LF Unix 格式的。
+        如果你是在 Linux 服务器中，你可以直接使用 <code>dos2unix</code> 进行文件格式转换。
+</li>
+<li><strong>Android 下脚本文件格式的敏感性</strong>
+    <br> 如果你启用的服务是一个脚本，
+</li>
+<li><strong>对于 ioctl 的特殊性</strong>
+    <br> 如果你的程序中使用了 ioctl 接口，即便你申明了访问 ioctl 的权限，那么你也同样会被内核报警告，如下所示：
+    <pre>
+# te 中存在的规则        
+allow self_net self_net:udp_socket { create ioctl };
+
+# 报告的警告
+avc: denied { ioctl } for path="socket:[47164]" dev="sockfs" ino=47164 ioctlcmd=0x8914 scontext=u:object_r:self_net:s0 tcontext=u:object_r:self_net:s0 tclass=udp_socket permissive=1
+avc: denied { ioctl } for path="socket:[50134]" dev="sockfs" ino=50134 ioctlcmd=0x8916 scontext=u:object_r:self_net:s0 tcontext=u:object_r:self_net:s0 tclass=udp_socket permissive=1
+    </pre>
+    <br> 这是因为 ioctl 能够操作的东西太多， SELinux 对其做了进一步的限制，因此你需要针对 ioctl 做出额外的规则申明，如下所示：
+    <pre>
+# te 中存在的规则    
+allowxperm ak_net ak_net:udp_socket ioctl { 0x8914 0x8916 };
+    </pre>
+
+</li>
+<li><strong>SELinux 的宏</strong>
+    <br> 官方定义的宏函数在 <code>system/sepolicy/public/te_macros</code> 路径下，其他和平台相关的宏可以在 device 目录使用 <code>find -name "te_macros"</code> 进行搜索。
+</li>
+<li><strong>SELinux 一键脚本</strong>
+    <pre>
+#!/bin/bash
+
+set -e
+
+PRJ_HOST=l2
+PRJ_HOME=./firefly
+
+f_cp_selinux_server_2_device(){
+	TEMP_F_NAME=/tmp/$$$$
+	ssh ${PRJ_HOST} "cd ${PRJ_HOME}/out/target/product/rk3588_firefly_itx_3588j/ && ls $1"  | while read FILE
+	do
+		scp ${PRJ_HOST}:${PRJ_HOME}/out/target/product/rk3588_firefly_itx_3588j/$1/${FILE} ${TEMP_F_NAME}
+		adb push ${TEMP_F_NAME} //$1/${FILE}
+		rm -rf ${TEMP_F_NAME}
+	done
+}
+
+adb root && adb remount
+f_cp_selinux_server_2_device system/etc/selinux/mapping/
+f_cp_selinux_server_2_device system/etc/selinux
+f_cp_selinux_server_2_device vendor/etc/selinux
+f_cp_selinux_server_2_device odm/etc/selinux
+adb reboot
+    </pre>
+
+</li>
+</ul>
+
+
+<div class="head head_2">参考资料</div>
+<ul>
 <li><a href="https://blog.csdn.net/fanx9339/article/details/106897218">Android SELinux介绍和配置</a>
     <br> 简单介绍了 SELinux 的三种模式，如何开机关闭 SELinux, 如何查看进程以及 文件的 SELinux 权限，等等...
     <br> 文中对规则的解释我觉得非常形象，因此我摘抄到这里： <code>什么是规则？ 规则就是针对 domain 对象的，上面我们说过，每一个进程都属于一个 domain （域），
         规则就是设置哪个 domain （域）的对象（就是进程）能够对哪些 type （类型）的目标对象（文件或者属性或者设备）具有哪有操作（删除啊，访问啊等等），这就是规则！</code>
     <br> 补充一下其中提到的但是不是很详细的一些信息：
     <br> 1. uboot 的关闭 selinux 的地方一般在 uboot 的板级配置中， 即 <code>xxx_defconfig</code> 中； kernel 中关闭的地方在板级的 dts 配置中；
+</li>
+<li><strong><a href="https://blog.csdn.net/feelabclihu/article/details/117576092">SELinux 介绍</a></strong>
+    <br> 本文介绍了 SELinux 的实现原理（简介），其中包括： SELinux 内部组成模块， SELinux 与 Linux 的关系， SELinux 与 Android 的关系；
+        以及 Security Context ( 安全上下文 ) 中的一些概念的定义，比如， Type Enforcement (TE) / Multi-Level Security (MLS) / Subject / Object / Subject, Object 与 Process, File 之间的关系，等等。
+    <br> 该文基本上信息都能从 <strong>SELinux Notebook</strong> 工程找到更加权威的解释，如果需要深入了解，建议还是仔细阅读 <strong>SELinux Notebook</strong> 工程。
 </li>
 </ul>
 

@@ -502,8 +502,8 @@ public:
 </pre>
     <br> non-static refrence 和 non-static const 对象都不能进行拷贝复制。
 <pre>
-main.cpp:6:7: error: non-static reference member ‘std::string& NameObject<int>::nameValue’, cannot use default assignment operator
-main.cpp:6:7: error: non-static const member ‘const int NameObject<int>::objectValue’, cannot use default assignment operator
+main.cpp:6:7: error: non-static reference member ‘std::string& NameObject&lt;int&gt;::nameValue’, cannot use default assignment operator
+main.cpp:6:7: error: non-static const member ‘const int NameObject&lt;int&gt;::objectValue’, cannot use default assignment operator
 </pre>
     <br> non-static refrence 和 non-static const 只能在初始化列表进行初始化。
 
@@ -910,13 +910,13 @@ narnespace WidgetStuff {
     ...
 
     template<typenarne T>
-    void swap( Widget<T>& a ,
-                Widget<T>& b){
+    void swap( Widget&lt;T&gt;& a ,
+                Widget&lt;T&gt;& b){
         a.swap(b) ;
     }
 }
 
-template<typename T>
+template&lt;typename T&gt;
 void doSomething(T& objl, T& obj2)
 {
 using std:: swap; // 令 std::swap 在此函数内可用
@@ -1666,7 +1666,127 @@ public:
 
 
 <div class="head head_2">46: 需要类型转换时请为模板定义非成员函数</div>
+<p>
+    理解作者说的这一点，你需要先有两个概念。第一个概念是友元函数，即友元函数一般不是类的内部函数。其次 template 实参推导过程中并不考虑采纳 "通过构造函数而产生的" 隐式类型转换。如下所示，
+    虽然我们可以接受一个模板类 A 可以通过单个 int 类型数据创建，并且也拥有一个 <code>A&lt;T&gt; operator*(const A&lt;T&gt; & v1 )</code> 的成员函数，但编译器无法将 v1 推导出来。
+    ( method1 和 method2 都是有问题的， 而且 method2 还无法访问内部私有成员 )。
+</p>
+<pre>
+#include &lt;iostream&gt;
 
+using namespace std;
+
+template&lt;typename T&gt;
+class A{
+    T a;
+    T b;
+public:
+    A(T val):
+        a( val ),
+        b( val ){
+    }
+    A(T val1, T val2):
+        a( val1 ),
+        b( val2 ){
+    }
+    // method1
+    const A&lt;T&gt; operator*( const A&lt;T&gt; &v2 ){
+        return A&lt;T&gt;( a * v2.a, a * v2.b );
+    }
+};
+
+// method2
+const A&lt;T&gt; operator*( A&lt;T&gt; &v1， A&lt;T&gt; &v2 ){
+    return A&lt;T&gt;( v1.a * v2.a, v1.b * v2.b );
+}
+
+int main( int argc, char *argv[] ){
+    A&lt;int&gt; a1( 1,2 );
+    A&lt;int&gt; a2( 1,2 );
+
+    auto a3 = a1*a2;        // 执行成功
+    auto a4 = a1*1;         // 执行失败
+
+    return 0;
+}
+</pre>
+<p>
+    但是可能你在实验上叙的功能时想， method2 无法访问到 private 数据，是不是可以将 method2 声明为 A&lt;T&gt; 的友元函数， 所以你就像下面这样试了一下，发现编译过了。但你收获了一个链接失败的提示。
+</p>
+<pre>
+template&lt;typename T&gt;
+class A{
+public:
+    friend A&lt;T&gt; operator*( const A&lt;T&gt; &v1, const A&lt;T&gt; &v2 );
+};
+
+template&lt;typename T&gt;
+A&lt;T&gt; operator*( const A&lt;T&gt; &v1, const A&lt;T&gt; &v2 ){
+    return A&lt;T&gt;( v1.a * v2.a, v1.b * v2.b );
+}
+</pre>
+<p>
+    链接错误信息：
+</p>
+<pre>
+&gt; g++ --std=c++17 -o test main.cpp && ./test
+main.cpp:19:56: warning: friend declaration ‘A&lt;T&gt; operator*(const A&lt;T&gt;&, const A&lt;T&gt;&)’ declares a non-template function [-Wnon-template-friend]
+   19 |         A&lt;T&gt; operator*( const A&lt;T&gt; &v1, const A&lt;T&gt; &v2 );
+      |                                                        ^
+main.cpp:19:56: note: (if this is not what you intended, make sure the function template has already been declared and add ‘&lt;&gt;’ after the function name here)
+/usr/bin/ld: /tmp/ccV0tDQv.o: in function `main':
+main.cpp:(.text+0x6a): undefined reference to `operator*(A&lt;int&gt; const&, A&lt;int&gt; const&)'
+collect2: error: ld returned 1 exit status
+</pre>
+<p>
+    即便你把 <code>operator*&lt;T&gt;</code> 提到 <code>class A</code> 之前都没用。
+    为什么？ 我也不清楚，作者也没有讲清楚。记住吧！
+</p>
+<p>
+    解决办法是在 <code>A</code> 内部将 friend 函数申明好（非类内函数定义在类内？？？？），至于长的有点不习惯，那么文中给出的方法是把函数主题迁移到外部即可。
+    最后整个函数看起来长这样：
+</p>
+<pre>
+#include &lt;iostream&gt;
+
+using namespace std;
+
+template&lt;typename T&gt; class A;
+template&lt;typename T&gt;
+const A&lt;T&gt; ____M( const A&lt;T&gt; v1, const A&lt;T&gt; v2 ){
+    return A&lt;T&gt;( v1.a * v2.a, v1.b * v2.b );
+}
+
+template&lt;typename T&gt;
+class A{
+public:
+    T a;
+    T b;
+    A(T val):
+        a( val ),
+        b( val ){
+    }
+    A(T val1, T val2):
+        a( val1 ),
+        b( val2 ){
+    }
+    friend const A&lt;T&gt; operator*( const A&lt;T&gt; &v1, const A&lt;T&gt; &v2 ){
+        return ____M( v1, v2 );
+    }
+};
+
+int main( int argc, char *argv[] ){
+    A&lt;int&gt; a1( 1,2 );
+    A&lt;int&gt; a2( 1,2 );
+
+    auto a3 = a1*1;        // 执行成功
+
+    return 0;
+}
+</pre>
+<p>
+    因此如果你想在你的模板类内使用隐式转换，那么或许你可以参考这样一个例子。
+</p>
 
 
 <div class="head head_2">47: 请用 traits classes 表现类型信息</div>

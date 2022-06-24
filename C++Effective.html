@@ -435,6 +435,32 @@ void A::func1( void ){
 </pre>
 </pre>
 
+
+<div class="head head_2">C++ 的迭代器类型</div>
+<p>
+    比较专业的描述请参考：<a href="https://zh.cppreference.com/w/cpp/iterator">https://zh.cppreference.com/w/cpp/iterator</a>, 下面是我自己的一些记录。
+</p>
+<p>
+    C++ 有五类迭代器， Input / Output / forward / bidirectional / random_access, 迭代器的分类的依据并不是迭代器的类型，而是迭代器所支持的操作。换句话说，某个类型只要支持相应的操作，就可以作为迭代器使用。
+    Input 迭代器只能向前移动，而且 client 只能读取该类迭代器的内容；
+    Output 迭代器也只能向前移动，而且 Client 只能向里面写入东西；
+    Forward 迭代器也只能向前移动，不过可以反复读取和修改当前内容；
+    Bidirectional 迭代器则可以进行双向移动，而且拥有 Forward 迭代器的所有功能；
+    Random_Access 迭代器则更加强大，可以向前或者向后移动任意单位的距离，当然企业拥有 Bidirectional 的所有功能。
+</p>
+<p>
+    针对该五类迭代器 C++ 为其定义了专用的 TAG STRUCT 加以确认，如下所示：
+</p>
+<pre>
+struct input_iterator_tag {I;
+struct output iterator tag {I;
+struct forward_iterator_tag: public input_iterator_tag { };
+struct bidirectional_iterator_tag: public forward_iterator_tag { };
+struct random_access_iterator_tag: public bidirectional iterator_tag {I;
+</pre>
+
+
+
 </div>    
 
 
@@ -1790,8 +1816,99 @@ int main( int argc, char *argv[] ){
 
 
 <div class="head head_2">47: 请用 traits classes 表现类型信息</div>
+ <p>
+    Traits 并不是 C++ 关键字或一个预先定义好的构件；它们是一种技术，也是一个 C++ 程序员共同遵守的协议。
+ </p>
+ <p>
+    原文介绍了一个用 traits 来处理不同容器的迭代器 <code>avdance</code> 函数实现的例子（该函数接受一个迭代器，和一个 int 参数，根据 int 参数前进或者后退到某个位置）。
+    而其实这项技术不仅仅是可以用于这种场景。该技术可以使用在多个类，拥有同一行为，但是行为有细微差别的处理过程的地方。
+    比如说：所有的动物都可以走，但有的你需要用两只脚走路的算法（人/鸟），有的你需要用四只脚走路的算法（猫猫狗狗），有的则可能需要用八只脚走路的算法（螃蟹/章鱼）；
+    或者所有建筑设计都需要建模，但是桥梁的建模和立式建筑使用的建模工具和方法肯定都不一样。
+    下面是一个例子：    
+ </p>
+ <p>
+     首先我们的需要准备一组 TAG 为的是给不同的类打标签：
+ </p>
+ <pre>
+struct TAG_A{};
+struct TAG_B{};
+struct TAG_C{};
+struct TAG_D{}: public TAG_A;
+ </pre>
+<p>
+    然后我们需要给我们的类打上不同的 TAG， 如下所示：
+</p>
+<pre>
+class A{
+public:
+    class do_somthing{
+    public:
+        typedef TAG_A TAG;
+    }
+};
+
+class A1{
+public:
+    class do_somthing{
+    public:
+        typedef TAG_A TAG;
+    }
+};
 
 
+class B{
+public:
+    class do_somthing{
+    public:
+        typedef TAG_B TAG;
+    }
+};
+...
+</pre>
+
+<p>
+    然后我们为不同的 TAG 设计不同的模板函数，如下所示：
+</p>
+<pre>
+template< typename T >
+void do_tag_work( T t, TAG_A ){
+    // do tag A process
+}
+
+template< typename T >
+void do_tag_work( T t, TAG_B ){
+    // do tag B process
+}
+...
+</pre>
+<p>
+    然后我们还需要为这些 TAG 准备以下对应的 traits 以用于查找某个类型的 TAG， 如下所示： 
+</p>
+<pre>    
+template&lt;typename T&gt;
+struct tag_traits{
+    typedef typename T::TAG tag_category;
+    ...
+};
+  
+// 指针的偏特化版本
+template&lt;typename T&gt;
+struct tag_traits<T*>{
+    typedef typename T::TAG tag_category;
+    ...
+};
+</pre>
+<p>
+    最后我们就可以为这些拥有有同样 TAG 的类提供统一类型处理函数了，如下所示：
+    （这里运用编译器的匹配重写函数的技术，编译器会寻找匹配类型的同名函数来调用，而 <code>typename tag_traits&lt;T&gt;::tag_category()</code> 就是用于区分使用不同函数的决定条件）
+</p>
+<pre>
+template&lt;typename T&gt;
+void tag_work( T t ){
+    do_tag_work( t,
+        typename tag_traits&lt;T&gt;::tag_category() )
+}
+</pre>
 
 <div class="head head_2">48: 认识 template 元编程</div>
 

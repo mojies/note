@@ -461,6 +461,10 @@ struct random_access_iterator_tag: public bidirectional iterator_tag {I;
 
 
 
+
+<div class="head head_2">typeid</div>
+
+
 </div>    
 
 
@@ -1909,8 +1913,25 @@ void tag_work( T t ){
         typename tag_traits&lt;T&gt;::tag_category() )
 }
 </pre>
+<p>
+    Traits 广泛用于标准程序库。其中当然有上述讨论的 iterator traits, 除了供应 iterator_category 还供应另四份迭代器相关信息(其中最有用的是 value_type, 见条款 42) 。
+    此外还有 char_traits 用来保存字符类型的相关信息，以及 numeric limits 用来保存数值类型的相关信息，例如某数值类型可表现之最小值和最大值等等。
+    命名为 numeric limits 有点让人惊讶，因为 traits classes 的名称常以 "traits" 结束，但 numeric limits 却没有遵守这种风格。
+</p>
+<p>
+    TRl (条款 54 )导入许多新的 traits classes 用以提供类型信息，包括 is_fundamental &lt;T&gt; (判断 T 是否为内置类型) ,
+    is_array&lt;T&gt; (判断 T 是否为数组类型) ，以及 is base of&lt;T1, T2&gt; ( Tl 和 T2 相同，抑或 Tl 是 T2 的 base class) 。
+    总计 TRl 一共为标准 C++ 添加了 50 个以上的 traits classes。
+</p>
 
-<div class="head head_2">48: 认识 template 元编程</div>
+<div class="head head_2">48: 认识 template 元编程 ( TMP - template metaprogramming )</div>
+<p>
+    TMP 有两个伟大的效力。
+    第一，它让某些事情更容易。如果没有它，那些事情将是困难的，甚至不可能的。
+    第二，由于 template metaprograms 执行于 C++ 编译期，因此可将工作从运行期转移到编译期。这导致的一个结果是，某些错误原本通常在运行期才能侦测到，现在可在编译期找出来。
+    另一个结果是，使用 TMP 的 C++ 程序可能在每一方面都更高效:较小的可执行文件、较短的运行期、较少的内存需求。
+    然而将工作从运行期移转至编译期的另一个结果是，编译时间变长了。
+</p>
 
 
 

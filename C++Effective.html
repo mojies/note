@@ -2007,7 +2007,45 @@ namespace std{
 </ul>
 
 <p>
-    
+    有时候你或许希望针对不同的类使用不同的内存分配失败处理过程， C++ 并没有支持 class 的专属 new_handler, 但是其实也不需要，因为你可以自己实现出这种行为。
+    其做法就是为你的 class 实现 <code>operator new</code>, 在 <code>operator new</code> 中先调用 <code>set_new_handler</code> 设置类自己专属的 <code>new_handler</code>,
+    然后再调用官方的 new 去申请内存，当然你得考虑退出的时候需要将原来的 <code>new_handler</code> 还原。因此这里你需要用到 13 小节提到的技术（也就是你需要设计一个资源管理器，
+    在构造的时候设置成指派的 <code>new_handler</code> ，在析构的时候设置成老的 <code>new_handle</code> ）。如下所示：
+</p>
+<pre>
+class HandleGuard{
+public:
+    explicit HandleGuard( std::new_handle p):
+        p_handle{p}{};
+    ~HandleGuard(){
+        std::set_new_handler( p_handle );
+    }
+private:
+    std::new_handle p_handle;
+    HandleGuard(const HandleGuard&);
+    HandleGuard &operator=(const HandleGuard&);
+}
+
+void class_a_handler( void ){
+    ...
+}
+
+class A{
+    ...
+public:
+    static void *operator new(std::size_t size) throw( std::bad_alloc );
+    ...
+}
+
+void *A::operator new( std::size_t size ) throw ( std::bad_alloc ){
+    HandleGuard guard( std::set_new_handler( class_a_handler ) );
+    return ::operator new( size );
+}
+</pre>
+
+<p>
+    最后原文还针对 <code>std::nothorw</code> 做了一番论述， nothrow 即告知 new 在申请内存失败的时候不报告异常而直接返回 NULL, 这是为了照顾以前编写的一些代码。
+    但是即便你在 new 一个对象的时候因为申明了 nothrow 而不产生异常，但你不能保证在对象执行构造函数阶段不会产生异常，因此该功能在你不了解透彻的情况下可能给你造成一些不必要的麻烦。
 </p>
 
 <div class="head head_2">50: 了解 new 和 delete 的合理替换时机</div>

@@ -3,10 +3,12 @@ function generateIndexLine( parent, index, innerContent ){
     var subIndexList;
 
     subIndex = document.createElement("a");
+    subIndex.setAttribute("style" , "text-decoration:none;" );
     subIndex.setAttribute("href" , index );
     subIndex.innerHTML = innerContent;
 
     subIndexList = document.createElement("li");
+    subIndexList.setAttribute("style" , "list-style-type:none;" );
     subIndexList.appendChild( subIndex );
     parent.appendChild( subIndexList );
     return subIndexList;
@@ -33,6 +35,7 @@ function autoCreateIndex(){
             k = 0;
             if( j == 0 ){
                 ol_head2 = document.createElement( "ol" );
+                ol_head2.setAttribute("style" , "padding-left:1.5em;" );
                 index_1.appendChild( ol_head2 );
                 j++;
             }
@@ -43,6 +46,7 @@ function autoCreateIndex(){
         if( tagDivs[i].getAttribute("class") == "head_3" ){
             if( k == 0 ){
                 ol_head3 = document.createElement( "ol" );
+                ol_head3.setAttribute("style" , "padding-left:1.5em;" );
                 index_1.appendChild( ol_head3 );
                 k++;
             }

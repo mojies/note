@@ -2042,35 +2042,230 @@ void *A::operator new( std::size_t size ) throw ( std::bad_alloc ){
     return ::operator new( size );
 }
 </pre>
-
+<p>
+    但上面的设置真的没问题吗？我不确定，在 new 期间执行的过程是否为原子的，我没有验证过，如果在其他线程恰好也在 new, 并且替换成其他 <code>new_handle</code> 会怎么样勒？
+    或者在本线程 <code>set_new_handler</code> 之后，其他线程执行 new 的时候出现申请异常了会不会出问题？这是否会对我们自己设计的 <code>new_handle</code> 提出要求？
+    我不敢轻易使用这条建议。或者说保守一点的情况是，仅仅为自己的进程设计唯一的一个原子性的 <code>new_handle</code>。
+</p>
 <p>
     最后原文还针对 <code>std::nothorw</code> 做了一番论述， nothrow 即告知 new 在申请内存失败的时候不报告异常而直接返回 NULL, 这是为了照顾以前编写的一些代码。
     但是即便你在 new 一个对象的时候因为申明了 nothrow 而不产生异常，但你不能保证在对象执行构造函数阶段不会产生异常，因此该功能在你不了解透彻的情况下可能给你造成一些不必要的麻烦。
 </p>
 
 <div class="head head_2">50: 了解 new 和 delete 的合理替换时机</div>
-
+<p>
+    一般人也不会自己去设计 new 和 delete, 一般会出于一下几个目的: 1. 用于检测运用上的错误; 2. 为了强化效能; 3. 为了收集使用上的统计数据；4. 使用更高级的内存使用方式（共享内存）
+</p>
+<p>
+    对于第二点，又可能还有几个原因：增加分配和归还内存的速度，降低默认内存管理器带来的额外空间开销，弥补默认分配器中欠缺齐位的考虑，为了将相关对象集中存放（从而减少页错误）。
+</p>
+<p>
+    对于强化效能这里可能需要补充一点，因为编译器自带的 operator new / detele 需要权衡各种场景的性能，因此对于某些特定的场景，可能并不是最高效的。因此，如果你非常熟悉你的数据存储特性，
+    这时你可以利用自定义的 new / delete 去提升能效，降低内存消耗，在某些场景甚至可以优化 50% 的内存消耗。
+</p>
+<p>
+    但在自定义 new / delete 的时候还是需要注意一些问题，比如数据对其的问题（在某些平台，对不对其的数据做运算可能导致程序（甚至系统）崩溃）。
+</p>
+<p>
+    还一个可取的方法是利用其他人已经写好的，成熟的代码，比如说 Boost 程序库中的 Pool 就是一个很好的实现，在 ”大量分配小型对象“ 的场景非常有帮助。
+</p>
 
 
 <div class="head head_2">51: 编写 new 和 delete 时需固守常规</div>
-
+<p>
+    operator new 的返回值十分单纯。如果它有能力供应客户申请的内存，就返回一个指针指向那块内存。如果没有那个能力, 就遵循条款 49 的规则，并抛出一个 bad_alloc 异常。
+</p>
+<p>
+    然而其实也不是非常单纯，因为 operator new 实际上不只一次尝试分配内存，并在每次失败后调用 new-handling 函数。
+    这里假设 new-handling 函数也许能够做某些动作将某些内存释放出来。
+    只有当指向 new-handling 函数的指针是 null, operator new 才会抛出异常。
+</p>
+<p>
+    奇怪的是 C++ 规定, 即使客户要求 0 bytes, operator new 也得返回一个合法指针。实现也很简单，当客户请求 0 byte 时，返回一个指向 1 byte 空间的地址。
+</p>
+<p>
+    许多人没有意识到 operator new 成员函数会被 derived classes 继承。
+    针对 class X 而设计的 operator new, 其行为很典型地只为大小刚好为 sizeof(X) 的对象而设计。
+    然而一旦被继承下去, 有可能 base class 的 operator new 被调用用以分配 derived class 对象，那将造成非常严重的后果。
+    处理此情势的最佳做法是将 "内存申请量错误" 的调用行为改来标准 operator new，像这样:
+</p>
+<pre>
+void* Base::operator new(std::size_t size) throw(std::bad_alloc){
+    if (size != sizeof(Base))
+        return ::operator new (size);
+    ...
+}
+</pre>
+<p>
+    如果你打算实现 class 独有的 aπays 内存分配行为，那么你需要实现 operator new 的 array 兄弟版 <code>operator new[]</code>。
+    如果你决定写个 <code>operator new[]</code>，记住唯一需要做的一件事就是分配一块未加工内存 (raw memory) 。
+    因为你无法对 array 之内迄今尚未存在的元素对象做任何事情。实际上你甚至无法计算这个 array 将含多少个元素对象。
+    原因之一是因为你不知道每个对象的具体大小，因为基类的 <code>operator new[]</code> 可能被派生类调用。因此你不能假设数组的元素个数为 <code>申请的大小 / sizeof(BaseClass)</code> 。
+</p>
+<p>
+    而设计对应的 delete 比 new 要简单的多，唯一要注意的是即使 delete 传的参数值是 nullptr 也必须是合法的。
+    而对于设计类成员的 <code>operator delete</code> 函数则需要检查一下大小，如果大小与 sizeof(ClassName) 不一致，那么你需要将该指针转移给 <code>::operator delete</code> 处理。
+</p>
+<p>
+    如果你的 base classes 遗漏 virtual 析构函数， operator delete 可能无法正确运作。因为你的派生类在析构时传递给 operator delete 的 size_t 可能是不正确的，
+    这是"让你的 base classes 拥有 virtual 析构函数"的一个够好的理由（条款7）
+</p>
 
 
 <div class="head head_2">52: 写了 placement new 也要写 placement delete</div>
+<p>
+    当你执行 <code>A *a = new A;</code> 的时候，你至少必须意识到两个问题：首先 new 的时候可能会失败产生异常，其次在内存分配之后会调用 A 的构造函数，这里也可能产生异常。
+    骑在第二个阶段产生异常之后，你是无法去处理第一节阶段申请的内存的，因此，这个工作交给了 C++ 编译器，他会帮你实现该部分异常处理。
+</p>
+<p>
+    而编译器采取的策略是 <strong>匹配与你 new 相同类型签名的 delete 函数，然后调用该函数去释放内存。如果没有匹配到怎么办？那这里会存在内存泄露。</strong>
+</p>
+<p>
+    或许你会想， new 和 delete 会有什么问题？我实现了 <code>operator new</code>, <code>operator delete</code>, <code>operator new[]</code>, <code>operator detele[]</code>,
+    还不够？ようち
+</p>
+<p>
+    首先，编译器默认情况下在 global 作用域内提供有以下形式的 <code>operator new</code>:
+</p>
+<pre>
+void *operator new( std::size_t ) throw( std::bad_alloc );          // normal new
+void *operator new( std::size_t, void * ) throw();                  // placement new
+void *operator new( std::size_t, const std::nothrow_t& ) throw();   // nothrow new ( 见 49 )
 
 
+void operator delete (void* ptr) throw();                           // ordinary
+void operator delete (void* ptr, void* ) throw();                   // placement
+void operator delete (void* ptr, const std::nothrow_t& ) throw();   // nothrow
+</pre>
+<p>
+    <code>placement new</code> 和 <code>placement delete</code> 是什么鬼？ 不知道你以前有没有见过这种用法：<code>A *a = new(std::nothrow) A;</code>，
+    对于这种情况，在 new 阶段调用的是 <code>nothrow new</code> 版本，在构造函数发生异常要释放内存时调用的是 <code>nothorw delete</code> 版本，而在最后 <code>delete a</code>, 的时候调用的是 normal delete 版本。
+</p>
+<p>
+    而实际上你也可以这么用，其作用为在之前已经开辟的空间再次执行 A 的初始化过程（调用构造函数），其调用的是以上案例的 <code>placement new</code> 和 <code>placement delete</code> 两个版本：
+</p>
+<pre>
+A a1;
+...
+A *a2 = new(&a1) A;
+...
+</pre>
+<p>
+    但我们能做的远不止于此，比如说我们想在 new 的时候传送一个对象进去，以方便记录 new 的行为。那么我们是可以这么做的：
+</p>
+<pre>
+class Logger{
+    ...
+public:
+    void log_info( std::string msg );
+    ...
+}
+class A{
+public:
+    static void *operator new( std::size_t, Logger & ) noexcept;
+    static void *operator delete(void *, Logger & ) noexcept;
+    static void *operator delete(void * ) noexcept;
+}
+
+// 一下是应用部分的代码
+Logger log1( TAG )
+
+A *a = new( log1 ) A;
+</pre>
+<p>
+    当然，为了方便使用，其实你还可以利用继承，或者模板等手法，建立起你的通用 new / delete 方法。（继承的时候不要忘了使用 using 申明基类相关函数的可见性，防止被重载函数覆盖）
+</p>
 
 <div class="head head_2">53: 不要轻易忽视编译器警告</div>
-
-
+<p>
+    在实际的开发经验中，反复的验证了该点，相信不用看作者的解释大家也都能理解。
+    我个人的习惯是消除代码中的每一个 warning, 当然在面对跨平台代码会有点困难，但通过编译工具上的处理，机会能做到消除每一个 warning。
+    退而求其次的做法是，自己必须知道每一个 warning 产生的原因。
+</p>
 
 <div class="head head_2">54: 让自己熟悉 TR1 在内的标准程序库</div>
+<p>
+    本章主要介绍在当 2006 年前 C++ 的情况，但是后续出的 C++11 已经把很多 tr1 中的功能添加到 std 标准库里面了，因此这里我仅仅做一份清单，与原文会有出入。
+</p>
+<ul>
+<li><strong>STL ( Stadard Template Library ) 标准模板库</strong>
+    <br> 容器 ( containers ): array( C++11 ), deque, forward_list( C++11 ), list, map, queue, set, stack, unordered_map( C++11 ), unorder_set( C++11 ), vector
+    <br> 迭代器( iterator ):  见前文
+    <br> 算法( algorithm ): for_each, find, find_end, count, copy, move( C++11 ), sort, is_sorted, min, max ... 详见 ( <a href="https://cplusplus.com/reference/algorithm/?kw=algorithm">https://cplusplus.com/reference/algorithm/?kw=algorithm</a> )
+    <br> 函数对象( function object ): less( functional ), greater( functional )
+    <br> 容器适配器( container adapter ): stack( stack ), priority_queue( queue )
+    <br> 函数适配器( function object adatpers ): mem_func( functional ), not1( functional )
+</li>
+<li><strong>iostream</strong>
 
+</li>
+<li><strong>国际化</strong>
+    <br> wchar_t
+    <br> wstring
+</li>
+<li><strong>数值处理</strong>
+    <br> complex
+    <br> valarray
 
+</li>
+<li><strong>异常</strong>
+
+</li>
+<li><strong>智能指针</strong>
+    <br> auto_ptr
+    <br> share_ptr
+    <br> unique_ptr
+    <br> weak_ptr
+</li>
+<li><strong>function</strong>
+
+</li>
+<li><strong>bind</strong>
+
+</li>
+<li><strong>正则表达式</strong>
+
+</li>
+<li><strong>Tunples 元组</strong>
+
+</li>
+<li><strong>reference_wrapper</strong>
+
+</li>
+<li><strong>随机数</strong>
+
+</li>
+<li><strong>数学函数</strong>
+
+</li>
+<li><strong>模板编程技术</strong>
+    <br> traits
+    <br> result_of
+</li>
+</ul>
+<p>
+    以后有时间在补充吧！
+</p>
 
 <div class="head head_2">55: 让自己熟悉 bootst</div>
-
-
+<p>
+    boost 官网 <a href="https://www.boost.org/">https://www.boost.org/</a>。
+</p>
+<p>
+    作者是非常推荐 C++ 开发者来这里逛逛的，很多 C++ 的标准都是从这里发酵的，因此你也能接触到最前沿的知识。但我自认为我现在还没达到这个 level, 我摘抄翻译了官网的介绍，有兴趣的同学可以自己去查看原文以及逛逛这个网站。
+</p>
+<p>
+    Boost 提供免费的经过同行评审的可移植 C++ 源库。
+</p>
+<p>
+    我们重视库与 C++ 标准库的良好配合。
+    Boost libraries 旨在提供能被广泛使用到各种应用场景，并且有效的功能。
+    Boost license 鼓励所有的用户以最小的限制使用 Boost lib。
+</p>
+<p>
+    我们的目标是建立 “现有实践” 并提供参考实现，以便 Boost 库适合最终的标准化。
+    从库技术报告 (TR1) 中包含的 10 个 Boost 库开始，到自 2011 年以来 C++ 标准的每个版本，C++ 标准委员会一直依赖 Boost 作为标准 C++ 库添加的宝贵来源 .
+</p>
 </div>
 
 

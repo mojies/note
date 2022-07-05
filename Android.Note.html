@@ -458,20 +458,201 @@ ndk.dir=D\:\\AndroidSDK\\ndk\\24.0.8215888
     <code>TARGET_DEVICE_DIR</code> 保存当前板级编译配置的路径。
     比如我编译的板级为 <code>rk3588_firefly_itx_3588j-userdebug</code>， 那么 <code>TARGET_DEVICE_DIR</code> 的值为 <code>device/rockchip/rk3588/rk3588_firefly_itx_3588j</code>
 </p>
-</div>
-    
+
+
+
+
+
+<div class="head head_2">当你再执行完 <code>source build/envsetup.sh</code> 和 <code>lunch PLT</code> 之后，再运行 make 这时编译系统做了哪些事情？</div>
+<p>
+    make 命令会自动加载 Makefile 中的内容，而可能你看到的工程根目录中的 Makefile 只有一行内容，即 <code>include build/make/core/main.mk</code>
+</p>
+<p>
+    而再你打开 <code>include build/make/core/main.mk</code> 文件之后，再文件的前部会看到 main.mk 将 make 的默认 target 改成了 <code>droid</code>, 而 <code>droid</code> target 又进而执行了 <code>droid_targets</code> target。
+</p>
+<pre>
+...
+.PHONY: droid
+DEFAULT_GOAL := droid
+$(DEFAULT_GOAL): droid_targets
+...
+droid_targets : blueprint_tools
+...
+</pre>
+<p>
+    你可能已经发现了 <code>droid_targets</code> 最终调用到了 <code>blueprint_tools</code> target, 但你找遍整个 core 都找不到 <code>blueprint_tools</code> target 再哪里。
+    别着急，
+</p>
+
+
+
+<div class="head head_2">关于 Android.mk</div>
+<p>
+    PS: 本章以下内容大多取自 <a href="https://deepinout.com/android-mk-explanation/android-mk-module-description-variable/android-mk-local_path.html">极客笔记</a> 相关页面。
+</p>
+<ul>
+<li><strong>CLEAR_VARS</strong>
+    <br> <code>CLEAR_VARS</code> 指向一个特殊的 Makefile（可能在这个路径 <code>./build/make/core/clear_vars.mk</code> ），该命令将会为你清除很多 <code>LOCAL_</code> 开头的变量,
+        例如 LOCAL_MODULE、LOCAL_SRC_FILES 和 LOCAL_STATIC_LIBRARIES。
+    <br> 不过 GNU Makefile 不会清除 LOCAL_PATH。此变量必须保留其值, 因为系统在单一 GNU Make 执行上下文（其中的所有变量都是全局变量）中解析所有构建控制文件。在描述每个模块之前，您必须声明（重新声明）此变量。
+    <br> 使用方式 <code>include $(CLEAR_VARS)</code>
+
+</li>
+<li><strong>include $(BUILD_SHARED_LIBRARY)</strong>
+    <br> 这一行会运行一个特殊的 Makefile 构建出该模块。
+    <br> 该变量指向的文件在 <code>./build/make/core/shared_library.mk</code>
+</li>
+
+<li><strong>LOCAL_PATH</strong>
+    <br> LOCAL_PATH 每个模块都在 Android.mk 里定义, 表示模块所在目录。
+    <br> 此变量用于指定当前文件的路径。必须在 Android.mk 文件开头定义此变量。
+
+</li>
+<li><strong>LOCAL_MODULE</strong>
+    <br> LOCAL_MODULE 此变量用于存储模块名称。 LOCAL_MODULE 将在每个模块的 makefile 里定义，如果未定义，编译系统会报错。
+    <br> 指定的名称在所有模块名称中必须唯一，并且不得包含任何空格。
+    <br> 您必须先定义该名称, 然后才能添加任何脚本 ( CLEAR_VARS 的脚本除外 )。
+    <br> 无需添加 lib 前缀或 .so 或 .a 文件扩展名；构建系统会自动执行这些修改。
+    <br> 在整个 Android.mk 和 Application.mk 文件中，请用未经修改的名称引用模块。
+    <br> 如果您希望生成的模块使用除 "lib + LOCAL_MODULE 的值" 以外的名称，可以使用 LOCAL_MODULE_FILENAME 变量为生成的模块指定自己选择的名称。
+
+</li>
+<li><strong>LOCAL_MODULE_FILENAME </strong>
+    <br> LOCAL_MODULE_FILENAME 此可选变量使您能够替换构建系统为其生成的文件默认使用的名称。
+    <br> 
+
+</li>
+<li><strong>LOCAL_MODULE_TAGS</strong>
+    <br> LOCAL_MODULE_TAGS 模块的 tag, 为 debug / eng / tests / optional / samples / shell_ash / shell_mksh 等 tag 的组合, 一个模块可有多个Tag。
+    <ul>
+    <li>user: 指该模块只在 user 版本下才编译</li>
+    <li>eng: 指该模块只在 eng 版本下才编译</li>
+    <li>tests: 指该模块只在 tests 版本下才编译</li>
+    <li>optional: 指该模块在所有版本下都编译</li>
+    </ul>
+    <br> 如果某个模块没有通过 LOCAL_MODULE_TAGS 指定标记，则其标记默认设置为 optional。仅当 PRODUCT_PACKAGES 的产品配置需要可选模块时，系统才会安装可选模块。
+    <br> 该变量在 <code>build/target/product/base.mk</code> 和 <code>build/target/product/core.mk</code> 里有赋值，这是所有产品都将继承的基础配置，
+        另外每个设备可在自己的产品配置文件 <code>device_*.mk</code> 里设置该变量，添加更多的模块。
+    <br> 如果当前目录或者父目录有*_GPL*的文件，那么将自动添加gnu的tag。
+
+</li>
+<li><strong>LOCAL_MODULE_CLASS</strong>
+    <br> LOCAL_MODULE_CLASS 将用于决定编译时的中间文件存放的位置。其可选的值有：
+        <code>RECOVERY_EXECUTABLES</code>,
+        <code>UTILITY_EXECUTABLES</code>,
+        <code>ETC</code>,
+        <code>STATIC_LIBRARIES</code>,
+        <code>EXECUTABLES</code>,
+        <code>FAKE</code>,
+        <code>JAVA_LIBRARIES</code>,
+        <code>SHARED_LIBRARIES</code>,
+        <code>APPS</code>
+
+    <br> 使用该变量的过程可参考：<code>build/core/base_rules.mk</code>
+
+</li>
+<li><strong>LOCAL_PROPRIETARY_MODULE </strong>
+    <br> Vendor 模块是特定于供应商的可执行文件或共享库（必须将这些模块安装到供应商分区中）。
+    <br> 在 Android.bp 文件中，供应商模块必须将 vendor 或 proprietary 属性设为 true。
+    <br> 在 Android.mk 文件中，供应商模块必须将 LOCAL_VENDOR_MODULE 或 LOCAL_PROPRIETARY_MODULE 设为 true。
+
+</li>
+<li><strong>LOCAL_MODULE_PATH</strong>
+    <br> LOCAL_MODULE_PATH 表示模块生成的目标将最终存放的目录，也即目标的安装路径。
+    <br> 使用该变量的过程可参考：<code>build/core/base_rules.mk</code>, 其常用取值有：
+    <div class="tb_format">
+        {
+            "head": [ "原始表达式", "例子" ],
+            "data": [
+            [ "<code>TARGET_OUT_INTERMEDIATES := $(PRODUCT_OUT)/obj</code>", "out/target/product/i9100/obj" ],
+            [ "<code>TARGET_OUT_HEADERS:= $(TARGET_OUT_INTERMEDIATES)/include</code>", "out/target/product/i9100/obj/include" ],
+            [ "<code>TARGET_OUT_INTERMEDIATE_LIBRARIES := $(TARGET_OUT_INTERMEDIATES)/lib</code>", "out/target/product/i9100/obj/lib" ],
+            [ "<code>TARGET_OUT_COMMON_INTERMEDIATES := $(TARGET_COMMON_OUT_ROOT)/obj</code>", "out/target/common/obj" ],
+            [ "<code>TARGET_OUT := $(PRODUCT_OUT)/$(TARGET_COPY_OUT_SYSTEM)</code>", "out/target/product/i9100/system" ],
+            [ "<code>TARGET_OUT_EXECUTABLES:= $(TARGET_OUT)/bin</code>", "out/target/product/i9100/system/bin" ],
+            [ "<code>TARGET_OUT_OPTIONAL_EXECUTABLES:= $(TARGET_OUT)/xbin</code>", "out/target/product/i9100/system/xbin" ],
+            [ "<code>TARGET_OUT_SHARED_LIBRARIES:= $(TARGET_OUT)/lib</code>", "out/target/product/i9100/system/lib" ],
+            [ "<code>TARGET_OUT_JAVA_LIBRARIES:= $(TARGET_OUT)/framework</code>", "out/target/product/i9100/system/framework" ],
+            [ "<code>TARGET_OUT_APPS:= $(TARGET_OUT)/app</code>", "out/target/product/i9100/system/app" ],
+            [ "<code>TARGET_OUT_KEYLAYOUT := $(TARGET_OUT)/usr/keylayout</code>", "out/target/product/i9100/system/usr/keylayout" ],
+            [ "<code>TARGET_OUT_KEYCHARS := $(TARGET_OUT)/usr/keychars</code>", "out/target/product/i9100/system/usr/keychars" ],
+            [ "<code>TARGET_OUT_ETC := $(TARGET_OUT)/etc</code>", "out/target/product/i9100/system/etc" ],
+            [ "<code>TARGET_OUT_NOTICE_FILES:=$(TARGET_OUT_INTERMEDIATES)/NOTICE_FILES</code>", "out/target/product/i9100/obj/NOTICE_FILES" ],
+            [ "<code>TARGET_OUT_FAKE := $(PRODUCT_OUT)/fake_packages</code>", "out/target/product/i9100/fake_packages" ],
+            [ "<code>TARGET_OUT_DATA := $(PRODUCT_OUT)/$(TARGET_COPY_OUT_DATA)</code>", "out/target/product/i9100/data" ],
+            [ "<code>TARGET_OUT_DATA_EXECUTABLES:= $(TARGET_OUT_EXECUTABLES)</code>", "out/target/product/i9100/system/bin" ],
+            [ "<code>TARGET_OUT_DATA_SHARED_LIBRARIES:= $(TARGET_OUT_SHARED_LIBRARIES)</code>", "out/target/product/i9100/system/lib" ],
+            [ "<code>TARGET_OUT_DATA_JAVA_LIBRARIES:= $(TARGET_OUT_JAVA_LIBRARIES)</code>", "out/target/product/i9100/system/framework" ],
+            [ "<code>TARGET_OUT_DATA_APPS:= $(TARGET_OUT_DATA)/app</code>", "out/target/product/i9100/data/app" ],
+            [ "<code>TARGET_OUT_DATA_KEYLAYOUT := $(TARGET_OUT_KEYLAYOUT)</code>", "out/target/product/i9100/system/usr/keylayout" ],
+            [ "<code>TARGET_OUT_DATA_KEYCHARS := $(TARGET_OUT_KEYCHARS)</code>", "out/target/product/i9100/system/usr/keychars" ],
+            [ "<code>TARGET_OUT_DATA_ETC := $(TARGET_OUT_ETC)</code>", "out/target/product/i9100/system/etc" ],
+            [ "<code>TARGET_OUT_DATA_NATIVE_TESTS := $(TARGET_OUT_DATA)/nativetest</code>", "out/target/product/i9100/data/nativetest" ],
+            [ "<code>TARGET_OUT_CACHE := $(PRODUCT_OUT)/cache</code>", "out/target/product/i9100/cache" ],
+            [ "<code>TARGET_OUT_VENDOR := $(PRODUCT_OUT)/$(TARGET_COPY_OUT_VENDOR)</code>", "out/target/product/i9100/system/vendor" ],
+            [ "<code>TARGET_OUT_VENDOR_EXECUTABLES:= $(TARGET_OUT_VENDOR)/bin</code>", "out/target/product/i9100/system/vendor/bin" ],
+            [ "<code>TARGET_OUT_VENDOR_OPTIONAL_EXECUTABLES:= $(TARGET_OUT_VENDOR)/xbin</code>", "out/target/product/i9100/system/vendor/xbin" ],
+            [ "<code>TARGET_OUT_VENDOR_SHARED_LIBRARIES:= $(TARGET_OUT_VENDOR)/lib</code>", "out/target/product/i9100/system/vendor/lib" ],
+            [ "<code>TARGET_OUT_VENDOR_JAVA_LIBRARIES:= $(TARGET_OUT_VENDOR)/framework</code>", "out/target/product/i9100/system/vendor/framework" ],
+            [ "<code>TARGET_OUT_VENDOR_APPS:= $(TARGET_OUT_VENDOR)/app</code>", "out/target/product/i9100/system/vendor/app" ],
+            [ "<code>TARGET_OUT_VENDOR_ETC := $(TARGET_OUT_VENDOR)/etc</code>", "out/target/product/i9100/system/vendor/etc" ],
+            [ "<code>TARGET_OUT_UNSTRIPPED := $(PRODUCT_OUT)/symbols</code>", "out/target/product/i9100/system/symbols" ],
+            [ "<code>TARGET_OUT_EXECUTABLES_UNSTRIPPED := $(TARGET_OUT_UNSTRIPPED)/system/bin</code>", "out/target/product/i9100/sysmbols/system/bin" ],
+            [ "<code>TARGET_OUT_SHARED_LIBRARIES_UNSTRIPPED := $(TARGET_OUT_UNSTRIPPED)/system/lib</code>", "out/target/product/i9100/sysmbols/system/lib" ]
+            ]
+        }
+    </div>
+
+
+</li>
+<li><strong>LOCAL_SRC_FILES</strong>
+    <br> 该变量包含要建构到该模块中的 C 或者 C++ 源文件, 每一个文件用空格分隔
+    <br> 请注意，您可以使用相对 ( 相对于 LOCAL_PATH ) 和绝对文件路径。不过应该避免使用绝对文件路径；相对路径可以提高 Android.mk 文件的移植性。
+</li>
+<li><strong>LOCAL_MODULE_RELATIVE_PATH</strong>
+    <br> LOCAL_MODULE_RELATIVE_PATH 指定动态库的相对路径,以各自编译对象放置的目录为参考。
+    <br> 通知编译系统来将一个模块放置到它的类型通常需要放到的目录的子目录下。
+    <br> 比如: <code>LOCAL_MODULE_RELATIVE_PATH := ak</code>, 生成的库将会存在于 <code>xxx/ak/</code> 目录下, xxx 取决于 LOCAL_MODULE_PATH。
+
+</li>
+<li><strong>LOCAL_CPP_EXTENSION</strong>
+    <br> 指定 .cpp 以外的文件扩展名。比如： <code>LOCAL_CPP_EXTENSION := .cxx .cpp .cc</code>
+
+</li>
+<li><strong>LOCAL_CPP_FEATURES</strong>
+    <br> LOCAL_CPP_FEATURES 您可使用此可选变量指明您的代码依赖于特定 C++ 功能。
+    <br> 它会在构建过程中启用正确的编译器标记和链接器标记。
+    <br> 对于预构建的二进制文件，此变量还会声明二进制文件依赖于哪些功能，从而确保最终链接正常运行。
+    <br> 我们建议您使用此变量，而不要直接在 LOCAL_CPPFLAGS 定义中启用 -frtti 和 -fexceptions。
+    <br> 使用此变量可让构建系统对每个模块使用适当的标记。使用 LOCAL_CPPFLAGS 会导致编译器将所有指定的标记用于所有模块，而不管实际需求如何。
+    <br> 比如: <code>LOCAL_CPP_FEATURES := rtti features</code>
+
+</li>
+<li><strong>LOCAL_C_INCLUDES</strong>
+    <br> LOCAL_C_INCLUDES 您可使用此可选变量指定相对于 NDK root 目录的路径列表, 以便在编译所有源文件 ( C、C++ 和 Assembly ) 时添加到 include 搜索路径中。
+        例如: <code>LOCAL_C_INCLUDES := $(LOCAL_PATH)/xxx/foo</code>
+    <br> 请在通过 LOCAL_CFLAGS 或 LOCAL_CPPFLAGS 设置任何对应的包含标记前定义此变量。
+
+</li>
+<li><strong>LOCAL_CFLAGS</strong>
+    <br> LOCAL_CFLAGS 此可选变量用于设置在构建 C 和 C++ 源文件时构建系统要传递的编译器标记。这样，您就可以指定额外的宏定义或编译选项。可以使用 LOCAL_CPPFLAGS 仅为 C++ 指定标记。
+    <br> 请勿尝试在 Android.mk 文件中更改优化/调试级别。构建系统可以使用 Application.mk 文件中的相关信息自动处理此设置。这样，构建系统就可以生成供调试期间使用的有用数据文件。
+
+</li>
+<li><strong>LOCAL_SDK_VERSION</strong>
+    <br> 我也没找到该变量的具体说明，但目前从经验来看，该变量制指定的是当前编译 Android 的 SDK 版本。
+    <br> 而且如果你编写了 JNI， 那么你必须指定该变量，否则编译的时候可能会报告 <code>jni.h not found</code>（出现在 Android 12 某芯片厂商的工程中）。
+    <br> 一般赋值为 <code>current</code> 即可。
+    <br> 其可选值有：<code>current</code>， <code>system_current</code>, <code>test_current</code>, <code>core_current</code>，以及具体的版本编号，
+</li>
+</ul>
 
 
 
 
 
 
-
-
-
-
-<div class="breadboard">
-<div class="head head_1">APP 下的 gradle</div>
+<div class="head head_2">APP 下的 gradle</div>
 <p>
     大体框架如下：
 </p>
@@ -522,33 +703,6 @@ dependencies {
 </pre>
 
 
-<div class="head head_1">Android.mk</div>
-<ul>
-<li><strong>LOCAL_PATH := $(call my-dir)</strong>
-    <br> LOCAL_PATH 将为当前 Android.mk 所在目录的位置
-</li>
-<li><strong>include $(CLEAR_VARS)</strong>
-    <br> <code>CLEAR_VARS</code> 指向一个特殊的 Makefile（可能在这个路径 <code>./build/make/core/clear_vars.mk</code> ），该命令将会为你清除很多 <code>LOCAL_</code> 开头的变量
-</li>
-<li><strong>LOCAL_MODULE</strong>
-    <br> 存储您要构建的模块的名称。在应用的每个模块中使用一次此变量，并且需要确保每一个模块明为唯一的，且不包含任何空格。
-    <br> 构建系统在生成最终共享库文件时，会对您分配给 LOCAL_MODULE 的名称自动添加正确的前缀和后缀。比如如果是共享库，则会加上 <code>lib</code> 前缀和 <code>.so</code> 后缀。
-</li>
-<li><strong>LOCAL_SRC_FILES</strong>
-    <br> 该变量包含要建构到该模块中的 C 或者 C++ 源文件
-    <br> 每一个文件用空格分隔
-</li>
-<li><strong>include $(BUILD_SHARED_LIBRARY)</strong>
-    <br> 这一行会运行一个特殊的 Makefile 构建出该模块。
-    <br> 该变量指向的文件在 <code>./build/make/core/shared_library.mk</code>
-</li>
-<li><strong>LOCAL_SDK_VERSION</strong>
-    <br> 我也没找到该变量的具体说明，但目前从经验来看，该变量制指定的是当前编译 Android 的 SDK 版本。
-    <br> 而且如果你编写了 JNI， 那么你必须指定该变量，否则编译的时候可能会报告 <code>jni.h not found</code>（出现在 Android 12 某芯片厂商的工程中）。
-    <br> 一般赋值为 <code>current</code> 即可。
-    <br> 其可选值有：<code>current</code>， <code>system_current</code>, <code>test_current</code>, <code>core_current</code>，以及具体的版本编号，
-</li>
-</ul>
 </div>
 
 
@@ -1489,6 +1643,15 @@ Makefile or Android.mk --> kati --> Ninja
     <br> 本博客内容主要集中在 Android 开发和优化相关的话题，包括一些性能工具的使用、Android App 优化知识、Android Framework 知识讲解，
         性能理论知识讲解等，这里整理了一份目录供大家参考，大家可以挑感兴趣的部分来看。这里不仅仅包含博客中的内容，
         一些我在 知乎 或者 知识星球 的回答也会放到这里,不过这个目录里面放的都是我原创的博客，另外还收集了一些优秀文章 , 我也会不定期更新 Android 性能优化必知必会
+</li>
+
+<li><strong><a href="https://github.com/jeanboydev/Android-ReadTheFuckingSourceCode">Android 技术笔记</a></strong>
+    <br> 总结了非常多的 Android 工程的解读
+
+</li>
+
+<li><strong>Android 12 Google 对系统要求</strong>
+    <br> <a href="https://source.android.com/compatibility/12/android-12-cdd.pdf">https://source.android.com/compatibility/12/android-12-cdd.pdf</a>
 </li>
 
 </ul>

@@ -809,6 +809,11 @@ iperf Done.
     <br> <a href="https://github.com/xournalpp/xournalpp/releases/tag/v1.1.1">https://github.com/xournalpp/xournalpp/releases/tag/v1.1.1</a>
 
 </li>
+<li><strong>buildroot CMake 添加头依赖</strong>
+    <br> buildroot 中的安装包都会安装到 <code>buildroot/output/PLAT/host/TOOLCHAIN_NAME/sysroot/usr/include</code>, 如果实在找不到可以在 PLT 目录查找以下你想要的头文件，
+        该目录也可以通过 <code>${CMAKE_SYSROOT}/usr/include</code> 定位到。
+    <br> 因此在你的工程中你可以使用 <code>include_directories("${CMAKE_SYSROOT}/usr/include")</code> 引用该目录下的所有安装头文件。
+</li>
 </ul>
 </div>
 

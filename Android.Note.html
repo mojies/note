@@ -286,7 +286,7 @@ th{
 
 
 <div class="breadboard">
-<div class="head head_1">Android stdio 开发</div>
+<div class="head head_1">AS 开发</div>
 <ul>
 
 <li><strong>AndroidAPP 中指定 SDK and NDK</strong>
@@ -334,6 +334,54 @@ ndk.dir=D\:\\AndroidSDK\\ndk\\24.0.8215888
 
 <div class="breadboard">
 <div class="head head_1">Android 系统编译框架</div>
+
+
+
+
+
+<div class="head head_2">Android 一些基本知识</div>
+<ul>
+<li><strong>KITA</strong>
+    <br> 参考文档： <a href="https://note.qidong.name/2017/08/android-kati/">Android中的Kati</a>
+    <br> KITA 的仓库地址：<a href="https://github.com/google/kati">https://github.com/google/kati</a>
+    <br> 基本上里面初步对 KITA 进行了介绍，但是为了避免原文失效，我将原文中部分内容进行摘抄。
+    <br> KITA 的作用： kati 是 Google 专门为了 Android 而开发的一个小项目，基于 Golang 和 C++ 。 目的是为了把 Android 中的 Makefile ，转换成 Ninja 文件。
+
+
+</li>
+<li><strong>Ninjia</strong>
+    <br> 参考文档： <a href="https://note.qidong.name/2017/08/android-ninja/">Android中的Ninja简介</a>
+    <br> 基本上里面初步对 KITA 进行了介绍，但是为了避免原文失效，我将原文中部分内容进行摘抄。
+    <br> 二者最核心的区别，在于设计哲学。 Makefile 是设计来给人手写的，而 Ninja 设计出来是给其它程序生成的。 如果说 Makefile 是 C 语言，那么 Ninja 就是汇编语言。 如果说 Makefile 是一个 DSL ，那么 Ninja 就是一种配置文件。
+         Makefile 支持分支、循环等流程控制，而 Ninja 只支持一些固定形式的配置。
+    <br> 二者的相同点是，都是为了控制编译流程而设计。 所以，他们的核心功能，都是指定目标，以及目标之间的依赖关系，自动计算执行顺序。
+    <br> 与 Makefile 相比，由于 Ninja 仅仅专注于核心的功能，所以有轻巧、速度快的优点。
+
+</li>
+<li><strong>Android 中 Makefile, Android.mk, Android.bp, Soong, Ninja, Blueprint 的关系</strong>
+    <br> kita 编译出 ckita 可执行文件， ckita 可将 Makefile 转换成 build.ninja 文件，用于 ninja 建构；
+    <br> Soong 包含一个 androidmk 的命令，可自动将 Android.mk 转换成 Android.bp,  这只对无选择、循环等复杂流程控制的 Android.mk 生效。
+    <br> Android.bp 则使用 Blueprint 框架来解析，最终转换成 Ninja 文件。
+    <br> Android.bp 是用来替换 Android.mk 的配置文件。
+    <br> Blueprint 和 Soong 都是由 Golang 写的项目。 从 Android Nougat 开始， prebuilts/go/ 目录下新增了 Golang 所需的运行环境，在编译时使用。
+    <br> 这几个模块之间的关系也可表示成下面这样：
+    <pre>
+Android.bp --> Blueprint --> Soong --> Ninja
+Makefile or Android.mk --> kati --> Ninja
+(Android.mk --> Soong --> Blueprint --> Android.bp)
+    </pre>
+
+
+</li>
+</ul>
+
+
+
+
+
+
+
+<div class="head head_2">Android build/envsetup.sh 提供的指令（函数）</div>
 <p>
     一般编译 Android 会首先要执行 <code>source build/envsetup.sh</code>, 该命令会将脚本中的一些脚本函数（操作流程）加载到当前的环境中。
     你可以通过直接调用函数名称来执行该过程。该脚本加载的函数包括：
@@ -647,6 +695,12 @@ droid_targets : blueprint_tools
 </li>
 </ul>
 
+
+
+
+
+
+<div class="head head_2">关于 Android.bp</div>
 
 
 
@@ -1550,38 +1604,7 @@ cc_binary {
     <br> <img src="https://images.cnblogs.com/cnblogs_com/mojies/2134079/o_220519153313_AndroidStartProcess.png" alt="" width=1000px class="img_center">
     
 </li>
-<li><strong>KITA</strong>
-    <br> 参考文档： <a href="https://note.qidong.name/2017/08/android-kati/">Android中的Kati</a>
-    <br> KITA 的仓库地址：<a href="https://github.com/google/kati">https://github.com/google/kati</a>
-    <br> 基本上里面初步对 KITA 进行了介绍，但是为了避免原文失效，我将原文中部分内容进行摘抄。
-    <br> KITA 的作用： kati 是 Google 专门为了 Android 而开发的一个小项目，基于 Golang 和 C++ 。 目的是为了把 Android 中的 Makefile ，转换成 Ninja 文件。
 
-
-</li>
-<li><strong>Ninjia</strong>
-    <br> 参考文档： <a href="https://note.qidong.name/2017/08/android-ninja/">Android中的Ninja简介</a>
-    <br> 基本上里面初步对 KITA 进行了介绍，但是为了避免原文失效，我将原文中部分内容进行摘抄。
-    <br> 二者最核心的区别，在于设计哲学。 Makefile 是设计来给人手写的，而 Ninja 设计出来是给其它程序生成的。 如果说 Makefile 是 C 语言，那么 Ninja 就是汇编语言。 如果说 Makefile 是一个 DSL ，那么 Ninja 就是一种配置文件。
-         Makefile 支持分支、循环等流程控制，而 Ninja 只支持一些固定形式的配置。
-    <br> 二者的相同点是，都是为了控制编译流程而设计。 所以，他们的核心功能，都是指定目标，以及目标之间的依赖关系，自动计算执行顺序。
-    <br> 与 Makefile 相比，由于 Ninja 仅仅专注于核心的功能，所以有轻巧、速度快的优点。
-
-</li>
-<li><strong>Android 中 Makefile, Android.mk, Android.bp, Soong, Ninja, Blueprint 的关系</strong>
-    <br> kita 编译出 ckita 可执行文件， ckita 可将 Makefile 转换成 build.ninja 文件，用于 ninja 建构；
-    <br> Soong 包含一个 androidmk 的命令，可自动将 Android.mk 转换成 Android.bp,  这只对无选择、循环等复杂流程控制的 Android.mk 生效。
-    <br> Android.bp 则使用 Blueprint 框架来解析，最终转换成 Ninja 文件。
-    <br> Android.bp 是用来替换 Android.mk 的配置文件。
-    <br> Blueprint 和 Soong 都是由 Golang 写的项目。 从 Android Nougat 开始， prebuilts/go/ 目录下新增了 Golang 所需的运行环境，在编译时使用。
-    <br> 这几个模块之间的关系也可表示成下面这样：
-    <pre>
-Android.bp --> Blueprint --> Soong --> Ninja
-Makefile or Android.mk --> kati --> Ninja
-(Android.mk --> Soong --> Blueprint --> Android.bp)
-    </pre>
-
-
-</li>
 <li><strong>Android 加固</strong>
     <br> 加固种类： DEX 加固， SDK 加固，资源加固， SO 加固， H5 加固
     <br> SO 加固：代码/字符串加密，函数隐藏，动态加密，导入导出函数保护，防 HOOK ，对抗拖壳

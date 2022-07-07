@@ -687,6 +687,51 @@ droid_targets : blueprint_tools
     <br> 请勿尝试在 Android.mk 文件中更改优化/调试级别。构建系统可以使用 Application.mk 文件中的相关信息自动处理此设置。这样，构建系统就可以生成供调试期间使用的有用数据文件。
 
 </li>
+<li><strong>LOCAL_CPPFLAGS</strong>
+    <br> LOCAL_CPPFLAGS 只构建 C++ 源文件时将传递的一组可选编译器标记。
+
+</li>
+<li><strong>LOCAL_STATIC_LIBRARIES</strong>
+    <br> LOCAL_STATIC_LIBRARIES 此变量用于存储当前模块依赖的静态库模块列表。
+    <br> 如果当前模块是共享库或可执行文件，此变量将强制这些库链接到生成的二进制文件。
+    <br> 如果当前模块是静态库，此变量只是指出依赖于当前模块的其他模块也会依赖于列出的库。
+
+</li>
+<li><strong>LOCAL_SHARED_LIBRARIES</strong>
+    <br> LOCAL_SHARED_LIBRARIES 此变量会列出此模块在运行时依赖的共享库模块。
+    <br> 此信息是链接时必需的信息，用于将相应的信息嵌入到生成的文件中。
+
+</li>
+<li><strong>LOCAL_WHOLE_STATIC_LIBRARIES</strong>
+    <br> LOCAL_WHOLE_STATIC_LIBRARIES 此变量是 LOCAL_STATIC_LIBRARIES 的变体，表示链接器应将相关的库模块视为完整归档。如需详细了解完整归档，请参阅有关 --whole-archive 标记的 GNU Id 文档。
+    <br> 多个静态库之间存在循环依赖关系时，此变量十分有用。使用此变量构建共享库时，它将强制构建系统将静态库中的所有对象文件添加到最终二进制文件。但是，生成可执行文件时不会发生这种情况。
+
+</li>
+<li><strong>LOCAL_LDLIBS</strong>
+    <br> LOCAL_LDLIBS 此变量列出了在构建共享库或可执行文件时使用的额外链接器标记。
+    <br> 利用此变量，您可使用 -l 前缀传递特定系统库的名称。比如: <code>LOCAL_LDLIBS := -lz</code>
+
+</li>
+<li><strong>LOCAL_LDFLAGS</strong>
+    <br> LOCAL_LDFLAGS表示链接时用的参数，此变量列出了构建系统在构建共享库或可执行文件时使用的其他链接器标记。
+    <br> 若要在 ARM/X86 上使用 ld.bfd 链接器可以添加该行 <code>LOCAL_LDFLAGS += -fuse-ld=bfd</code>
+
+</li>
+<li><strong>LOCAL_ALLOW_UNDEFINED_SYMBOLS</strong>
+    <br> LOCAL_ALLOW_UNDEFINED_SYMBOLS 忽略链接错误，但是在运行中可能会出现错误，因为库文件找不到依赖的文件就会报错。
+    <br> 默认情况下，如果构建系统在尝试构建共享库时遇到未定义的引用，将会抛出“未定义的符号”错误。此错误可帮助您捕获源代码中的错误。
+    <br> 如需停用此检查，请将此变量设置为 true。请注意，此设置可能会导致共享库在运行时加载。
+
+</li>
+<li><strong>LOCAL_ARM_MODE</strong>
+    <br> LOCAL_ARM_MODE 默认情况下，构建系统会以 thumb 模式生成 ARM 目标二进制文件，其中每条指令都是 16 位宽，并与 thumb/ 目录中的 STL 库链接。
+
+</li>
+<li><strong>LOCAL_MULTILIB</strong>
+    <br> LOCAL_MULTILIB 可以指定特定模块编译32bit或64bit或都编译。
+    <br> 默认值有 "both", "32", "64", "first", ""(由其他命令确定)
+
+</li>
 <li><strong>LOCAL_SDK_VERSION</strong>
     <br> 我也没找到该变量的具体说明，但目前从经验来看，该变量制指定的是当前编译 Android 的 SDK 版本。
     <br> 而且如果你编写了 JNI， 那么你必须指定该变量，否则编译的时候可能会报告 <code>jni.h not found</code>（出现在 Android 12 某芯片厂商的工程中）。

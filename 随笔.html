@@ -282,6 +282,30 @@ img{
 #define ETH_P_IPV6      0x86DD          /* IPv6 over bluebook           */
     </pre>
 </li>
+<li><strong>WakeOnLine</strong>
+    <br> WOL / LAN 是以太网的一个通过网络消息唤醒设备的机制
+    <br> 消息通常由同一局域网的网络设备发起。当然也可以使用子网的定向广播或者 WoL 网关发起。
+    <br> WoL 物理层通过识别 magic package 来判断是否有其他设备再唤醒本设备。包结构通常为 ( 6 * 0xFF + 16 * 唤醒机器的 MAC 地址 ) 总共 102 个字节。数据包通常以广播的方式发送出来。
+    <br> WoL Magic 包发送有以下限制：
+    <ul>
+    <li>需要目标计算机的 MAC 地址（也可能需要 secure ON 的密码）</li>
+    <li>不提供唤醒确认（被唤醒机器不提供应答）</li>
+    <li>可能无法再本地网络之外工作</li>
+    <li>需要目标计算机上的 LAN 硬件支持</li>
+    <li>大多数 802.11 无线接口在低功耗状态下不维持链路并且无法接收魔术包</li>
+    </ul>
+    <br> 有时也可以通过 SDB （子网定向广播）将广播信号传播到子网的设备中。但也需要网关支持才行（可能会被过滤掉）。
+
+    <br> Wake-on-LAN (WoL or WOL) is an Ethernet or Token Ring computer networking standard that allows a computer to be turned on or awakened by a network message.
+    <br> The message is usually sent to the target computer by a program executed on a device connected to the same local area network.
+        It is also possible to initiate the message from another network by using subnet directed broadcasts or a WoL gateway service.
+    <br> Equivalent terms include wake on WAN, remote wake-up, power on by LAN, power up by LAN, resume by LAN, resume on LAN and wake up on LAN.
+         If the computer being awakened is communicating via Wi-Fi, a supplementary standard called Wake on Wireless LAN (WoWLAN) must be employed.
+    <br> The WoL and WoWLAN standards are often supplemented by vendors to provide protocol-transparent on-demand services, for example in the Apple Bonjour wake-on-demand (Sleep Proxy) feature.
+    <br> <strong>Magic packet</strong> The magic packet is a frame that is most often sent as a broadcast and that contains anywhere within its payload 6 bytes of all 255 (FF FF FF FF FF FF in hexadecimal), 
+        followed by sixteen repetitions of the target computer's 48-bit MAC address, for a total of 102 bytes.
+
+</li>
 </ul>
 
 
@@ -700,6 +724,26 @@ iperf Done.
 
 </div>
     
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">图像</div>
+<ul>
+<li><strong>RGB 和 Ycrcb 转换</strong>
+    <br> 转换公式一定要依据ITU的标准, 常看到的是 <code>ITU.BT-601</code> 和 <code>ITU.BT-709</code> 。
+    <br> <a href="https://www.itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.601-7-201103-I!!PDF-E.pdf">ITU.BT-601</a>
+    <br> <a href="https://www.itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf">ITU.BT-709</a>
+
+</li>
+</ul>
+
+</div>
 
 
 

@@ -302,7 +302,148 @@ ndk.dir=D\:\\AndroidSDK\\ndk\\24.0.8215888
     <br> 方法1: <strong>双击 shift -> 搜索 <code>Edit Custom VM Options</code> -> 回车，没有则创建之 </strong>, 在打开的文件中加入配置： <code>-Dfile.encoding=UTF-8</code>, 然后 <strong>双击 shift -> 搜索 <code>restart IED</code> -> 回车 </strong>,
 </li>
 
+<li><strong>配置代理</strong>
+    <br> 在工程的 <code>gradle.properties</code> 文件中，或者 <code>~/.gradle/gradle.properties</code> 中加入下列配置，如果不支持可以使用 <code>#</code> 注释。
+    <pre>
+systemProp.http.proxyHost=www.somehost.org
+systemProp.http.proxyPort=8080
+systemProp.http.proxyUser=user
+systemProp.http.proxyPassword=password
+systemProp.http.nonProxyHosts=localhost
+systemProp.http.auth.ntlm.domain=domain
+
+systemProp.https.proxyHost=www.somehost.org
+systemProp.https.proxyPort=8080
+systemProp.https.proxyUser=user
+systemProp.https.proxyPassword=password
+systemProp.https.nonProxyHosts=localhost
+systemProp.https.auth.ntlm.domain=domain
+    </pre>
+
+</li>
+<li><strong>Could not resolve all artifacts for configuration ':classpath'.</strong>
+    <br> 如果你出现类似下面的 BUG, 那么很有可能你无法访问 maven 仓库，这时你可能需要设置一下代理，或者直接在浏览器中访问一下报错链接：
+    <pre>
+> Could not resolve all artifacts for configuration ':classpath'.
+   > Could not resolve com.android.tools.build:gradle:4.1.0.
+   ...
+               > Could not GET 'https://maven.aliyun.com/nexus/content/groups/public/com/android/tools/build/gradle/4.1.0/gradle-4.1.0.pom'.
+   ...
+    </pre>
+    <br> 但是还有一种可能，你设置了 aliyun 的代理仓库。但是老的代理仓库已经不支持了，比如下面这样的老配置：
+    <pre>
+buildscript {
+    repositories {
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+        maven{ url 'https://maven.aliyun.com/repository/google' }
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.0'
+    }
+}
+
+allprojects {
+    repositories {
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+        maven{ url 'https://maven.aliyun.com/repository/google' }
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        google()
+    }
+}
+    </pre>
+    <br> 这个时候你需要参考阿里云最新的 maven 仓库使用规范： <a href="https://developer.aliyun.com/mvn/guide">https://developer.aliyun.com/mvn/guide</a>, 来更新你的配置，但我自己没有搞定。
+        因此我还是用回了原来的仓库，解决问题：如下所示：
+    <pre>
+buildscript {
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://maven.google.com" }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.0'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://maven.google.com" }
+    }
+}
+    </pre>
+</li>
+<li><strong>在命令行编译 Android APP</strong>
+    <br> 在命令行可以直接使用 <code>gradle</code>，或者工程下的 gradlew 来直接编译，不过你先需要使用 <code>chmod +x</code> 确保你的 <code>gradlew</code> 有可执行权限。
+    <br> 使用 <code>./gradlew task</code> 可以查看当前工程中支持的子任务，如下所示：
+    <pre>
+> ./gradlew task               
+
+> Task :tasks
+
+------------------------------------------------------------
+Tasks runnable from root project
+------------------------------------------------------------
+...
+
+Build tasks
+-----------
+assemble - Assemble main outputs for all the variants.
+assembleAndroidTest - Assembles all the Test applications.
+...
+
+    </pre>
+</li>
+    <br> 这时你可以直接使用 <code>./gradlew TASK</code> 的形式来进行相关 task 的执行。
 </ul>
+<li><strong>命令行编译 Android 应用工程和升级 Android SDK</strong>
+    <br> 首先你可以使用如下命令来编译 Android 工程，而且有可能你编译的时候会报错，如下所示：
+    <pre>
+> ./gradlew compileDebugSources
+Exception while marshalling /opt/android-sdk/tools/package.xml. Probably the SDK is read-only
+...
+<span class="red_t">FAILURE: Build failed with an exception.</span>
+
+* What went wrong:
+Could not determine the dependencies of task ':app:compileDebugJavaWithJavac'.
+> Failed to install the following Android SDK packages as some licences have not been accepted.
+     build-tools;30.0.3 Android SDK Build-Tools 30.0.3
+     platforms;android-29 Android SDK Platform 29
+    </pre>
+    <br> 这时你可以通过 <code>sdkmanager --install "build-tools;30.0.3"</code> 命令和 <code>sdkmanager --install platforms;android-29</code> 来安装相关的哦依赖；
+    <br> 当然你首先要确保 <code>sdkmanager</code> 存在才行，这请参考： <a href="https://developer.android.com/studio/command-line">https://developer.android.com/studio/command-line</a>
+    <br> 其次你还需要确保你的 Android studio 工程使用的 SDK 是你安装的 SDK 目录才行。
+        像我系统默认的 SDK 目录是 <code>/opt/android/sdk</code>, 但是如果你没有安装 SDK 在该目录或者，你没有权限，那么此时大概率也会报告上述问题。
+        假如你安装 Android SDK 的目录在 <code>/home/USER/android/sdk</code>, 那么你需要在 <code>local.properties</code> 中声明你使用的 SDK 的实际目录。
+        如下所示：
+        <pre>
+> cat local.properties
+## This file must *NOT* be checked into Version Control Systems,
+# as it contains information specific to your local configuration.
+#
+# Location of the SDK. This is only used by Gradle.
+# For customization when using a Version Control System, please read the
+# header note.
+#Sun Jul 24 16:58:18 CST 2022
+sdk.dir=/home/USER/android/sdk
+        </pre>
+</li>
+<li><strong>给你的 Android 工程制定 SDK 可 NDK 目录</strong>
+    <br> 你可以在 <code>local.properties</code> 中声明你使用的 Android SDK 或者 NDK 的实际目录。
+    如下所示：
+    <pre>
+> cat local.properties
+sdk.dir=/home/USER/android/sdk
+ndk.dir=/home/USER/android/sdk/ndk-bundle
+    </pre>
+    <br> <span class="red_t">注意：这里的路径不能是相对路径，一定要得是相对路径，而且像 <code>sdk.dir=~/android/sdk</code> 这样的路径也是不行的。</span>
+    <br> <span class="red_t">注意： Windows 下的反斜杠需要使用 <code>\\</code> 取代，防止反转译。比如： <code>sdk.dir=D:\\android\\sdk</code></span>
+    
+
+</li>
 </div>
 
 

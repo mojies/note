@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>V4L2</title>
+</head>
+<body style="font-family: Courier New, Arial, Microsoft YaHei, sans-serif;" >
+<style id="style_area" >
+a{
+    text-decoration:none;
+}
+p{
+    line-height: 1.4em;
+    /* text-indent:2em; */
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0.3em 0;
+}
+li{
+    padding: 0.3em 0;
+}
+.gray-line{
+    color:#F77;
+    font-weight: 100;
+    font-style: oblique;
+    font-size: 0.8em;
+}
+code{
+    line-height: 24px;
+    border-bottom: rgb(253, 191, 186) solid 2px;
+    margin: 3px 0.5em;
+    padding: 2px;
+
+    font-weight: 400;
+    font-size: 13px;
+    font-style: oblique;
+    border-radius: 3px;
+    backdrop-filter: blur(2px);
+    color: rgb(227, 103, 90);
+}
+/* code{
+    line-height: 20px;
+    margin: 3px;
+    padding: 2px;
+    border-radius: 3px;
+    color: #eb3f2f;
+    font-weight: bold;
+    font-size: 12px;
+    margin: 3px;
+    background-color:#f0f0f0;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #a9a9a9;
+    backdrop-filter: blur(2px);
+} */
+pre{
+    border-radius: 4px;
+    background-color: rgb(247,247,247,0.3);
+    border: 1px solid #aaa;
+    line-height: 1.182em;
+    overflow: auto;
+    font-size: 11px;
+    padding: 16px;
+    margin: 10px;
+}
+img{
+    opacity:1;
+    margin: 10px;
+}
+table, th, td {
+    font-size: 12px;
+    border: 1px solid #aaa;
+    padding: 2px 0.5em;
+    border-collapse: collapse;
+}
+th{
+    font-size: 16px;
+}
+
+.ps{
+    margin: 2px;
+    font-size: 11px;
+    font-style: italic;
+}
+.breadboard{
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.37);
+    margin: 5px 2% 45px;
+    padding: 10px;
+}
+
+.head_index{
+    color: #133152;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+}
+.head_1{
+    color: #133152;
+    font-size: 32px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 4px #133152 solid;
+    width: 99%;
+    margin-top: 1.5em;
+}
+.head_2{
+    color: #163a60;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: left;
+
+    padding-bottom: 10px;
+    border-bottom: 2px #163a60 solid;
+    width: 99%;
+    margin-top: 1.25em;
+}
+.head_3{
+    color: #1a426e;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+.head_4{
+    color: #1d4a7bc2;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+.head_5{
+    color: #0d4886d2;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: left;
+    margin: 32px 0 10px 0;
+}
+
+.div_2{
+    margin: 5px 2% 45px;
+    padding: 40px;
+    height: 100px;
+    text-align: center;
+
+}
+
+.img_center{
+    text-align: center;
+}
+.img_left{
+    text-align: left;
+    margin-left: 4em;
+}
+.note_msg{
+    color: #eb3f2f;
+    font-weight: 600;
+}
+
+.offset_1em{margin-left: 1em;}
+.offset_2em{margin-left: 2em;}
+.offset_3em{margin-left: 3em;}
+.offset_4em{margin-left: 4em;}
+.offset_5em{margin-left: 5em;}
+.offset_6em{margin-left: 6em;}
+.offset_7em{margin-left: 7em;}
+.offset_8em{margin-left: 8em;}
+.offset_9em{margin-left: 9em;}
+.offset_10em{margin-left: 10em;}
+
+.green_t{
+    color: green;
+}
+.red_t{
+    color: red;
+}
+.blue_t{
+    color: blue;
+}
+.purple_t{
+    color: purple;
+}
+
+.limit_window_size{
+    /* overflow:auto; */
+    max-height:30em;
+    overflow-y:auto;
+    word-wrap:break-word;
+    word-break: normal;
+    white-space: pre-wrap;
+    margin:10px;
+}
+
+.child_red2_key li strong{
+    color: red;
+}
+.child_red1_key li strong{
+    color: red;
+}
+.child_red2_key li strong{
+    color: #F77;
+}
+.child_red3_key li strong{
+    color: #Faa;
+}
+.foot_panel{
+    position:fixed;
+    right:3em;
+    bottom: 3em;
+    width:6em;
+    height:30px;
+    padding:15px 5px 5px 15px;
+    background-color:rgb( 157, 157, 157, 0.618 );
+    border-radius: 8px;
+}
+/* .latex_str{
+} */
+#foot_panel_top{
+    display: inline;
+    border-right: 5px solid #eee;
+}
+#foot_panel_top a{
+    width:4em;
+}
+#foot_panel_bottom {
+    display: inline;
+    margin-left: 5px;
+}
+#foot_panel_top a{
+    width:4em;
+}
+
+#main_index li{
+    line-height: 17px;
+    font-size: 16px;
+}
+</style>
+
+
+
+
+<div class="breadboard">
+<div class="head_index">目录</div>
+<div><ol id="main_index">
+</ol></div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">简介</div>
+<p>
+    Linux 媒体子系统包括以下几种不同类型设备的支持：
+</p>
+<ul>
+    <li>Audio 和 Video 的采集</li>
+    <li>PC 和 laptop 自带 Camera</li>
+    <li>嵌入式的复杂的 Camera 设备</li>
+    <li>模拟和数字 TV</li>
+    <li>多点触控输入设备</li>
+    <li>远程控制设备</li>
+    <li>Media 的编解码器</li>
+</ul>
+
+<p>
+    因此 Linux 为这些不同的设备提供了一些不同的 API：
+</p>
+<li>
+    <li>Remote Controller API;</li>
+    <li>HDMI CEC API;</li>
+    <li>Video4Linux API;</li>
+    <li>Media controller API;</li>
+    <li>Video4Linux Request API (experimental);</li>
+    <li>Digital TV API (also known as DVB API).</li>
+
+</li>
+
+<p>
+    下文我们将着重对 V4L2 的相关部分来进行介绍。
+</p>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">API</div>
+<p>
+    下面我们将着重针对 V4L2 的 Camera 部分，流捕获输出设备，编解码，编解码器和遥控器部分进行详细说明。
+</p>
+
+<div class="head head_2">视频捕获和输出、相机、模拟电视设备和编解码器</div>
+
+
+
+<div class="head head_2">远程控制器</div>
+
+<div class="head head_2">媒体控制器</div>
+
+<div class="head head_2">CEC( 消费电子控制 )</div>
+<p>
+    HDMI 连接器提供一个供消 CEC 使用的引脚。该协议允许通过 HDMI 电缆连接的不同设备进行通信。
+    CEC 1.4 版的协议在 HDMI 1.4a ( HDMI ) 规范的补充 1 (CEC) 和 2( HEAC 或 HDMI 以太网和音频回传通道 ) 的支持。
+    并将这些特性添加到了 CEC 2.0 的扩展在第 11 章中定义HDMI 2.0 ( HDMI2 ) 规范中。
+</p>
+<p>
+    实际上它的 Bitrate 特别慢（实际上每秒不超过 36 字节），并且基于旧 SCART 连接器中使用的古老 AV.link 协议。
+    该协议非常类似于一个疯狂的 Rube Goldberg 装置，是低级和高级消息的邪恶组合。
+    分层在 CEC 之上的 HEAC 协议的那部分，需要由内核处理，其他消息可以由内核或用户空间处理。
+</p>
+<p>
+    此外，CEC 还可以在支持 HDMI TX / HIDMI RX 的 USB 中实现。
+</p>
+<p>
+    支持 CEC 的驱动程序将创建一个 CEC 设备节点 ( <code>/dev/cecX</code> ) 以授予用户空间访问 CEC 适配器的权限。
+    <code>ioctl CEC_ADAP_G_CAPS</code> 将 告诉用户空间它被允许做什么。
+</p>
+<p>
+    为了检查支持和测试它，建议下载 <code>v4l-utils</code> 包。它提供了三种处理 CEC 的工具：
+</p>
+<ul>
+<li><strong>cec-ctl</strong>:
+    CEC的瑞士军刀。允许您配置、传输和监控 CEC 消息。
+</li>
+<li><strong>cec-compliance</strong>:
+    对远程 CEC 设备进行 CEC 合规性测试，以确定 CEC 实施的合规性。
+</li>
+<li><strong>cec-follower</strong>:
+    模拟 CEC 追随者。
+</li>
+</ul>
+
+<p>
+    操作 CEC 主要有以下 API：
+</p>
+<ul>
+<li><code>open()</code></li>
+<li><code>close()</code></li>
+<li><code>ioctl()</code></li>
+<li><code>poll()</code></li>
+<li><code>ioctl CEC_ADAP_G_CAPS</code></li>
+<li><code>ioctls CEC_ADAP_G_LOG_ADDRS and CEC_ADAP_S_LOG_ADDRS</code></li>
+<li><code>ioctls CEC_ADAP_G_PHYS_ADDR and CEC_ADAP_S_PHYS_ADDR</code></li>
+<li><code>ioctl CEC_ADAP_G_CONNECTOR_INFO</code></li>
+<li><code>ioctl CEC_DQEVENT</code></li>
+<li><code>ioctls CEC_G_MODE and CEC_S_MODE</code></li>
+<li><code>ioctls CEC_RECEIVE and CEC_TRANSMIT</code></li>
+</ul>
+
+
+<div class="head head_3">int open(const char *device_name, int flags)</div>
+<p>
+    <code>flags</code> 必须包含 <code>O_RDWR</code>。
+    当 <code>O_NONBLOCK</code> 存在的时候，如果你调用 <code>ioctl CEC_RECEIVE / CEC_DQEVENT</code>, 在没有消息和事件可用的时候， ioctl 可能会返回 <code>EAGAIN</code> 的错误信息。
+    而且 <code>ioctls CEC_TRANSMIT & CEC_ADAP_S_PHYS_ADDR & CEC_ADAP_S_LOG_ADDRS</code> 将会直接返回 0。
+</p>
+<p>
+    详细请参考：<a href="https://linuxtv.org/downloads/v4l-dvb-apis/userspace-api/cec/cec-func-open.html">https://linuxtv.org/downloads/v4l-dvb-apis/userspace-api/cec/cec-func-open.html</a>
+</p>
+
+<div class="head head_3">int close(int fd)</div>
+<p>
+    输入 open 之后的 fd。如果 fd 异常则会返回 <code>EBADF</code> 错误码。
+</p>
+
+<div class="head head_3">int ioctl(int fd, int request, void *argp)</div>
+<p>
+    ioctl 主要支持以下命令：
+</p>
+<ul>
+<li><strong>CEC_ADAP_G_CAPS</strong>： 获取设备 CEC 能力
+</li>
+<li><strong>CEC_ADAP_G_LOG_ADDRS</strong> 和  <strong>CEC_ADAP_S_LOG_ADDRS</strong>:
+    get 和 set 逻辑地址
+</li>
+<li><strong>CEC_ADAP_G_PHYS_ADDR</strong> 和 <code>CEC_ADAP_S_PHYS_ADDR</code>:
+    get 和 set 物理地址
+</li>
+<li><strong>CEC_ADAP_G_CONNECTOR_INFO</strong>:
+    获取 HDMI 的连接信息
+</li>
+<li><strong>CEC_DQEVENT</strong>：
+    dequeue CEC 事件
+</li>
+<li><strong>CEC_G_MODE</strong> 和 <strong>CEC_S_MODE</strong>：
+    Get 或者 set CEC adapter 的独占模式。
+</li>
+<li><strong>CEC_RECEIVE</strong> 和 <code>CEC_TRANSMIT</code>
+    接受或者传输 CEC 的事件
+</li>
+</ul>
+
+<div class="head head_3">int poll(struct pollfd *ufds, unsigned int nfds, int timeout)</div>
+<p>
+    <code>struct pollfd</code> 的结构如下图所示：
+</p>
+<pre>
+struct pollfd {
+    int fd;        /* 文件描述符 */
+    short events; /* 等待的事件 */
+    short revents; /* 实际发生了的事件 */
+};
+</pre>
+<p>
+    大体的使用方法和普通使用 poll 的方法类似，你需要准备一个 <code>struct pollfd</code> 的数组，然后你还要在数组里面天上你需要检查的描述符以及事件。
+    而放检测到有匹配到等待的事件之后，会返回，返回匹配到描述符的个数。
+</p>
+<p>
+    其中，当收到消息之后 
+</p>
+
+<div class="head head_3">xxxxxxx</div>
+<div class="head head_3">xxxxxxx</div>
+<div class="head head_3">xxxxxxx</div>
+<div class="head head_3">xxxxxxx</div>
+<div class="head head_3">xxxxxxx</div>
+<div class="head head_3">xxxxxxx</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="breadboard">
+<div class="head head_1">参考文档</div>
+<ul>
+<li>
+    <a href="https://linuxtv.org/downloads/v4l-dvb-apis/index.html">Linux Kernel Media Documentation</a>
+</li>
+<li>
+    <a href="https://git.linuxtv.org/v4l-utils.git/about/">v4l-utils</a>
+</li>
+</ul>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><tr>
+<td><img width="190" src="http://images.cnblogs.com/cnblogs_com/mojies/998573/o_AliPay1.jpg" alt=""></td>
+<td><img width="200" src="http://images.cnblogs.com/cnblogs_com/mojies/998573/o_WeChatPa1.jpg" alt=""></td>
+</tr></table>
+<div class="div_2" id="AuthorizationWarning">
+<div class="Text_ZZ">原创文章，版权所有，转载请获得作者本人允许并注明出处</div>
+<div class="Text_LB">我是留白；我是留白；我是留白；（重要的事情说三遍）</div>
+</div>
+<div class="foot_panel" id="foot_panel">
+    <div id="foot_panel_top" >
+        <a href="#main_index" class="NoExternal">TOP</a>
+    </div>
+    <div id="foot_panel_bottom" >
+        <a href="#AuthorizationWarning" class="NoExternal">BOT</a>
+    </div>
+</div>
+</body>
+
+<script src="js/PrePost.js"></script>
+</html>

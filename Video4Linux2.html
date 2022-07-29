@@ -423,11 +423,198 @@ struct pollfd {
     而放检测到有匹配到等待的事件之后，会返回，返回匹配到描述符的个数。
 </p>
 <p>
-    其中，当收到消息之后 
+    其中，当收到消息之后 reevent 会设置起 <code>POLLIN</code> 和 <code>POLLRDNORM</code>，如果发送队列有空间容纳新消息则会设置上 <code>POLLOUT</code> 和 <code>POLLWRNORM</code>，
+    如果事件在事件队列中，那么 <code>POLLPRI</code> 将会被设置。如果没有任何事件并且超时，那么将不会设置任何标志位，并且返回 0。如果错误发生，则会返回 -1。
 </p>
 
-<div class="head head_3">xxxxxxx</div>
-<div class="head head_3">xxxxxxx</div>
+<div class="head head_3">ioctl CEC_ADAP_G_CAPS</div>
+<p>
+    使用方法：<code>int ioctl(int fd, CEC_ADAP_G_CAPS, struct cec_caps *argp)</code>
+</p>
+<p>
+    其中 <code>struct cec_caps</code> 的数据结构如下所示：
+</p>
+<div class="tb_format">
+    {
+        "head":[ "Type", "Name", "Desc" ],
+        "data": [
+        [ "char", "driver[32]", "The name of the cec adapter driver" ],
+        [ "char", "name[32]", "The name of this CEC adapter. The combination driver and name must be unique." ],
+        [ "__u32", "available_log_addrs", "The maximum number of logical addresses that can be configured" ],
+        [ "__u32", "capabilities", "The capabilities of the CEC adapter, see CEC Capabilities Flags" ],
+        [ "__u32", "version", "CEC Framework API version, formatted with the KERNEL_VERSION() macro" ]
+        ]
+    }
+</div>
+</pre>
+
+<p>
+    其中 <code>capabilities</code> 字段现有如下定义：<code>其定义在 <code>uapi/linux/cec.h</code> 文件中</code>
+</p>
+<div class="tb_format">
+    {
+        "head":[ "Name", "Value", "Desc" ],
+        "data": [
+        [ "CEC_CAP_PHYS_ADDR", "0x00000001", "Userspace has to configure the physical address by calling ioctl CEC_ADAP_S_PHYS_ADDR. If this capability isn’t set, then setting the physical address is handled by the kernel whenever the EDID is set (for an HDMI receiver) or read (for an HDMI transmitter)." ],
+        [ "CEC_CAP_LOG_ADDRS", "0x00000002", "Userspace has to configure the logical addresses by calling ioctl CEC_ADAP_S_LOG_ADDRS. If this capability isn’t set, then the kernel will have configured this." ],
+        [ "CEC_CAP_TRANSMIT", "0x00000004", "Userspace can transmit CEC messages by calling ioctl CEC_TRANSMIT. This implies that userspace can be a follower as well, since being able to transmit messages is a prerequisite of becoming a follower. If this capability isn’t set, then the kernel will handle all CEC transmits and process all CEC messages it receives." ],
+        [ "CEC_CAP_PASSTHROUGH", "0x00000008", "Userspace can use the passthrough mode by calling ioctl CEC_S_MODE." ],
+        [ "CEC_CAP_RC", "0x00000010", "This adapter supports the remote control protocol." ],
+        [ "CEC_CAP_MONITOR_ALL", "0x00000020", "The CEC hardware can monitor all messages, not just directed and broadcast messages." ],
+        [ "CEC_CAP_NEEDS_HPD", "0x00000040", "The CEC hardware is only active if the HDMI Hotplug Detect pin is high. This makes it impossible to use CEC to wake up displays that set the HPD pin low when in standby mode, but keep the CEC bus alive." ],
+        [ "CEC_CAP_MONITOR_PIN", "0x00000080", "The CEC hardware can monitor CEC pin changes from low to high voltage and vice versa. When in pin monitoring mode the application will receive CEC_EVENT_PIN_CEC_LOW and CEC_EVENT_PIN_CEC_HIGH events." ],
+        [ "CEC_CAP_CONNECTOR_INFO", "0x00000100", "If this capability is set, then ioctl CEC_ADAP_G_CONNECTOR_INFO can be used." ]
+        ]
+    }
+</div>
+
+<div class="head head_3">ioctls CEC_ADAP_G_LOG_ADDRS and CEC_ADAP_S_LOG_ADDRS</div>
+<p>
+    使用方法： <code>int ioctl(int fd, CEC_ADAP_G_LOG_ADDRS, struct cec_log_addrs *argp)</code> and <code>int ioctl(int fd, CEC_ADAP_S_LOG_ADDRS, struct cec_log_addrs *argp)</code>
+</p>
+<p>
+    其中 <code>struct cec_log_addrs</code> 的结构如下所示：
+</p>
+<pre>
+struct cec_log_addrs {
+    // The actual logical addresses that were claimed. This is set by the driver. If no logical address could be claimed, then it is set to CEC_LOG_ADDR_INVALID. If this adapter is Unregistered, then log_addr[0] is set to 0xf and all others to CEC_LOG_ADDR_INVALID.
+    __u8 log_addr[CEC_MAX_LOG_ADDRS];
+
+    //The bitmask of all logical addresses this adapter has claimed. If this adapter is Unregistered then log_addr_mask sets bit 15 and clears all other bits. If this adapter is not configured at all, then log_addr_mask is set to 0. Set by the driver.
+    __u16 log_addr_mask;
+
+    // The CEC version that this adapter shall use. See CEC Versions. Used to implement the CEC_MSG_CEC_VERSION and CEC_MSG_REPORT_FEATURES messages. Note that CEC_OP_CEC_VERSION_1_3A is not allowed by the CEC framework.
+    __u8 cec_version;
+
+    // Number of logical addresses to set up. Must be ≤ available_log_addrs as returned by ioctl CEC_ADAP_G_CAPS. All arrays in this structure are only filled up to index available_log_addrs-1. The remaining array elements will be ignored. Note that the CEC 2.0 standard allows for a maximum of 2 logical addresses, although some hardware has support for more. CEC_MAX_LOG_ADDRS is 4. The driver will return the actual number of logical addresses it could claim, which may be less than what was requested. If this field is set to 0, then the CEC adapter shall clear all claimed logical addresses and all other fields will be ignored.
+    __u8 num_log_addrs;
+
+    // The vendor ID is a 24-bit number that identifies the specific vendor or entity. Based on this ID vendor specific commands may be defined. If you do not want a vendor ID then set it to CEC_VENDOR_ID_NONE.
+    __u32 vendor_id;
+
+    // Flags. See Flags for struct cec_log_addrs for a list of available flags.
+    __u32 flags;
+
+    // The On-Screen Display name as is returned by the CEC_MSG_SET_OSD_NAME message.
+    char osd_name[15];
+
+    // Primary device type for each logical address. See CEC Primary Device Types for possible types.
+    __u8 primary_device_type[CEC_MAX_LOG_ADDRS];
+
+    // Logical address types. See CEC Logical Address Types for possible types. The driver will update this with the actual logical address type that it claimed (e.g. it may have to fallback to CEC_LOG_ADDR_TYPE_UNREGISTERED).
+    __u8 log_addr_type[CEC_MAX_LOG_ADDRS];
+
+    /* CEC 2.0 */
+    // CEC 2.0 specific: the bit mask of all device types. See CEC All Device Types Flags. It is used in the CEC 2.0 CEC_MSG_REPORT_FEATURES message. For CEC 1.4 you can either leave this field to 0, or fill it in according to the CEC 2.0 guidelines to give the CEC framework more information about the device type, even though the framework won’t use it directly in the CEC message.
+    __u8 all_device_types[CEC_MAX_LOG_ADDRS];
+    // Features for each logical address. It is used in the CEC 2.0 CEC_MSG_REPORT_FEATURES message. The 12 bytes include both the RC Profile and the Device Features. For CEC 1.4 you can either leave this field to all 0, or fill it in according to the CEC 2.0 guidelines to give the CEC framework more information about the device type, even though the framework won’t use it directly in the CEC message.
+    __u8 features[CEC_MAX_LOG_ADDRS][12];
+};
+</pre>
+
+<p>
+    <code>struct cec_log_addrs</code> 中的 <code>flags</code> 有如下释义：
+</p>
+<pre>
+By default if no logical address of the requested type can be claimed, then it will go back to the unconfigured state. If this flag is set, then it will fallback to the Unregistered logical address. Note that if the Unregistered logical address was explicitly requested, then this flag has no effect.
+
+#define CEC_LOG_ADDRS_FL_ALLOW_UNREG_FALLBACK   1
+    
+By default the CEC_MSG_USER_CONTROL_PRESSED and CEC_MSG_USER_CONTROL_RELEASED messages are only passed on to the follower(s), if any. If this flag is set, then these messages are also passed on to the remote control input subsystem and will appear as keystrokes. This features needs to be enabled explicitly. If CEC is used to enter e.g. passwords, then you may not want to enable this to avoid trivial snooping of the keystrokes.
+#define CEC_LOG_ADDRS_FL_ALLOW_RC_PASSTHRU      2
+    
+
+// If this flag is set, then the device is CDC-Only. CDC-Only CEC devices are CEC devices that can only handle CDC messages.
+// All other messages are ignored.    
+#define CEC_LOG_ADDRS_FL_CDC_ONLY               4
+</pre>
+
+<p>
+    CEC 的 Version 有：
+</p>
+<pre>
+#define CEC_OP_CEC_VERSION_1_3A                 4
+
+#define CEC_OP_CEC_VERSION_1_4B                 5
+
+#define CEC_OP_CEC_VERSION_2_0                  6
+</pre>
+
+<p>
+    CEC Primary Device Types
+</p>
+<pre>
+// Use for a TV
+#define CEC_OP_PRIM_DEVTYPE_TV                  0
+
+// Use for a recording device.
+#define CEC_OP_PRIM_DEVTYPE_RECORD              1
+
+// Use for a device with a tuner.
+#define CEC_OP_PRIM_DEVTYPE_TUNER               3
+
+// Use for a playback device.
+#define CEC_OP_PRIM_DEVTYPE_PLAYBACK            4
+
+// Use for an audio system (e.g. an audio/video receiver).
+#define CEC_OP_PRIM_DEVTYPE_AUDIOSYSTEM         5
+
+// Use for a CEC switch.
+#define CEC_OP_PRIM_DEVTYPE_SWITCH              6
+
+// Use for a video processor device.
+#define CEC_OP_PRIM_DEVTYPE_VIDEOPROC           7
+</pre>
+
+<p>
+    CEC Logical Address Types：
+</p>
+<pre>
+// Use for a TV.
+#define CEC_LOG_ADDR_TYPE_TV   0
+
+// Use for a recording device
+#define CEC_LOG_ADDR_TYPE_RECORD   1
+
+// Use for a tuner device
+#define CEC_LOG_ADDR_TYPE_TUNER   2
+
+// Use for a playback device
+#define CEC_LOG_ADDR_TYPE_PLAYBACK   3
+
+// Use for an audio system device
+#define CEC_LOG_ADDR_TYPE_AUDIOSYSTEM   4
+
+// Use for a second TV or for a video processor device
+#define CEC_LOG_ADDR_TYPE_SPECIFIC   5
+
+// Use this if you just want to remain unregistered. Used for pure CEC switches or CDC-only devices (CDC: Capability Discovery and Control).
+#define CEC_LOG_ADDR_TYPE_UNREGISTERED   6
+</pre>
+
+<p>
+    CEC All Device Types Flags
+</p>
+<pre>
+// This supports the TV type
+#define CEC_OP_ALL_DEVTYPE_TV 0x80
+
+// This supports the Recording type.
+#define CEC_OP_ALL_DEVTYPE_RECORD 0x40
+
+// This supports the Tuner type.
+#define CEC_OP_ALL_DEVTYPE_TUNER 0x20
+
+// This supports the Playback type.
+#define CEC_OP_ALL_DEVTYPE_PLAYBACK 0x10
+
+// This supports the Audio System type
+#define CEC_OP_ALL_DEVTYPE_AUDIOSYSTEM 0x08
+
+// This supports the CEC Switch or Video Processing type
+#define CEC_OP_ALL_DEVTYPE_SWITCH 0x04
+</pre>
+
 <div class="head head_3">xxxxxxx</div>
 <div class="head head_3">xxxxxxx</div>
 <div class="head head_3">xxxxxxx</div>

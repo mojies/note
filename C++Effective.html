@@ -461,11 +461,28 @@ struct random_access_iterator_tag: public bidirectional iterator_tag {I;
 
 
 
+<div class="head head_2">R"delimiter(...)delimiter" -- Raw string</div>
+<p>
+    如果你声明的字符串中频繁的包含 <code>\n</code> <code>\r</code> <code>\</code> 等符号，
+    而你又不想你的代码线的非常凌乱，这个时候你可以以这种方式声明一个字符串，如下所示
+</p>
+<p>
+std::string a = "Geeks.\nFor.\nGeeks.\n \\n"；
 
-<div class="head head_2">typeid</div>
+// 你可以直接写成这样
 
+std::string a = R"xxx(Geeks.
+For.
+Geeks.
+ \n)xxx"
+
+</p>
+<p>
+    具体威力可以参考这份代码：<code>https://android.googlesource.com/platform/system/logging/+/refs/heads/master/logcat/logcat.cpp</code>
+</p>
 
 </div>    
+
 
 
 

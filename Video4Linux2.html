@@ -615,8 +615,255 @@ By default the CEC_MSG_USER_CONTROL_PRESSED and CEC_MSG_USER_CONTROL_RELEASED me
 #define CEC_OP_ALL_DEVTYPE_SWITCH 0x04
 </pre>
 
-<div class="head head_3">xxxxxxx</div>
-<div class="head head_3">xxxxxxx</div>
+<div class="head head_3">ioctls CEC_ADAP_G_PHYS_ADDR and CEC_ADAP_S_PHYS_ADDR</div>
+<p>
+    使用方法：<code>int ioctl(int fd, CEC_ADAP_G_PHYS_ADDR, __u16 *argp)</code> 和 <code>int ioctl(int fd, CEC_ADAP_S_PHYS_ADDR, __u16 *argp)</code>
+</p>
+<p>
+    其中 <code>argp</code> 指向 CEC 的地址。
+    不过仅当 <code>CEC_CAP_PHYS_ADDR </code> 被设置的时候才能设置 CEC 物理地址，因此再设置之前最好检查一下。
+    而且 <code>CEC_ADAP_S_PHYS_ADDR</code> 只能再 init 模式下才能被调用，否则会返回一个 <code>EBUSY</code> 的错误信息。
+</p>
+<p>
+    关于 init 模式，请参考： <code>see ioctls CEC_G_MODE & CEC_S_MODE</code>
+</p>
+<p>
+    如果需要清除设置的物理地址，那么将之设置为 <code>CEC_PHYS_ADDR_INVALID</code> 即可。
+</p>
+<pre>
+#define CEC_PHYS_ADDR_INVALID   0xffff
+</pre>
+<p>
+    如果有逻辑地址正在定义中，那么该请求将会被阻塞，直到所有的逻辑地址都被成功声明。
+    如果该 fd 被声明为非阻塞模式，那么该请求将会直接返回，返回值为 0.
+</p>
+<p>
+    此外当你设置 PHY 地址之后，一个 <code>CEC_EVENT_STATE_CHANGE</code> 将会产生，并发送给对方设备。
+</p>
+<p>
+    
+</p>
+<p>
+    
+A CEC_EVENT_STATE_CHANGE event is sent when the physical address changes.
+
+The physical address is a 16-bit number where each group of 4 bits represent a digit of the physical address a.b.c.d where the most significant 4 bits represent ‘a’. The CEC root device (usually the TV) has address 0.0.0.0. Every device that is hooked up to an input of the TV has address a.0.0.0 (where ‘a’ is ≥ 1), devices hooked up to those in turn have addresses a.b.0.0, etc. So a topology of up to 5 devices deep is supported. The physical address a device shall use is stored in the EDID of the sink.
+
+For example, the EDID for each HDMI input of the TV will have a different physical address of the form a.0.0.0 that the sources will read out and use as their physical address.
+</p>
+
+<div class="head head_3">ioctl CEC_ADAP_G_CONNECTOR_INFO</div>
+<p>
+    使用方法： <code>int ioctl(int fd, CEC_ADAP_G_CONNECTOR_INFO, struct cec_connector_info *argp)</code>
+</p>
+<p>
+    使用改 ioctl 方法你可以获取到该 CEC 设备与哪个 HDMI 设备相关。调用该方法时，你的程序应该提供一个指向 <code>cec_connector_info</code> 结构体的指针，成功返回之后，内核会将该 CEC 的信息返回到该结构体中。
+    当然，你再调用该方法之前，先应该减产 <code>CEC_CAP_CONNECTOR_INFO</code> 是否被标记。
+</p>
+<p>
+    struct cec_connector_info 的结构如下所示：
+</p>
+<pre>
+struct cec_connector_info {
+// 没有 HDMI connector 与此 CEC 相关或者驱动程序并没有提供有用信息
+#define CEC_CONNECTOR_TYPE_NO_CONNECTOR             0
+// 存在一个 DRM 设备与该 CEC 设备相关联，详细信息可在 <code>cec_drm_connector_info</code> 中找到。
+#define CEC_CONNECTOR_TYPE_DRM                      1
+    __u32 type;
+
+    union {
+        struct cec_drm_connector_info drm;
+        __u32 raw[16];
+    };
+};
+</pre>
+<p>
+    struct cec_drm_connector_info 的结构如下所示：
+</p>
+<pre>
+struct cec_drm_connector_info {
+    // DRM card number， 如果值为 0， 则代表该 CEC 设备与 <code>/dev/card0</code> 关联
+    __u32 card_no;
+
+    // DRM connector ID
+    __u32 connector_id;
+};
+</pre>
+
+
+<div class="head head_3">ioctl CEC_DQEVENT</div>
+<p>
+    使用方法：<code>int ioctl(int fd, CEC_DQEVENT, struct cec_event *argp)</code>
+</p>
+<p>
+    CEC devices can send asynchronous events. These can be retrieved by calling CEC_DQEVENT(). If the file descriptor is in non-blocking mode and no event is pending, then it will return -1 and set errno to the EAGAIN error code.
+
+The internal event queues are per-filehandle and per-event type. If there is no more room in a queue then the last event is overwritten with the new one. This means that intermediate results can be thrown away but that the latest event is always available. This also means that is it possible to read two successive events that have the same value (e.g. two CEC_EVENT_STATE_CHANGE events with the same state). In that case the intermediate state changes were lost but it is guaranteed that the state did change in between the two events.
+</p>
+<p>
+    struct cec_event 的结构如下所示：
+</p>
+<pre>
+struct cec_event {
+	__u64 ts;
+	__u32 event;
+	__u32 flags;
+	union {
+		struct cec_event_state_change state_change;
+		struct cec_event_lost_msgs lost_msgs;
+		__u32 raw[16];
+	};
+};
+</pre>
+
+<p>
+    <code>struct cec_event_state_change</code> 的结构如下所示：
+</p>
+<pre>
+struct cec_event_state_change {
+	__u16 phys_addr;
+	__u16 log_addr_mask;
+	__u16 have_conn_info;
+};
+</pre>
+
+<p>
+    <code>struct cec_event_lost_msgs</code> 的结构如下所示：
+</p>
+<pre>
+struct cec_event_lost_msgs {
+	__u32 lost_msgs;
+};
+</pre>
+
+<p>
+    <code>CEC Events Types</code> 有下面这些
+</p>
+<pre>
+#define CEC_EVENT_STATE_CHANGE		1
+#define CEC_EVENT_LOST_MSGS		    2
+#define CEC_EVENT_PIN_CEC_LOW		3
+#define CEC_EVENT_PIN_CEC_HIGH		4
+#define CEC_EVENT_PIN_HPD_LOW		5
+#define CEC_EVENT_PIN_HPD_HIGH		6
+#define CEC_EVENT_PIN_5V_LOW		7
+#define CEC_EVENT_PIN_5V_HIGH		8
+</pre>
+
+<p>
+    <code>CEC Event Flags</code> 有下面这些：
+</p>
+<pre>
+#define CEC_EVENT_FL_INITIAL_STATE	(1 << 0)
+#define CEC_EVENT_FL_DROPPED_EVENTS	(1 << 1)
+</pre>
+
+
+<div class="head head_3">ioctls CEC_G_MODE and CEC_S_MODE</div>
+<p>
+    使用方法：<code>int ioctl(int fd, CEC_G_MODE, __u32 *argp)</code> 和 <code>int ioctl(int fd, CEC_S_MODE, __u32 *argp) </code>
+</p>
+
+<p>
+    By default any filehandle can use ioctls CEC_RECEIVE and CEC_TRANSMIT, but in order to prevent applications from stepping on each others toes it must be possible to obtain exclusive access to the CEC adapter. This ioctl sets the filehandle to initiator and/or follower mode which can be exclusive depending on the chosen mode. The initiator is the filehandle that is used to initiate messages, i.e. it commands other CEC devices. The follower is the filehandle that receives messages sent to the CEC adapter and processes them. The same filehandle can be both initiator and follower, or this role can be taken by two different filehandles.
+
+When a CEC message is received, then the CEC framework will decide how it will be processed. If the message is a reply to an earlier transmitted message, then the reply is sent back to the filehandle that is waiting for it. In addition the CEC framework will process it.
+
+If the message is not a reply, then the CEC framework will process it first. If there is no follower, then the message is just discarded and a feature abort is sent back to the initiator if the framework couldn’t process it. If there is a follower, then the message is passed on to the follower who will use ioctl CEC_RECEIVE to dequeue the new message. The framework expects the follower to make the right decisions.
+
+The CEC framework will process core messages unless requested otherwise by the follower. The follower can enable the passthrough mode. In that case, the CEC framework will pass on most core messages without processing them and the follower will have to implement those messages. There are some messages that the core will always process, regardless of the passthrough mode. See Core Message Processing for details.
+
+If there is no initiator, then any CEC filehandle can use ioctl CEC_TRANSMIT. If there is an exclusive initiator then only that initiator can call ioctls CEC_RECEIVE and CEC_TRANSMIT. The follower can of course always call ioctl CEC_TRANSMIT.
+
+Available initiator modes are:
+</p>
+
+<p>
+    <code>Initiator Modes</code> 如下所示：
+</p>
+<pre>
+#define CEC_MODE_NO_INITIATOR		(0x0 << 0)
+#define CEC_MODE_INITIATOR		(0x1 << 0)
+#define CEC_MODE_EXCL_INITIATOR		(0x2 << 0)
+#define CEC_MODE_INITIATOR_MSK		0x0f
+</pre>
+
+<p>
+    <code>Follower Modes</code> 如下所示：
+</p>
+<pre>
+#define CEC_MODE_NO_FOLLOWER		(0x0 << 4)
+#define CEC_MODE_FOLLOWER		(0x1 << 4)
+#define CEC_MODE_EXCL_FOLLOWER		(0x2 << 4)
+#define CEC_MODE_EXCL_FOLLOWER_PASSTHRU	(0x3 << 4)
+#define CEC_MODE_MONITOR_PIN		(0xd << 4)
+#define CEC_MODE_MONITOR		(0xe << 4)
+#define CEC_MODE_MONITOR_ALL		(0xf << 4)
+#define CEC_MODE_FOLLOWER_MSK		0xf0
+</pre>
+
+<p>
+    <code>Core Message Processing</code> 如下所示：
+</p>
+<pre>
+#define CEC_MSG_GET_CEC_VERSION				0x9f
+#define CEC_MSG_GIVE_DEVICE_VENDOR_ID       0x8c
+#define CEC_MSG_ABORT                       0xff
+#define CEC_MSG_GIVE_PHYSICAL_ADDR			0x83
+#define CEC_MSG_GIVE_OSD_NAME				0x46
+#define CEC_MSG_GIVE_FEATURES				0xa5
+#define CEC_MSG_USER_CONTROL_PRESSED        0x44
+#define CEC_MSG_USER_CONTROL_RELEASED       0x45
+#define CEC_MSG_REPORT_PHYSICAL_ADDR        0x84
+</pre>
+
+
+<div class="head head_3">ioctls CEC_RECEIVE and CEC_TRANSMIT</div>
+<p>
+    使用方法：<code>int ioctl(int fd, CEC_RECEIVE, struct cec_msg *argp)</code> 和 <code>int ioctl(int fd, CEC_TRANSMIT, struct cec_msg *argp)</code>。
+    参考：<a href="https://linuxtv.org/downloads/v4l-dvb-apis/userspace-api/cec/cec-ioc-receive.html">https://linuxtv.org/downloads/v4l-dvb-apis/userspace-api/cec/cec-ioc-receive.html</a>
+</p>
+<p>
+    <code>struct cec_msg</code> 的结构如下所示：
+</p>
+<pre>
+struct cec_msg {
+    __u64 tx_ts;
+    __u64 rx_ts;
+    __u32 len;
+    __u32 timeout;
+    __u32 sequence;
+
+#define CEC_MSG_FL_REPLY_TO_FOLLOWERS	(1 << 0)
+#define CEC_MSG_FL_RAW			(1 << 1)
+    __u32 flags;
+    __u8 msg[CEC_MAX_MSG_SIZE];
+    __u8 reply;
+
+
+#define CEC_RX_STATUS_OK		(1 << 0)
+#define CEC_RX_STATUS_TIMEOUT		(1 << 1)
+#define CEC_RX_STATUS_FEATURE_ABORT	(1 << 2)
+#define CEC_RX_STATUS_ABORTED		(1 << 3)
+    __u8 rx_status;
+
+
+#define CEC_TX_STATUS_OK		(1 << 0)
+#define CEC_TX_STATUS_ARB_LOST		(1 << 1)
+#define CEC_TX_STATUS_NACK		(1 << 2)
+#define CEC_TX_STATUS_LOW_DRIVE		(1 << 3)
+#define CEC_TX_STATUS_ERROR		(1 << 4)
+#define CEC_TX_STATUS_MAX_RETRIES	(1 << 5)
+#define CEC_TX_STATUS_ABORTED		(1 << 6)
+#define CEC_TX_STATUS_TIMEOUT		(1 << 7)
+    __u8 tx_status;
+    __u8 tx_arb_lost_cnt;
+    __u8 tx_nack_cnt;
+    __u8 tx_low_drive_cnt;
+    __u8 tx_error_cnt;
+};
+</pre>
+
 <div class="head head_3">xxxxxxx</div>
 <div class="head head_3">xxxxxxx</div>
 
@@ -644,6 +891,9 @@ By default the CEC_MSG_USER_CONTROL_PRESSED and CEC_MSG_USER_CONTROL_RELEASED me
 </li>
 <li>
     <a href="https://git.linuxtv.org/v4l-utils.git/about/">v4l-utils</a>
+</li>
+<li>
+    <a href="https://en.wikipedia.org/wiki/Video4Linux">wiki V4l2</a>
 </li>
 </ul>
 

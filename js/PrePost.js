@@ -43,7 +43,7 @@ function autoCreateIndex(){
             index_1 = generateIndexLine( ol_head2, "#subTitle_head2_"+index_count.toString(), tagDivs[i].innerHTML );
             index_count++;
         }else
-        if( tagDivs[i].getAttribute("class") == "head_3" ){
+        if( tagDivs[i].getAttribute("class") == "head head_3" ){
             if( k == 0 ){
                 ol_head3 = document.createElement( "ol" );
                 ol_head3.setAttribute("style" , "padding-left:1.5em;" );

@@ -1594,53 +1594,55 @@ interface ICameraProvider extends @2.6::ICameraProvider {
     <code>getCameraDeviceInterface_VN_x</code> 这么几个方法。
 </p>
 <p>
-    * Camera provider HAL, which enumerates the available individual camera devices
-    * known to the provider, and provides updates about changes to device status,
-    * such as connection, disconnection, or torch mode enable/disable.
-    *
-    * The provider is responsible for generating a list of camera device service
-    * names that can then be opened via the hardware service manager.
-    *
-    * Multiple camera provider HALs may be present in a single system.
-    * For discovery, the service names, and process names, must be of the form
-    * "android.hardware.camera.provider@<major>.<minor>/<type>/<instance>"
-    * where
-    *   - <major>/<minor> is the provider HAL HIDL version,
-    *   - <type> is the type of devices this provider knows about, such as
-    *     "internal", "legacy", "external", "remote" etc. The camera framework
-    *     must not differentiate or chage its behavior based on the specific type.
-    *   - <instance> is a non-negative integer starting from 0 to disambiguate
-    *     between multiple HALs of the same type.
-    *
-    * The "legacy" type is only used for passthrough legacy HAL mode, and must
-    * not be used by a standalone binderized HAL.
-    *
-    * The device instance names enumerated by the provider in getCameraIdList() or
-    * ICameraProviderCallback::cameraDeviceStatusChange() must be of the form
-    * "device@<major>.<minor>/<type>/<id>" where
-    * <major>/<minor> is the HIDL version of the interface. <id> is either a small
-    * incrementing integer for "internal" device types, with 0 being the main
-    * back-facing camera and 1 being the main front-facing camera, if they exist.
-    * Or, for external devices, a unique serial number (if possible) that can be
-    * used to identify the device reliably when it is disconnected and reconnected.
-    *
-    * Multiple providers must not enumerate the same device ID.
+    Camera provider HAL 可用于枚举独立可用的 camera 设备，并且 provider 还提供更新这些 camera 设备状态的方式。
+    这些状态包括 connection / disconnection 和手电筒模式的启用和禁用。
+</p>
+<p>
+    provider 有责任提供一个 camera device service 名的 list， 而这些名字对应的 service 必须能被 hardware service manager 打开。
+
+
+</p>
+<p>
+    多个 camera provider HAL 也许被集成在一个系统中。为了系统能发现这些 service 的名字和 process 的名字，
+    provider 必须以 <code>android.hardware.camera.provider@&lt;major&gt;.&lt;minor&gt;/&lt;type&gt;/&lt;instance&gt;&lt;</code> 的形式命名。
+    这里的 &lt;major&gt;.&lt;minor&gt; 为 HAL HIDL 的版本，比如 2.4 / 2.5 ... 
+    而 &lt;type&gt; 则为 provider 的类型，目前已定义的类型有 <code>internal</code>， <code>legacy</code>， <code>external</code>， <code>remote</code> ...
+    而 camera framework 必须直到各个版本间的差异性。
+    最后 &lt;instance&gt;， 是一个从 0 开始的非负整数，用于消除相同类型的多个 HAL 之间的歧义。
+</p>
+<p>
+    其中"legacy" 类型的 provider 提供的 device 只能以传统 HAL 模式访问，
+    而且一定不能被 standalone binderized HAL 所使用。
+</p>
+<p>
+    设备实例名字必须能被 <code>getCameraIdList()</code> 或者 <code>ICameraProviderCallback::cameraDeviceStatusChange()</code> 枚举。
+    的获取的格式必须服从 "device@&lt;major&gt;.&lt;minor&gt;/&lt;type&gt;/&lt;id&gt;&lt;" 其中 &lt;major&gt;/&lt;minor&gt; 为对应的 HIDL 的版本号。
+    id  是 "internal" 设备类型的一个小的递增整数，0 是主后置摄像头，1 是主前置摄像头（如果存在）。 或者，对于外部设备，一个唯一的序列号（如果可能）可用于在设备断开连接和重新连接时可靠地识别设备。
+</p>
+<p>
+    需要注意的是，多个 provider 一定不能枚举出同一个 device ID。
 </p>
 
+<div class="head head_3">setCallback</div>
+<div class="head head_3">getCameraIdList</div>
+<div class="head head_3">isSetTorchModeSupported</div>
+<div class="head head_3">getCameraDeviceInterface_VN_x</div>
+<div class="head head_3">notifyDeviceStateChange</div>
+<div class="head head_3">isConcurrentStreamCombinationSupported</div>
+<div class="head head_3">isConcurrentStreamCombinationSupported_2_7</div>
+
+<p>
+</p>
+<p>
+</p>
+
+<div class="head head_2">ICameraProviderCallback.hal</div>
 
 
+<div class="head head_2">vendor tag</div>
 
-60-      setCallback:
-83-      getVendorTags:
-102-     getCameraIdList:
-125-     isSetTorchModeSupported:
-150-     getCameraDeviceInterface_VN_x:
----> ./2.5/ICameraProvider.hal
-30-      notifyDeviceStateChange:
----> ./2.6/ICameraProvider.hal
-104-     isConcurrentStreamCombinationSupported:
----> ./2.7/ICameraProvider.hal
-30-      isConcurrentStreamCombinationSupported_2_7
+<div class="head head_2">vendor tag</div>
+
 </div>
 
 

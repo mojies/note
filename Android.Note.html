@@ -668,8 +668,7 @@ Makefile or Android.mk --> kati --> Ninja
 <div class="head head_2">当你再执行完 <code>source build/envsetup.sh</code> 和 <code>lunch PLT</code> 之后，再运行 make 这时编译系统做了哪些事情？</div>
 <p>
     make 命令会自动加载 Makefile 中的内容，而可能你看到的工程根目录中的 Makefile 只有一行内容，即 <code>include build/make/core/main.mk</code>
-</p>
-<p>
+</p><p>
     而再你打开 <code>include build/make/core/main.mk</code> 文件之后，再文件的前部会看到 main.mk 将 make 的默认 target 改成了 <code>droid</code>, 而 <code>droid</code> target 又进而执行了 <code>droid_targets</code> target。
 </p>
 <pre>
@@ -972,28 +971,21 @@ http://gityuan.com/2016/02/05/android-init/
 https://segmentfault.com/a/1190000023184321
 <p>
     init 程序的源码位于 <code>system/core/init</code> 中。而解析 init.rc 文件的函数入口为 <code>parse_config_file</code>。.rc 中的 service 信息会被存放在 server_list 中。
-</p>
-<p>
+</p><p>
     Android Init 文件中主要存在五类对象： Actions、Commands、Services、Options 和 Imports。init 文件中可用 <code>#</code> 进行注释，并且可以使用 <code>${property.name}</code> 来使用系统属性
     （如：<code>import /init.recovery.${ro.hardware}.rc</code> ）。
-</p>
-<p>
+</p><p>
     init 程序会在加载之后第一时间加载 <code>/system/etc/init/hw/init.rc</code> 中的配置，随后会加载 <code>/{system,system_ext,vendor,odm,product}/etc/init/</code> 中的 <code>.rc</code> 文件。
-</p>
-<p>
+</p><p>
     其中，<code>/system/etc/init/</code> 中存放 Android 核心组件的一些启动配置文件；<code>/vendor/etc/init/</code> 用于存放厂商的核心 SoC 功能所需的操作或守护程序。
     而 <code>/odm/etc/init/</code> 目录则存放设备制造商的启动文件，如外设或者传感器的守护进程或初始化动作。
-</p>
-<p>
+</p><p>
     Action 和 Service 指示一个 section 的开始，所有的命令或者选项都属于先前定义的最近一个 section , 第一个区块以前的命令和选项将会被忽略。
-</p>
-<p>
+</p><p>
     另外 service 的名字必须被忽略，如果出现第二个同名的 service 名字，那么这个 service 将会被忽略，并且会答应 error 日志。
-</p>
-<p>
+</p><p>
     之前对于 Legacy devices 没有 first stage mount 机制，因此可以在 mount_all 阶段去导入 init 脚本，但是在后续版本中该特性被作废了，并且不允许在 Q 之后启动设备。
-</p>
-<p>
+</p><p>
     system / vendor / odm 分区的所有服务的可执行二进制文件或者脚本都应该在与之相关联的 .rc 文件都应该安装到所在分区的 <code>/etc/init</code> 目录中，并且每一个 .rc 文件应该包含其申明的服务的所有操作。
     文件可以申明在 Android.mk 的 <code>LOCAL_INIT_RC</code> 宏中，编译的时候会自动安装到相应的目录。Android.pb 的编译代码如下所示：
 </p>
@@ -1010,11 +1002,9 @@ prebuilt_etc {
     一个 logcat 例子， logcat 的代码位于 <code>system/core/logcat</code> 目录， logcatd.rc 也在其中。
     在改目录下有一个  Android.mk 文件，文件中指定了 LOCAL_INIT_RC 宏，在编译的时候将 logcatd.rc 安装到 /system/etc/init 目录中。
     init 将在 mount_all 期间加载 logcatd.rc ，而其将会在系统启动过程的适当时机被执行。
-</p>
-<p>
+</p><p>
     每个服务拥有自己 .rc 文件的方式优于以前一个大 init.rc 的方式，一方面在代码的管理方面，冲突会大大减少，另外 .rc 文件跟着工程走，这保证了我们可以非常方便的查找定位问题。 
-</p>
-<p>
+</p><p>
     因为 APEX 会应用到多个 Android 主线版本上，此时不同版本的 init.rc 可能不一致，由此在 APEX 中以 init.#rc 的方式命名了各个不同版本的 init.rc 文件，其中 # 为支持的 SDK 版本号（比如 init.rc, init.32rc, init.35rc ）。
     而在编译的时候，编译器会找出最大的，最接近当前 SDK 版本的 init.rc 安装进去。(如果你的 SDK 为 32,33,34 则会选择 init.32rc, 而如果你的 SDK 版本 >= 35, 那么会选择 init.35rc)
 </p>
@@ -1023,12 +1013,10 @@ prebuilt_etc {
 <p>
     Action 是一系列指令的名字， Action 中有一个 trigger 字段，该字段标识该 action 在何时被调用。
     动作被添加到队列中并根据包含它们的文件被解析的顺序执行（参见 import 部分），然后在单个文件中按顺序执行。
-</p>
-<p>    
+</p><p>    
     Each action in the queue is dequeued in sequence and each command in that action is executed in sequence.
      Init handles other activities (device creation/destruction, property setting, process restarting) “between” the execution of the commands in activities.
-</p>
-<p>
+</p><p>
     Action 的通用形式如下所示：
 </p>
 <pre>
@@ -1113,20 +1101,17 @@ service \name \pathname [ \argument ]*
 <div class="head head_1">Service</div>
 <p>
     了解 Service 你可能需要先了解 Binder, 这里有一篇解释 Binder 的文章写得还挺详细的：<a href="https://zhuanlan.zhihu.com/p/35519585">写给 Android 应用工程师的 Binder 原理剖析</a>
-</p>
-<p>
+</p><p>
     Android 的所有系统服务都在 <code>base/services/java/com/android/server/SystemServer.java</code> 中加载。
     <code>SystemServer.java</code> 中包含 java 的函数入口 <code>public static void main(String[] args)</code>, zygote 启动的时候会 fork 出 SystemServer 进程，在最后通过反射机制调用到了 <code>SystemServer.main()</code> 函数。
     SystemServer 类中的初始化过程如下所示: <code>SystemServer.main</code> -> <code>SystemServer.run</code> -> <code>startBootstrapServices(t) && startCoreServices(t) && startOtherServices(t)</code>。
 
     <span class="red_t">具体的 SystemServer 启动过程可以参考本章文后参考文档 3。</span>
-</p>
-<p>
+</p><p>
     其中 Android 的 core service 包括， <code>SystemConfigService</code>, <code>BatteryService</code>, <code>UsageStatsService</code>, <code>WebViewUpdateService</code>, <code>CachedDeviceStateService</code>,
     <code>BinderCallsStatsService</code>, <code>LooperStatsService</code>, <code>RollbackManagerService</code>, <code>NativeTombstoneManagerService</code>, <code>BugreportManagerService</code>, <code>GpuService</code>。
     这些服务都是在 <code>startOtherServices</code> 函数中启动的。
-</p>
-<p>
+</p><p>
     startOtherServices 中启动的 service 有： <code>KeyAttestationApplicationIdProviderService</code>, <code>KeyChainSystemService</code>, <code>SchedulingPolicyService</code>, <code>TelecomLoaderService</code>,
     <code>TelephonyRegistry</code>, <code>EntropyMixer</code>( 可能算不上 service ), <code>AccountManagerService$Lifecycle</code>, <code>ContentService$Lifecycle</code>, <code>DropBoxManagerService</code>,
     <code>RoleService</code>, <code>VibratorManagerService.Lifecycle</code>, <code>DynamicSystemService</code>, <code>ConsumerIrService</code>, <code>AlarmManagerService</code>, <code>InputManagerService</code>,
@@ -1155,15 +1140,13 @@ service \name \pathname [ \argument ]*
     <code>IncidentCompanionService</code>, <code>MmsServiceBroker</code>, <code>AutofillManagerService</code>, <code>TranslationManagerService</code>, <code>ClipboardService</code>, <code>AppBindingService.Lifecycle</code>,
     <code>TracingServiceProxy</code>, <code>PermissionPolicyService</code>, <code>R.array.config_deviceSpecificSystemServices</code> 中指定的服务, <code>GameManagerService$Lifecycle</code>,
     <code>uwb.UwbService</code>, <code>AppSearchManagerService</code>, <code>MediaCommunicationService</code>, <code>CarServiceHelperService</code>
-</p>
-<p>
+</p><p>
     startOtherServices 中启动的和网络相关的 service 有： 
     <code>IpConnectivityMetrics</code>, <code>NetworkWatchlistService</code>, <code>NetworkManagementService</code>, <code>IpSecService</code>, <code>NetworkScoreService.Lifecycle</code>,
     <code>NetworkStatsService</code>,  <code>NetworkPolicyManagerService</code>, <code>wifi.WifiService</code>, <code>wifi.scanner.WifiScanningService</code>, <code>wifi.rtt.RttService</code>,
     <code>wifi.aware.WifiAwareService</code>, <code>wifi.p2p.WifiP2pService</code>, <code>lowpan.LowpanService</code>, <code>ethernet.EthernetService</code>, <code>PacProxyService</code>,
     <code>ConnectivityServiceInitializer</code>, <code>VpnManagerService</code>, <code>VcnManagementService</code>, <code>NsdService</code>, 
-</p>
-<p>
+</p><p>
     startOtherServices 中启动的和手表相关的 service 有：<code>ThermalObserver</code>, 
     <code>MediaProjectionManagerService</code>, <code>WearPowerService</code>, <code>WearConnectivityService</code>, <code>WearDisplayService</code>,
     <code>WearTimeService</code>, <code>WearLeftyService</code>, <code>GlobalActionsService</code>
@@ -1172,11 +1155,9 @@ service \name \pathname [ \argument ]*
 <div class="head head_2">publishBinderService 和 publishLocalService 区别</div>
 <p>
     参考文档：<a href="https://blog.csdn.net/u010871962/article/details/120047716">publishBinderService和publishLocalService区别</a>
-</p>
-<p>
+</p><p>
     摘要： 1. 通过 publishBinderService 方法发布的 Service 上层可以访问对应服务 Manager; 2. 通过 publishLocalService 方法发布的 Service, 上层不可以访问对应服务 Manager, 只能 System 进程访问。
-</p>
-<p>
+</p><p>
     查看 Android 系统中启动的 service 可以使用： <code>service list</code>
 </p>
 
@@ -1189,8 +1170,7 @@ service \name \pathname [ \argument ]*
 <div class="head head_2">NetworkManagementService</div>
 <p>
     NetworkManagementService 位于 <code>frameworks/base/services/core/java/com/android/server/NetworkManagementService.java</code> 位置。
-</p>
-<p>
+</p><p>
     <code>framework/base/services/java/com/android/server/SystemServer.java</code> 在初始化的时候在 <code>private void startOtherServices(@NonNull TimingsTraceAndSlog t)</code> 函数会初始化网络相关服务，
     之后再初始化大多数基础模块之后会调用 <code>NetworkManagementService</code> 进行初始化。
     如下所示：
@@ -1209,14 +1189,11 @@ service \name \pathname [ \argument ]*
 </pre>
 <p>
     SystemServer 调用 <code>NetworkManagementService.systemReady</code> 之后, <code>systemReady</code> 会调用 <code>private void prepareNativeDaemon()</code> 进行一系列的网络初始化工作。
-</p>
-<p>
+</p><p>
     NetworkManagementService 继承自 <code>INetworkManagementService</code>, <code>INetworkManagementService</code> 定义于 <code>./frameworks/base/core/java/android/os/INetworkManagementService.aidl</code> 文件中。
-</p>
-<p>
+</p><p>
     NetworkManagementService 提供的接口包括：注册监听网络事件接口； get/set/config 网络接口的接口； 对网络接口进行 IPV6 设置的接口； 操作共享网络的接口； 为 Uid 设置网络接口的权限； 设置防火墙的一些接口; ...
-</p>
-<p>
+</p><p>
     如何打开 NetworkManagerService 的调试信息？方法之一是直接修改 <code>NetworkManagementService.java</code> 中 <code>DBG</code> 成员的值为 <code>true</code>。下面是一个自动编译安装的脚本。
 </p>
 <pre>
@@ -1296,15 +1273,13 @@ service netd /system/bin/netd
 <p>
     Netd 接收并处理来自 Framework 层中 NetworkManagementService 或 NsdService 的命令。
     这些命令最终由 Netd 中对应的 Command 对象去处理。Net 接收并解析来自 Kernel 的 UEvent 消息, 然后再转发给 Framework 层中对应 Service 去处理。
-</p>
-<p>
+</p><p>
     Netd 进程由 init 进程根据 init.rc 的对应配置项而启动。
 </p>
 
 <p>
     NetdService
-</p>
-<p>
+</p><p>
     假定你已经熟悉 ServiceManager 相关知识，
     假定你已经熟悉基本的网络知识： ethnet, wifi, 七层架构，四层架构，路由，常规网络管理知识， IPV4/IPV6, DNS, DHCP ...
 </p>
@@ -1359,8 +1334,7 @@ exit 0
 <div class="head head_2">netd 如何提供服务的</div>
 <p>
     netd 的服务存在一个类 <code>class NetdNativeService</code>, 该类继承自 <code>public BinderService&lt;NetdNativeService&gt;, public BnNetd</code>, 也意味着它是一个 binder service。
-</p>
-<p>
+</p><p>
     netd 启动的时候执行以下代码启动该服务:
 </p>
 <pre>
@@ -1374,8 +1348,7 @@ exit 0
 <p>
     调用路径如下所示：
     <code>@utf8InCpp String[] interfaceGetList();</code> -> <code>NetdNativeService::interfaceGetList</code> -> <code>InterfaceController::getIfaceNames</code> 。
-</p>
-<p>
+</p><p>
     <code>InterfaceController::getIfaceNames</code> 会打开 <code>/sys/class/net</code> 目录，并查看该目录下的接口有哪些。并将这些接口存储到
     <code>std::vector<std::string> ifaceNames</code> 中，然后返回给调用者。
 </p>
@@ -1383,8 +1356,7 @@ exit 0
 <p>
     调用路径如下所示：
     <code>InterfaceConfigurationParcel interfaceGetCfg(in @utf8InCpp String ifName);</code> -> <code>NetdNativeService::interfaceGetCfg</code> -> <code>InterfaceController::getCfg</code>。
-</p>
-<p>
+</p><p>
     <code>InterfaceController::getCfg</code> 函数会获取到接口的 MAC 地址, IP 地址，掩码， UP/DOWN 等信息。为了获取这些信息，首先要打开一个 socket ( <code>socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0)</code> ),
     然后调用 <code>ioctl(fd, SIOCGIFHWADDR, &ifr)</code> 获取接口的硬件地址，调用 <code>ioctl(fd, SIOCGIFADDR, &ifr)</code> 获取接口的 IP 地址以及类型，调用 <code>ioctl(fd, SIOCGIFNETMASK, &ifr)</code> 获取接口掩码，
     调用 <code>ioctl(fd, SIOCGIFFLAGS, &ifr)</code> 获取目前接口状态，并通过检查 <code>IFF_UP</code> 查看接口是否被使能。同时还可以检查如下状态 <code>IFF_BROADCAST</code>, <code>IFF_LOOPBACK</code>, <code>IFF_POINTOPOINT</code>,
@@ -1394,8 +1366,7 @@ exit 0
 <p>
     set 的接口和 get 的接口类似，调用流程如下所示：
     <code>void interfaceSetCfg(in InterfaceConfigurationParcel cfg)</code> -> <code>NetdNativeService::interfaceSetCfg</code> -> <code>InterfaceController::setCfg</code> 。
-</p>
-<p>
+</p><p>
     set 的时候 ioctl 带的 request id 分别为， <code>SIOCSIFADDR</code> ( 设置 IP 地址 ). <code>SIOCSIFFLAGS</code> ( 将接口 UP or DOWN )。
 </p>
 
@@ -1404,8 +1375,7 @@ exit 0
 <div class="head head_2">ndc</div>
 <p>
     ndc 工具是属于 netd 的一部分，在调试 netd 的时候非常有帮助。 netd 工程地址在 <code>system/netd</code>。
-</p>
-<p>
+</p><p>
     其中与 ndc 相关的配置在 <code>system/netd/server/Android.pb</code> 文件中，如下所示：
 </p>
 <pre>
@@ -1453,8 +1423,7 @@ int main(int argc, char** argv){
     这些指令从 <code>server/NdcDispatcher.cpp</code> 注册到每一个指令的专属类中，这些类的定义在 <code>server/NdcDispatcher.h</code> 中。
     <code>ndc</code> 收到命令行输入的数据之后会直接调用 <code>NdcDispatcher::dispatchCommand</code> 方法，该方法会在注册到 <code>NdcDispatcher::mCommands</code> 的命令类中找到对应的命令类，
     并调用该命令类的 <code>NdcNetdCommand::runCommand</code> 将指令分发出去。
-</p>
-<p>
+</p><p>
    <code>NdcNetdCommand</code> 为各个命令类的基类，每个派生类都会实现一次 <code>NdcDispatcher::_xxx_::runCommand</code>。
     而 <code>runCommand</code> 会负责检查参数的合法性，并调用 <code>sp&lt;INetd&gt; mNetd</code> 通过 binder 将要操作的指令发给 netd 去处理。
 </p>
@@ -1517,13 +1486,11 @@ int main(int argc, char** argv){
     关于 camera 的原始信息可以参考 google 官方仓库中的文档。（
     <a href="http://source.android.com/devices/camera/index.html">source.android.com</a> ）
 
-</p>
-<p>
+</p><p>
     camera.provider 主要用于 camera service 发现，请求，和打开单个 camera 设备。
     他还允许直接控制闪光灯，或者打开关闭手电筒模式等。
     下面文中的资料也是我直接参考 google 官方的解释以及源码中的注释，如果大家想获得一手的资料，建议还是去查看官方文档。
-</p>
-<p>
+</p><p>
     2.4 是地一个 HIDL 版本，
     该版本提供了 HAL 层的操作和回调接口。
     之后的版本基本上都是继承字该接口。如下所示：
@@ -1592,71 +1559,50 @@ interface ICameraProvider extends @2.6::ICameraProvider {
     <code>getCameraIdList</code>,
     <code>isSetTorchModeSupported</code>,
     <code>getCameraDeviceInterface_VN_x</code> 这么几个方法。
-</p>
-<p>
+</p><p>
     Camera provider HAL 可用于枚举独立可用的 camera 设备，并且 provider 还提供更新这些 camera 设备状态的方式。
     这些状态包括 connection / disconnection 和手电筒模式的启用和禁用。
-</p>
-<p>
+</p><p>
     provider 有责任提供一个 camera device service 名的 list， 而这些名字对应的 service 必须能被 hardware service manager 打开。
 
 
-</p>
-<p>
+</p><p>
     多个 camera provider HAL 也许被集成在一个系统中。为了系统能发现这些 service 的名字和 process 的名字，
     provider 必须以 <code>android.hardware.camera.provider@&lt;major&gt;.&lt;minor&gt;/&lt;type&gt;/&lt;instance&gt;&lt;</code> 的形式命名。
     这里的 &lt;major&gt;.&lt;minor&gt; 为 HAL HIDL 的版本，比如 2.4 / 2.5 ... 
     而 &lt;type&gt; 则为 provider 的类型，目前已定义的类型有 <code>internal</code>， <code>legacy</code>， <code>external</code>， <code>remote</code> ...
     而 camera framework 必须直到各个版本间的差异性。
     最后 &lt;instance&gt;， 是一个从 0 开始的非负整数，用于消除相同类型的多个 HAL 之间的歧义。
-</p>
-<p>
+</p><p>
     其中"legacy" 类型的 provider 提供的 device 只能以传统 HAL 模式访问，
     而且一定不能被 standalone binderized HAL 所使用。
-</p>
-<p>
+</p><p>
     设备实例名字必须能被 <code>getCameraIdList()</code> 或者 <code>ICameraProviderCallback::cameraDeviceStatusChange()</code> 枚举。
     的获取的格式必须服从 "device@&lt;major&gt;.&lt;minor&gt;/&lt;type&gt;/&lt;id&gt;&lt;" 其中 &lt;major&gt;/&lt;minor&gt; 为对应的 HIDL 的版本号。
     id  是 "internal" 设备类型的一个小的递增整数，0 是主后置摄像头，1 是主前置摄像头（如果存在）。 或者，对于外部设备，一个唯一的序列号（如果可能）可用于在设备断开连接和重新连接时可靠地识别设备。
-</p>
-<p>
+</p><p>
     需要注意的是，多个 provider 一定不能枚举出同一个 device ID。
 </p>
 
 <div class="head head_3">setCallback</div>
 <p>
-    
-    Provide a callback interface to the HAL provider to inform framework of
-asynchronous camera events. The framework must call this function once
-during camera service startup, before any other calls to the provider
-(note that in case the camera service restarts, this method must be
-invoked again during its startup).
-     *
-@param callback
-A non-null callback interface to invoke when camera events occur.
-@return status
-Status code for the operation, one of:
-OK:
-On success
-INTERNAL_ERROR:
-An unexpected internal error occurred while setting the callbacks
-ILLEGAL_ARGUMENT:
-The callback argument is invalid (for example, null).
+    原型：<code>setCallback(ICameraProviderCallback callback) generates (Status status);</code>;
+</p><p>
+    该接口用于设置一个回调函数，该回调函数用于同步底层 camera 子系统的事件，
+    camera  service 必须在其启动期间，在调用其他 provider 方法前，调用以下该函数。
+    （当然在 camera service 重启之后也应该重新注册）。     
+</p><p>
+    需要注意的是返回值 <code>status</code> 返回的可能值有 <code>OK</code>,  <code>INTERNAL_ERROR</code>,  <code>ILLEGAL_ARGUMENT</code>。
 </p>
+
 <div class="head head_3">getVendorTags</div>
 <p>
-    Retrieve all vendor tags supported by devices discoverable through this
-provider. The tags are grouped into sections.
-     *
-@return status
-Status code for the operation, one of:
-OK:
-On success
-INTERNAL_ERROR:
-An unexpected internal error occurred while setting the callbacks
-@return sections
-The supported vendor tag sections; empty if there are no supported
-vendor tags, or status is not OK.
+    原型：<code>getVendorTags() generates (Status status, vec<VendorTagSection> sections);</code>;
+</p><p>
+    camera service 可通过该接口获取 所有的 vendor tag。
+    这些 tag 将会通过 <code>section</code> 字段返回。
+</p><p>
+    需要注意的是返回值 <code>status</code> 返回的可能值有 <code>OK</code>,  <code>INTERNAL_ERROR</code>。
 </p>
 
 <div class="head head_3">getCameraIdList</div>
@@ -1739,8 +1685,7 @@ vendor tags, or status is not OK.
 <div class="head head_3">notifyDeviceStateChange</div>
 <p>
     notifyDeviceStateChange(bitfield<DeviceState> newState);
-</p>
-<p>
+</p><p>
     Notify the HAL provider that the state of the overall device has
 changed in some way that the HAL may want to know about.
      *
@@ -1779,8 +1724,7 @@ The new state of the device.
 <div class="head head_3">getConcurrentStreamingCameraIds</div>
 <p>
     getConcurrentStreamingCameraIds() generates (Status status, vec<vec<string>> cameraIds);
-</p>
-<p>
+</p><p>
     Get a vector of combinations of camera device ids that are able to
 configure streams concurrently. Each camera device advertised in a
 combination MUST at the very least support the following streams while
@@ -1853,8 +1797,7 @@ specified.
 <p>
     isConcurrentStreamCombinationSupported(vec<CameraIdAndStreamCombination> configs)
         generates (Status status, bool queryStatus);
-</p>
-<p>
+</p><p>
     Check for device support of specific camera stream combinations while
 streaming concurrently with other devices.
      *
@@ -1900,19 +1843,15 @@ error.
 <div class="head head_3">isConcurrentStreamCombinationSupported_2_7</div>
 <p>
     isConcurrentStreamCombinationSupported_2_7(vec<CameraIdAndStreamCombination> configs) generates (Status status, bool queryStatus);
-</p>
-<p>
+</p><p>
     该函数与 <code>@2.6::isConcurrentStreamCombinationSupported</code> 版本中的同名函数相同，只是该函数采用的是 <code>@3.7::StreamConfiguration</code> vector。
-</p>
-<p>
+</p><p>
     <code>configs</code> 参数为一个与查询 camera stream 相关的 camera id 集合。
-</p>
-<p>
+</p><p>
     当返回的 status 值为 <code>OK</code> 的时候请求成功。
     而当返回 status 值为 <code>METHOD_NOT_SUPPORTED</code> 的时候，查询的流中包含不支持 stream combination 查询请求。
     而当返回 status 值为 <code>INTERNAL_ERROR</code> 的时候则是内部出现错误。
-</p>
-<p>
+</p><p>
     返回值 queryStatus 的值为 <code>true</code> 则代表操作成功， <code>false</code> 代表操作失败。
 </p>
 
@@ -1923,8 +1862,7 @@ error.
 <div class="head head_3">cameraDeviceStatusChange</div>
 <p>
     原型： <code>cameraDeviceStatusChange(string cameraDeviceName, CameraDeviceStatus newStatus);</code>
-</p>
-<p>
+</p><p>
     
     cameraDeviceStatusChange:
 
@@ -1948,8 +1886,7 @@ error.
 <div class="head head_3">torchModeStatusChange</div>
 <p>
     原型： <code>torchModeStatusChange(string cameraDeviceName, TorchModeStatus newStatus); </code>
-</p>
-<p>
+</p><p>
 
 torchModeStatusChange:
 Callback to the camera service to indicate that the state of the torch
@@ -1986,8 +1923,7 @@ ICameraDevice::getCameraCharacteristics call.
 <p>
     关于 SELinux 再 Android 中的简要介绍可以查看<a href="https://source.android.com/security/selinux">Android 官方关于 SELinux 的介绍</a>。
     AOSP 的 SELinux 仓库位于<a href="https://android.googlesource.com/platform/external/selinux/">https://android.googlesource.com/platform/external/selinux/</a>。
-</p>
-<p>
+</p><p>
     如果想要查询 SELinux 的目的，架构，以及其他关于 SELinux 的一切，你可以查看 <a href="https://github.com/SELinuxProject/selinux-notebook">SELinux Notebook Github 工程</a>, 该工程介绍了：
 </p>
 <ul>

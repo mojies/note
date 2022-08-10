@@ -239,11 +239,9 @@ img{
 <p>
     首先摘抄一段模板的定义：“模板就是实现代码重用机制的一种工具，它可以实现类型参数化，即把类型定义为参数， 从而实现了真正的代码可重用性。模版可以分为两类，一个是函数模版，另外一个是类模版。” From: 
     <a href="https://zhuanlan.zhihu.com/p/346400616">C++ 模板 全特化与偏特化</a>
-</p>
-<p>
+</p><p>
     那么什么是模板的特化？模板特化是模板的一个特殊情况，比如说，你之前已经定义了一个模板，但是在定义的模板中并不支持某种特殊情况，那么这个时候可能我们需要对模板再这种特殊情况做特殊说明。
-</p>
-<p>
+</p><p>
     举个例子，比如你先定义了一个求两个参数是否相等的模板，如下所示：
 </p>
 <pre>
@@ -265,8 +263,7 @@ bool EQ(float a, float b)
 
 <p>
     <strong>而模板分为函数模板和类模板，模板的特化分为全特化和偏特化，其中类模板支持全特化和偏特化，而函数模板仅支持全特化。</strong> 
-</p>
-<p>
+</p><p>
     接下来介绍一下全特化和偏特化。全特化即需要制定模板中所有模板参数的具体类型，而片特化只需要制定其中的一部分。如下所示：
 </p>
 <pre>
@@ -315,25 +312,19 @@ class A&lt;float, T&gt;{
 <div class="head head_2">C++ 11 <strong>default</strong></div>
 <p>
     原文： <a href="https://blog.csdn.net/fengbingchun/article/details/52475155">https://blog.csdn.net/fengbingchun/article/details/52475155</a>
-</p>
-<p>
+</p><p>
     在 C+11 中, 对于 defaulted 函数, 编译器会为其自动生成默认的函数定义体, 从而获得更高的代码执行效率, 也可免除程序员手动定义该函数的工作量。
-</p>
-<p>
+</p><p>
     C++ 的类有四类特殊成员函数，它们分别是：<code>默认构造函数</code> / <code>析构函数</code> / <code>拷贝构造函数</code> / <code>拷贝赋值运算符</code>。
     这些类的特殊成员函数负责创建、初始化、销毁，或者拷贝类的对象。如果程序员没有显式地为一个类定义某个特殊成员函数，而又需要用到该特殊成员函数时，则编译器会隐式的为这个类生成一个默认的特殊成员函数。
     当存在用户自定义的特殊成员函数时，编译器将不会隐式的自动生成默认特殊成员函数，而需要程序员手动编写，加大了程序员的工作量。并且手动编写的特殊成员函数的代码执行效率比编译器自动生成的特殊成员函数低。
-</p>
-<p>
+</p><p>
     C++11 标准引入了一个新特性: defaulted 函数。程序员只需在函数声明后加上 "=default", 就可将该函数声明为 defaulted 函数, 编译器将为显式声明的 defaulted 函数自动生成函数体。
-</p>
-<p>
+</p><p>
     defaulted 函数特性仅适用于类的特殊成员函数，且该特殊成员函数没有默认参数。
-</p>
-<p>
+</p><p>
     defaulted 函数既可以在类体里(inline)定义，也可以在类体外(out-of-line)定义。
-</p>
-<p>
+</p><p>
     如下所示：
 </p>
 <pre>
@@ -360,20 +351,15 @@ class A{
 <div class="head head_2">友元函数</div>
 <p>
     以下的解释摘自： <a href="http://c.biancheng.net/view/169.html">http://c.biancheng.net/view/169.html</a>
-</p>
-<p>
+</p><p>
     私有成员只能在类的成员函数内部访问，如果想在别处访问对象的私有成员，只能通过类提供的接口（成员函数）间接地进行。这固然能够带来数据隐藏的好处，利于将来程序的扩充，但也会增加程序书写的麻烦。
-</p>
-<p>
+</p><p>
     C++ 是从结构化的C语言发展而来的，需要照顾结构化设计程序员的习惯，所以在对私有成员可访问范围的问题上不可限制太死。
-</p>
-<p>
+</p><p>
     C++ 设计者认为， 如果有的程序员真的非常怕麻烦，就是想在类的成员函数外部直接访问对象的私有成员，那还是做一点妥协以满足他们的愿望为好，这也算是眼前利益和长远利益的折中。因此，C++ 就有了友元（friend）的概念。打个比方，这相当于是说：朋友是值得信任的，所以可以对他们公开一些自己的隐私。
-</p>
-<p>
+</p><p>
     友元分为两种：友元函数和友元类。
-</p>
-<p>
+</p><p>
     下面是一个友元函数的例子，其中函数 A.func1 和全局函数 func3 为 B 的友元函数，可以访问 B 中默认的 private 数据/接口。
 </p>
 <pre>
@@ -439,16 +425,14 @@ void A::func1( void ){
 <div class="head head_2">C++ 的迭代器类型</div>
 <p>
     比较专业的描述请参考：<a href="https://zh.cppreference.com/w/cpp/iterator">https://zh.cppreference.com/w/cpp/iterator</a>, 下面是我自己的一些记录。
-</p>
-<p>
+</p><p>
     C++ 有五类迭代器， Input / Output / forward / bidirectional / random_access, 迭代器的分类的依据并不是迭代器的类型，而是迭代器所支持的操作。换句话说，某个类型只要支持相应的操作，就可以作为迭代器使用。
     Input 迭代器只能向前移动，而且 client 只能读取该类迭代器的内容；
     Output 迭代器也只能向前移动，而且 Client 只能向里面写入东西；
     Forward 迭代器也只能向前移动，不过可以反复读取和修改当前内容；
     Bidirectional 迭代器则可以进行双向移动，而且拥有 Forward 迭代器的所有功能；
     Random_Access 迭代器则更加强大，可以向前或者向后移动任意单位的距离，当然企业拥有 Bidirectional 的所有功能。
-</p>
-<p>
+</p><p>
     针对该五类迭代器 C++ 为其定义了专用的 TAG STRUCT 加以确认，如下所示：
 </p>
 <pre>
@@ -465,8 +449,7 @@ struct random_access_iterator_tag: public bidirectional iterator_tag {I;
 <p>
     如果你声明的字符串中频繁的包含 <code>\n</code> <code>\r</code> <code>\</code> 等符号，
     而你又不想你的代码线的非常凌乱，这个时候你可以以这种方式声明一个字符串，如下所示
-</p>
-<p>
+</p><p>
 std::string a = "Geeks.\nFor.\nGeeks.\n \\n"；
 
 // 你可以直接写成这样
@@ -476,8 +459,7 @@ For.
 Geeks.
  \n)xxx"
 
-</p>
-<p>
+</p><p>
     具体威力可以参考这份代码：<code>https://android.googlesource.com/platform/system/logging/+/refs/heads/master/logcat/logcat.cpp</code>
 </p>
 
@@ -1671,14 +1653,11 @@ int main( int argc, char *argv[] ){
 <p>
     对于模板定义中的每个函数，编译器在实例化的时候会因为输入的模板参数值（类型模板参数或者非类型模板参数）的不同，而生成不同的函数代码块，
     如果你在乎最终生成的可执行程序大小，那么那些与模板参数无关的代码逻辑最好独立出来，再在模板中引用该独立出来的函数。
-</p>
-<p>
+</p><p>
     因非类型模板参数 (non-type template parameters) 而造成的代码膨胀，往往可消除，做法是以函数参数或 class 成员变量替换 template 参数。
-</p>
-<p>
+</p><p>
     类型参数(type parameters) 而造成的代码膨胀，往往可降低，做法是让带有完全相同二进制表述 (binary representations) 的具现类型 (instantiation types)共享实现码。
-</p>
-<p>
+</p><p>
     我的测试代码如下所示，膨胀部分只与模板参数涉及到的部分相关。像带模板参数的那个例子，增加 func2 / func3 实际并不会增加代码量（除非你调用过这些代码），因为编译器会优化掉你不调用的代码。
     但在函数中携带进模板参数，则会导致编译器实例化出调用数量那么多的函数，而在非模板那个例子中则不会出现这个现象（那还用说吗？）：
 </p>
@@ -1775,8 +1754,7 @@ int main( int argc, char *argv[] ){
     有的时候你有一个基类 ( A ) 和一个派生类 ( B ), 而且你还有一个模板类 ( C ), 你想要将 C&lt;B&gt; 自由的转换成 C&lt;A&gt;,
     比如 share_ptr&lt;B&gt; 可以自动的赋值给 share_ptr&lt;A&gt;。
     你如何处理呢？
-</p>
-<p>
+</p><p>
     本文 ( 也是 share_ptr ) 提供的方法是使用 <strong>泛化的拷贝构造函数</strong> 和 <strong>泛化的拷贝赋值函数</strong> 这两个形式来处理的。如下所示：
 </p>
 <pre>
@@ -1809,8 +1787,7 @@ public:
     但是请记住： member templates 并不改变语言规则，而语言规则说，如果程序需要一个 copy 构造函数，你却没有声明它，编译器会为你暗自生成一个。
     在 class 内声明泛化 copy 构造函数(是个 member template ) 并不会阻止编译器生成它们自己的 copy 构造函数( 一个 non-template ),
     所以如果你想要控制 copy 构造的方方面面, 你必须同时声明泛化 copy 构造函数和 "正常的" copy 构造函数。相同规则也适用于赋值 ( assignment) 操作。
-</p>
-<p>
+</p><p>
     当然，这里说的成员模板函数并不仅仅是只能用于这两种场景，因此请更具你自己的情况合理使用这条规则。
 </p>
 
@@ -1891,8 +1868,7 @@ collect2: error: ld returned 1 exit status
 <p>
     即便你把 <code>operator*&lt;T&gt;</code> 提到 <code>class A</code> 之前都没用。
     为什么？ 我也不清楚，作者也没有讲清楚。记住吧！
-</p>
-<p>
+</p><p>
     解决办法是在 <code>A</code> 内部将 friend 函数申明好（非类内函数定义在类内？？？？），至于长的有点不习惯，那么文中给出的方法是把函数主题迁移到外部即可。
     最后整个函数看起来长这样：
 </p>
@@ -2037,8 +2013,7 @@ void tag_work( T t ){
     Traits 广泛用于标准程序库。其中当然有上述讨论的 iterator traits, 除了供应 iterator_category 还供应另四份迭代器相关信息(其中最有用的是 value_type, 见条款 42) 。
     此外还有 char_traits 用来保存字符类型的相关信息，以及 numeric limits 用来保存数值类型的相关信息，例如某数值类型可表现之最小值和最大值等等。
     命名为 numeric limits 有点让人惊讶，因为 traits classes 的名称常以 "traits" 结束，但 numeric limits 却没有遵守这种风格。
-</p>
-<p>
+</p><p>
     TRl (条款 54 )导入许多新的 traits classes 用以提供类型信息，包括 is_fundamental &lt;T&gt; (判断 T 是否为内置类型) ,
     is_array&lt;T&gt; (判断 T 是否为数组类型) ，以及 is base of&lt;T1, T2&gt; ( Tl 和 T2 相同，抑或 Tl 是 T2 的 base class) 。
     总计 TRl 一共为标准 C++ 添加了 50 个以上的 traits classes。
@@ -2054,8 +2029,7 @@ void tag_work( T t ){
     另一个结果是，使用 TMP 的 C++ 程序可能在每一方面都更高效:较小的可执行文件、较短的运行期、较少的内存需求。
     然而将工作从运行期移转至编译期的另一个结果是，编译时间变长了。
     ( 元模板编程能提效和缩小代码的原因是因为 C++ 将一些判断部分和一些能在编译初期就能计算出来的结果在编译期间处理了)。
-</p>
-<p>
+</p><p>
     TMP 已被证明是个"图灵完全" (Turing-complete) 机器，意思是它的威力大到足以计算任何事物。使用 TMP 你可以声明变量、执行循环、编写及调用函数......
     下面是一个利用模板实现函数递归的实现，计算某个某个数字的阶乘的值：
 </p>
@@ -2067,8 +2041,7 @@ struct Factorial {
 </pre>
 <p>
     而你在使用的时候 ( <code>= Factorial<10></code> )，该值会直接在编译期间给出，而不是在你每次程序执行到此处的时候计算而得。（正如原文中问到的，这是否有给你汗毛直立的感觉？？？我没有汗毛直立的感觉，但我有醍醐灌顶的感觉）
-</p>
-<p>
+</p><p>
     下面是原文提到的其他三个例子，我觉得非常有意义，记录下来：
 </p>
 <ul>
@@ -2102,8 +2075,7 @@ namespace std{
 <p>
     调用 <code>set_new_handler()</code> 的时候该函数会返回一个 new_handler 的函数指针，该返回的函数指针为之前处理 new 分配内存异常的处理函数。
     因此在适当的时机，你最好将该返回的 new_handler 通过 <code>set_new_handler()</code> 返回给系统。
-</p>
-<p>
+</p><p>
     对此，本书给广大读者在实现 new_handler 的过程中提供几条建议：
 </p>
 <ul>
@@ -2166,8 +2138,7 @@ void *A::operator new( std::size_t size ) throw ( std::bad_alloc ){
     但上面的设置真的没问题吗？我不确定，在 new 期间执行的过程是否为原子的，我没有验证过，如果在其他线程恰好也在 new, 并且替换成其他 <code>new_handle</code> 会怎么样勒？
     或者在本线程 <code>set_new_handler</code> 之后，其他线程执行 new 的时候出现申请异常了会不会出问题？这是否会对我们自己设计的 <code>new_handle</code> 提出要求？
     我不敢轻易使用这条建议。或者说保守一点的情况是，仅仅为自己的进程设计唯一的一个原子性的 <code>new_handle</code>。
-</p>
-<p>
+</p><p>
     最后原文还针对 <code>std::nothorw</code> 做了一番论述， nothrow 即告知 new 在申请内存失败的时候不报告异常而直接返回 NULL, 这是为了照顾以前编写的一些代码。
     但是即便你在 new 一个对象的时候因为申明了 nothrow 而不产生异常，但你不能保证在对象执行构造函数阶段不会产生异常，因此该功能在你不了解透彻的情况下可能给你造成一些不必要的麻烦。
 </p>
@@ -2175,18 +2146,14 @@ void *A::operator new( std::size_t size ) throw ( std::bad_alloc ){
 <div class="head head_2">50: 了解 new 和 delete 的合理替换时机</div>
 <p>
     一般人也不会自己去设计 new 和 delete, 一般会出于一下几个目的: 1. 用于检测运用上的错误; 2. 为了强化效能; 3. 为了收集使用上的统计数据；4. 使用更高级的内存使用方式（共享内存）
-</p>
-<p>
+</p><p>
     对于第二点，又可能还有几个原因：增加分配和归还内存的速度，降低默认内存管理器带来的额外空间开销，弥补默认分配器中欠缺齐位的考虑，为了将相关对象集中存放（从而减少页错误）。
-</p>
-<p>
+</p><p>
     对于强化效能这里可能需要补充一点，因为编译器自带的 operator new / detele 需要权衡各种场景的性能，因此对于某些特定的场景，可能并不是最高效的。因此，如果你非常熟悉你的数据存储特性，
     这时你可以利用自定义的 new / delete 去提升能效，降低内存消耗，在某些场景甚至可以优化 50% 的内存消耗。
-</p>
-<p>
+</p><p>
     但在自定义 new / delete 的时候还是需要注意一些问题，比如数据对其的问题（在某些平台，对不对其的数据做运算可能导致程序（甚至系统）崩溃）。
-</p>
-<p>
+</p><p>
     还一个可取的方法是利用其他人已经写好的，成熟的代码，比如说 Boost 程序库中的 Pool 就是一个很好的实现，在 ”大量分配小型对象“ 的场景非常有帮助。
 </p>
 
@@ -2194,16 +2161,13 @@ void *A::operator new( std::size_t size ) throw ( std::bad_alloc ){
 <div class="head head_2">51: 编写 new 和 delete 时需固守常规</div>
 <p>
     operator new 的返回值十分单纯。如果它有能力供应客户申请的内存，就返回一个指针指向那块内存。如果没有那个能力, 就遵循条款 49 的规则，并抛出一个 bad_alloc 异常。
-</p>
-<p>
+</p><p>
     然而其实也不是非常单纯，因为 operator new 实际上不只一次尝试分配内存，并在每次失败后调用 new-handling 函数。
     这里假设 new-handling 函数也许能够做某些动作将某些内存释放出来。
     只有当指向 new-handling 函数的指针是 null, operator new 才会抛出异常。
-</p>
-<p>
+</p><p>
     奇怪的是 C++ 规定, 即使客户要求 0 bytes, operator new 也得返回一个合法指针。实现也很简单，当客户请求 0 byte 时，返回一个指向 1 byte 空间的地址。
-</p>
-<p>
+</p><p>
     许多人没有意识到 operator new 成员函数会被 derived classes 继承。
     针对 class X 而设计的 operator new, 其行为很典型地只为大小刚好为 sizeof(X) 的对象而设计。
     然而一旦被继承下去, 有可能 base class 的 operator new 被调用用以分配 derived class 对象，那将造成非常严重的后果。
@@ -2221,12 +2185,10 @@ void* Base::operator new(std::size_t size) throw(std::bad_alloc){
     如果你决定写个 <code>operator new[]</code>，记住唯一需要做的一件事就是分配一块未加工内存 (raw memory) 。
     因为你无法对 array 之内迄今尚未存在的元素对象做任何事情。实际上你甚至无法计算这个 array 将含多少个元素对象。
     原因之一是因为你不知道每个对象的具体大小，因为基类的 <code>operator new[]</code> 可能被派生类调用。因此你不能假设数组的元素个数为 <code>申请的大小 / sizeof(BaseClass)</code> 。
-</p>
-<p>
+</p><p>
     而设计对应的 delete 比 new 要简单的多，唯一要注意的是即使 delete 传的参数值是 nullptr 也必须是合法的。
     而对于设计类成员的 <code>operator delete</code> 函数则需要检查一下大小，如果大小与 sizeof(ClassName) 不一致，那么你需要将该指针转移给 <code>::operator delete</code> 处理。
-</p>
-<p>
+</p><p>
     如果你的 base classes 遗漏 virtual 析构函数， operator delete 可能无法正确运作。因为你的派生类在析构时传递给 operator delete 的 size_t 可能是不正确的，
     这是"让你的 base classes 拥有 virtual 析构函数"的一个够好的理由（条款7）
 </p>
@@ -2236,15 +2198,12 @@ void* Base::operator new(std::size_t size) throw(std::bad_alloc){
 <p>
     当你执行 <code>A *a = new A;</code> 的时候，你至少必须意识到两个问题：首先 new 的时候可能会失败产生异常，其次在内存分配之后会调用 A 的构造函数，这里也可能产生异常。
     骑在第二个阶段产生异常之后，你是无法去处理第一节阶段申请的内存的，因此，这个工作交给了 C++ 编译器，他会帮你实现该部分异常处理。
-</p>
-<p>
+</p><p>
     而编译器采取的策略是 <strong>匹配与你 new 相同类型签名的 delete 函数，然后调用该函数去释放内存。如果没有匹配到怎么办？那这里会存在内存泄露。</strong>
-</p>
-<p>
+</p><p>
     或许你会想， new 和 delete 会有什么问题？我实现了 <code>operator new</code>, <code>operator delete</code>, <code>operator new[]</code>, <code>operator detele[]</code>,
     还不够？ようち
-</p>
-<p>
+</p><p>
     首先，编译器默认情况下在 global 作用域内提供有以下形式的 <code>operator new</code>:
 </p>
 <pre>
@@ -2260,8 +2219,7 @@ void operator delete (void* ptr, const std::nothrow_t& ) throw();   // nothrow
 <p>
     <code>placement new</code> 和 <code>placement delete</code> 是什么鬼？ 不知道你以前有没有见过这种用法：<code>A *a = new(std::nothrow) A;</code>，
     对于这种情况，在 new 阶段调用的是 <code>nothrow new</code> 版本，在构造函数发生异常要释放内存时调用的是 <code>nothorw delete</code> 版本，而在最后 <code>delete a</code>, 的时候调用的是 normal delete 版本。
-</p>
-<p>
+</p><p>
     而实际上你也可以这么用，其作用为在之前已经开辟的空间再次执行 A 的初始化过程（调用构造函数），其调用的是以上案例的 <code>placement new</code> 和 <code>placement delete</code> 两个版本：
 </p>
 <pre>
@@ -2370,19 +2328,15 @@ A *a = new( log1 ) A;
 <div class="head head_2">55: 让自己熟悉 bootst</div>
 <p>
     boost 官网 <a href="https://www.boost.org/">https://www.boost.org/</a>。
-</p>
-<p>
+</p><p>
     作者是非常推荐 C++ 开发者来这里逛逛的，很多 C++ 的标准都是从这里发酵的，因此你也能接触到最前沿的知识。但我自认为我现在还没达到这个 level, 我摘抄翻译了官网的介绍，有兴趣的同学可以自己去查看原文以及逛逛这个网站。
-</p>
-<p>
+</p><p>
     Boost 提供免费的经过同行评审的可移植 C++ 源库。
-</p>
-<p>
+</p><p>
     我们重视库与 C++ 标准库的良好配合。
     Boost libraries 旨在提供能被广泛使用到各种应用场景，并且有效的功能。
     Boost license 鼓励所有的用户以最小的限制使用 Boost lib。
-</p>
-<p>
+</p><p>
     我们的目标是建立 “现有实践” 并提供参考实现，以便 Boost 库适合最终的标准化。
     从库技术报告 (TR1) 中包含的 10 个 Boost 库开始，到自 2011 年以来 C++ 标准的每个版本，C++ 标准委员会一直依赖 Boost 作为标准 C++ 库添加的宝贵来源 .
 </p>
@@ -2408,14 +2362,11 @@ A *a = new( log1 ) A;
 <div class="head head_2">RAII ( Resource Acquisition Is Initialization ) 获取资源即初始化</div>
 <p>
     C++ 中管理资源的一种技术，即在构造函数中创建资源，然后析构函数中创建资源
-</p>
-<p>
+</p><p>
     这种技术有个好处，就是，就算发生了异常， C++ 也能够保证资源的释放。
-</p>
-<p>
+</p><p>
     常见的 RAII 类有，<code>std::lock_guard</code>, <code>std::auto_ptr</code>, <code>std::tr1::share_ptr</code> ...
-</p>
-<p>
+</p><p>
     用户也可以创建自己的 RAII 类。
 </p>
 

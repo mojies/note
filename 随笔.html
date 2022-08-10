@@ -243,15 +243,298 @@ th{
 
 
 
+
+
+<div class="breadboard">
+<div class="head head_1">编译相关</div>
+<div class="head head_2">readelf</div>
+<div class="head head_3">elf 文件格式</div>
+<p>
+    参考: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#:~:text=In%20computing%2C%20the%20Executable%20and,shared%20libraries%2C%20and%20core%20dumps. 
+</p>
+
+<div class="head head_3">readelf 支持的参数</div>
+<p>
+    参考：<code>man readelf</code>
+</p>
+<ul>
+<li><code>-a, --all</code>
+    <br> 相当于 -h -l -S -s -r -d -V -A -I 的集合
+</li>
+
+<li><code>-h, --file-header</code>
+    <br> 显示 ELF 文件开始的文件头信息
+</li>
+
+<li><code>-l, --program-headers, --segments</code>
+    <br> 显示 segments（段）头信息
+</li>
+
+<li><code>-S, --section-headers, --sections</code>
+    <br> 显示 section 头信息
+</li>
+
+<li><code>-g, --section-groups</code>
+    <br> 显示 section 的组信息
+</li>
+
+<li><code>-t, --section-details</code>
+    <br> 显示 section 详细信息
+</li>
+
+<li><code>-e, --headers</code>
+    <br> 显示全部头信息，相当于 -h -l -S
+</li>
+
+<li><code>-s, --syms, --symbols</code>
+    <br> 包含静态符号表信息，显示符号表节信息，包含静态符号表信息 <code>.symtab</code>，和动态符号表信息 <code>.dynsym</code>。
+    <br> 如果只关心动态符号表可以直接使用 <code>--dyn-syms</code> 
+    <br> 如果符号有相应的版本信息，则会显示该版本信息
+    <br> 版本字符串显示为符号名称的后缀，并以 @ 字符开头，例如 <code>foo@Ver_1</code>
+    <br> 在解析未版本化引用的符号时，如果该版本是要使用的默认版本，则将显示为后缀，其后跟两个
+</li>
+
+<li><code>--dyn-syms</code>
+    <br> 显示文件的动态符号表部分中的条目（如果有）。输出格式与 --syms 选项使用的格式相同。
+</li>
+
+<li><code>--lto-syms</code>
+    <br> 显示文件中任何 LTO 符号表的内容。输出格式与 --syms 选项使用的格式相同。
+</li>
+
+<li><code>--sym-base=[0, 8, 10, 16]</code>
+    <br> 强制符号表的大小字段使用给定的基数。
+    <br> 任何无法识别的选项都将被视为“0”。
+    <br> --sym-base=0 代表默认和旧的行为。 对于小于 100000 的数字，这会将大小输出为十进制。 对于大小 100000 和更大的十六进制符号，将使用 0x 前缀。
+    <br> --sym-base=8 将以八进制给出符号大小。 --sym-base=10 将始终以十进制给出符号大小。 --sym-base=16 将始终以带有 0x 前缀的十六进制给出符号大小。
+</li>
+
+<li><code>--demangle=style, --no-demangle</code>
+    <br> 将低级符号名称解码（解码）为用户级名称。 这使得 C++ 函数名称可读。 不同的编译器有不同的修饰风格。 可选的 demangling 样式参数可用于为您的编译器选择合适的 demangling 样式。
+    <br> 参见 <a href="https://sourceware.org/binutils/docs/binutils/c_002b_002bfilt.html">c++filt</a> ，了解更多关于 demangling 的信息。 
+</li>
+
+<li><code>--quiet</code>
+    <br> 禁止 “no symbols” 诊断。
+</li>
+
+<li><code>--recurse-limit, --no-recurse-limit, --recursion-limit, --no-recursion-limit</code>
+    <br> 启用或禁用在对字符串进行分解时执行的递归量的限制。 由于名称修饰格式允许无限级别的递归，因此可以创建字符串，其解码将耗尽主机上可用的堆栈空间量，从而触发内存故障。 该限制试图通过将递归限制为 2048 级嵌套来防止这种情况发生。
+    <br> 默认情况下启用此限制，但可能需要禁用它才能解开真正复杂的名称。 但是请注意，如果禁用递归限制，则可能会耗尽堆栈，并且任何有关此类事件的错误报告都将被拒绝。
+</li>
+
+<li><code>-U [d|i|l|e|x|h]</code> 或者 <code>--unicode=[default|invalid|locale|escape|hex|highlight]</code>
+    <br> 控制标识符名称中非 ASCII 字符的显示。 默认（--unicode=locale 或--unicode=default）是将它们视为多字节字符并在当前语言环境中显示它们。
+    <br> 此选项的所有其他版本将字节视为 UTF-8 编码值并尝试解释它们。 如果它们无法被解释或者如果使用了 --unicode=invalid 选项，那么它们将显示为十六进制字节序列，并用花括号括起来。
+    <br> 使用 --unicode=escape 选项会将字符显示为 unicode 转义序列 (\uxxxx)。 使用 --unicode=hex 会将字符显示为用尖括号括起来的十六进制字节序列。
+    <br> 使用 --unicode=highlight 会将字符显示为 unicode 转义序列，但它也会以红色突出显示它们，假设输出设备支持着色。 着色旨在提醒人们注意可能不存在的 unicode 序列。
+    <br> 
+</li>
+
+<li><code>-n, --notes</code>
+    <br> 显示 NOTE 段和/或部分的内容（如果有）。
+</li>
+
+<li><code>-r, --relocs</code>
+    <br> 显示文件的重定位部分的内容（如果有的话）。
+</li>
+
+<li><code>-u, --unwind</code>
+    <br> 显示文件展开部分的内容（如果有）。
+    <br> 当前仅支持 IA64 ELF 文件的展开部分以及 ARM 展开表 (.ARM.exidx / .ARM.extab)。 如果您的架构尚未实现支持，您可以尝试使用 --debug-dump=frames 或 --debug-dump=frames-interp 选项转储 .eh_frames 部分的内容。
+</li>
+
+<li><code>-d, --dynamic</code>
+    <br> 显示文件的动态部分的内容（如果有的话）。
+</li>
+
+<li><code>-V, --version-info</code>
+    <br> 显示文件中版本部分的内容，（如果它们存在的话）。
+</li>
+
+<li><code>-A, --arch-specific</code>
+    <br> 显示文件中特定于体系结构的信息（如果有）。
+</li>
+
+<li><code>-D, --use-dynamic</code>
+    <br> 显示符号时，此选项使 readelf 使用文件动态部分中的符号哈希表，而不是符号表部分。
+    <br> 显示重定位时，此选项使 readelf 显示动态重定位而不是静态重定位。
+</li>
+
+<li><code>-L, --lint, --enable-checks</code>
+    <br> 显示有关正在检查的文件可能存在问题的警告消息。 如果单独使用，则将检查文件的所有内容。 如果与转储选项之一一起使用，则只会为正在显示的内容生成警告消息。
+</li>
+
+<li><code>-x &lt;number or name&gt;, --hex-dump=&lt;number or name&gt;</code>
+    <br> 将指定部分的内容显示为十六进制字节。编号通过节表中的索引标识特定节；任何其他字符串标识目标文件中具有该名称的所有部分。
+</li>
+
+<li><code>-p &lt;number or name&gt;, --string-dump=&lt;number or name&gt;</code>
+    <br> 将指定部分的内容显示为可打印字符串。编号通过节表中的索引标识特定节；任何其他字符串标识目标文件中具有该名称的所有部分。
+</li>
+
+<li><code>-R &lt;number or name&gt;, --relocated-dump=&lt;number or name&gt;</code>
+    <br> 将指定部分的内容显示为十六进制字节。 编号通过节表中的索引标识特定节； 任何其他字符串标识目标文件中具有该名称的所有部分。 该部分的内容将在显示之前重新定位。
+</li>
+
+<li><code>-z, --decompress</code>
+    <br> 请求由 x、R 或 p 选项转储的部分在显示之前解压缩。如果部分未压缩，则它们按原样显示。
+</li>
+
+<li><code>-c, --archive-index</code>
+    <br> 显示包含在二进制归档文件头部分的文件符号索引信息。执行与 ar 的 t 命令相同的功能，但不使用 BFD 库。见 <a href="https://sourceware.org/binutils/docs/binutils/ar.html">ar</a>。
+</li>
+
+<li><code>-w[lLiaprmfFsoORtUuTgAck] </code> 或者 <code>--debug-dump[=rawline,=decodedline,=info,=abbrev,=pubnames,=aranges,=macro,=frames,=frames-interp,=str,=str-offsets,=loc,=Ranges,=pubtypes,=trace_info,=trace_abbrev,=trace_aranges,=gdb_index,=addr,=cu_index,=links]</code>
+    <br> 显示文件中 DWARF 调试部分的内容（如果存在）。 压缩的调试部分在显示之前会自动（临时）解压缩。 如果开关后面有一个或多个可选字母或单词，则只会转储那些类型的数据。 字母和单词指的是以下信息：
+    <ul>
+    <li><code>a</code>, <code>=abbrev</code>
+        <br> 显示 “.debug_abbrev” 部分的内容。
+        </li>
+    <li><code>A</code>, <code>=addr</code>
+        <br> 显示 “.debug_addr” 部分的内容。
+        </li>
+    <li><code>c</code>, <code>=cu_index  </code>
+        <br> 显示 “.debug_cu_index” 和/或 “.debug_tu_index” 部分的内容。
+        </li>
+    <li><code>f</code>, <code>=frames</code>
+        <br> 显示 “.debug_frame” 部分的原始内容。
+        </li>
+    <li><code>F</code>, <code>=frames-interp</code>
+        <br> 显示 “.debug_frame” 部分的解释内容。
+        </li>
+    <li><code>g</code>, <code>=gdb_index</code>
+        <br> 显示 “.gdb_index” 和/或 “.debug_names” 部分的内容。
+        </li>
+    <li><code>i</code>, <code>=info</code>
+        <br> 显示 “.debug_info” 部分的内容。 注意：此选项的输出也可以通过使用 --dwarf-depth 和 --dwarf-start 选项来限制。
+        </li>
+    <li><code>k</code>, <code>=links</code>
+        <br> 显示 “.gnu_debuglink”、 “.gnu_debugaltlink” 和 “.debug_sup” 部分的内容（如果存在）。 如果它们由 “.debug_info” 部分中的 DW_AT_GNU_dwo_name 或 DW_AT_dwo_name 属性指定，还显示指向单独的 dwarf 对象文件 (dwo) 的任何链接。
+        </li>
+    <li><code>K</code>, <code>=follow-links</code>
+        <br> 显示在链接的单独调试信息文件中找到的任何选定调试部分的内容。 如果同一调试部分存在于多个文件中，这可能会导致显示多个版本。
+        <br> 另外，在显示 DWARF 属性时，如果发现表单引用了单独的调试信息文件，那么也会显示引用的内容。
+        <br> 注意 - 在某些发行版中，此选项默认启用。 它可以通过 N 调试选项禁用。 通过 --enable-follow-debug-links=yes 或 --enable-follow-debug-links=no 选项配置 binutils 时可以选择默认值。 如果不使用这些，则默认启用以下调试链接。
+        </li>
+    <li><code>N</code>, <code>=no-follow-links</code>
+        <br> 禁用以下链接到单独的调试信息文件。
+        </li>
+    <li><code>l</code>, <code>=rawline</code>
+        <br> 以原始格式显示“.debug_line”部分的内容。
+        </li>
+    <li><code>L</code>, <code>=decodedline</code>
+        <br> 显示 “.debug_line” 部分的解释内容。
+        </li>
+    <li><code>m</code>, <code>=macro</code>
+        <br> 显示 “.debug_macro” 和/或 “.debug_macinfo” 部分的内容。
+        </li>
+    <li><code>o</code>, <code>=loc</code>
+        <br> 显示 “.debug_loc” 和/或 “.debug_loclists” 部分的内容。
+        </li>
+    <li><code>O</code>, <code>=str-offsets</code>
+        <br> 显示 “.debug_str_offsets” 部分的内容。
+        </li>
+    <li><code>p</code>, <code>=pubnames</code>
+        <br> 显示 “.debug_pubnames” 和/或 “.debug_gnu_pubnames” 部分的内容。
+        </li>
+    <li><code>r</code>, <code>=aranges</code>
+        <br> 显示 “.debug_aranges” 部分的内容。
+        </li>
+    <li><code>R</code>, <code>=Ranges</code>
+        <br> 显示 “.debug_ranges” 和/或 “.debug_rnglists” 部分的内容。
+        </li>
+    <li><code>s</code>, <code>=str</code>
+        <br> 显示 “.debug_str”、“.debug_line_str” 和/或 “.debug_str_offsets” 部分的内容。
+        </li>
+    <li><code>t</code>, <code>=pubtype</code>
+        <br> 显示 “.debug_pubtypes” 和/或 “.debug_gnu_pubtypes” 部分的内容。
+        </li>
+    <li><code>T</code>, <code>=trace_aranges</code>
+        <br> 显示 “.trace_aranges” 部分的内容。
+        </li>
+    <li><code>u</code>, <code>=trace_abbrev</code>
+        <br> 显示 “.trace_abbrev” 部分的内容。
+        </li>
+    <li><code>U</code>, <code>=trace_info</code>
+        <br> 显示 “.trace_info” 部N分的内容。
+        </li>
+    </ul>
+    <br> 注意：目前并不是所有平台都支持上面的这些指令。
+</li>
+
+
+<li><code>-P, --process-links</code>
+    <br> 显示在链接到主文件的单独 debuginfo 文件中找到非调试部分的内容。此选项自动带 -wK 选项，并且仅显示其他命令行选项请求的部分。
+</li>
+
+<li><code>--dwarf-depth=n</code>
+    <br> 将 .debug_info 部分的转储限制为 n 个子项。 这仅对 --debug-dump=info 有用。 默认打印所有DIE； n 的特殊值 0 也会产生这种效果。
+    <br> 如果 n 为非零值，则不会打印 n 级或更深的 DIE。 n 的范围是从零开始的。
+</li>
+
+<li><code>--dwarf-start=n</code>
+    <br> 仅打印以编号为 n 的 DIE 开头的 DIE。 这仅对 --debug-dump=info 有用。
+    <br> 如果指定，此选项将禁止打印任何标题信息和编号为 n 的 DIE 之前的所有 DIE。 只会打印指定 DIE 的兄弟姐妹和孩子。
+    <br> 这可以与 --dwarf-depth 结合使用。
+</li>
+
+<li><code>--ctf=section</code>
+    <br> 显示指定 CTF 节的内容。 CTF 部分本身包含许多子部分，所有子部分都按顺序显示。
+    <br> 默认情况下，显示名为 .ctf 的部分的名称，即 ld 发出的名称。
+</li>
+
+<li><code>--ctf-parent=section</code>
+    <br> 如果 CTF 部分包含模糊定义的类型，它将包含许多 CTF 字典的存档，所有字典都继承自一个包含明确类型的字典。
+    <br> 该成员默认命名为 .ctf，就像包含它的部分一样，但可以在链接时使用 ctf_link_set_memb_name_changer 函数更改此名称。
+    <br> 当查看由使用名称更改器重命名父存档成员的链接器创建的 CTF 存档时，--ctf-parent 可用于指定用于父存档的名称。
+</li>
+
+<li><code>--ctf-symbols=section</code> and <code>--ctf-strings=section</code>
+    <br> 指定 CTF 文件可以从中继承字符串和符号的另一个节的名称。 默认情况下，使用 .symtab 及其链接字符串表。
+    <br> 如果指定了 --ctf-symbols 或 --ctf-strings 中的任何一个，则还必须指定另一个。
+</li>
+
+<li><code>-I, --histogram</code>
+    <br> 在显示符号表的内容时显示桶列表长度的直方图。
+</li>
+
+<li><code>-v, --version</code>
+    <br> 显示 readelf 的版本号。
+</li>
+
+<li><code>-W, --wide</code>
+    <br> 不要打破输出行以适应 80 列。 默认情况下，readelf 会中断 64 位 ELF 文件的节标题和段列表行，以便它们适合 80 列。 此选项使 readelf 分别打印每个节标题。 每个段都是单行，在超过 80 列的终端上可读性更高。
+</li>
+
+<li><code>-T, --silent-truncation</code>
+    <br> 通常，当 readelf 显示符号名称时，它必须截断名称以适应 80 列显示，它会在名称中添加 [...] 的后缀。 此命令行选项禁用此行为，允许再显示 5 个名称的字符并恢复 readelf 的旧行为（发布 2.35 之前）。
+</li>
+
+<li><code>-H, --help</code>
+    <br> help info
+</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
 <div class="breadboard">
 <div class="head head_1">DTS</div>
-<div class="head head_1">DTS 是什么</div>
-<div class="head head_1">DTS 如何在 Linux 中起作用的</div>
-<div class="head head_1">DTS 如何编译出来的</div>
-<div class="head head_1">DTS 存在 Linux 镜像的哪个位置</div>
-<div class="head head_1">DTS 与 bootloader 的关系</div>
-<div class="head head_1">DTS Linux 如何使用 DTS 中的配置</div>
-<div class="head head_1">DTS 如何加载一个 DTS</div>
+<div class="head head_2">DTS 是什么</div>
+<div class="head head_2">DTS 如何在 Linux 中起作用的</div>
+<div class="head head_2">DTS 如何编译出来的</div>
+<div class="head head_2">DTS 存在 Linux 镜像的哪个位置</div>
+<div class="head head_2">DTS 与 bootloader 的关系</div>
+<div class="head head_2">DTS Linux 如何使用 DTS 中的配置</div>
+<div class="head head_2">DTS 如何加载一个 DTS</div>
 
 </div>
 
@@ -341,19 +624,16 @@ https://blog.csdn.net/wesleyflagon/article/details/80272696
     iPerf was orginally developed by NLANR/DAST. iPerf3 is principally developed by ESnet / Lawrence Berkeley National Laboratory. It is released under a three-clause BSD license。
     详细信息参考：
     <a href="https://iperf.fr/">iperf3 官网</a>
-</p>
-<p>
+</p><p>
     iperf3 支持测试 TCP 的带宽, MSS/MTU, 另外还支持调整 socket buffer 和的窗口大小。对于 UDP, 支持测量带宽，丢包率, delay/jitter, 以及多播能力。
-</p>
-<p>
+</p><p>
     其支持多种客户端可以直接再官网上下载 bin 文件或者自行编译： Windows, Linux, Android, MacOS X, FreeBSD, OpenBSD, NetBSD, VxWorks, Solaris,...
 </p>
 
 <div class="head head_2">参数列表</div>
 <p>
     Linux 端支持的参数列表和 Windows 端支持的参数列表是不一样的，而这里仅仅支持常用的一些，对于各个平台的差异还请自己查询官方文档。
-</p>
-<p>
+</p><p>
     下面介绍以 server 模式运行时的独有参数：
 </p>
 <ul>
@@ -901,8 +1181,76 @@ iperf Done.
     <br> <a href="https://en.wikipedia.org/wiki/List_of_tools_for_static_code_analysis#Clang">Wikipedia -- List of tools for static code analysis</a>
 
 </li>
+<li><strong>下载 github 某一个仓库某一个目录的文件</strong>
+    <br> <a href="https://minhaskamal.github.io/DownGit/#/home">https://minhaskamal.github.io/DownGit/#/home</a>
+</li>
+<li><strong>搜索 github 某一个仓库中的内容</strong>
+    <br> <a href="https://sourcegraph.com/search">https://sourcegraph.com/search</a>
+    <br> 比如： https://sourcegraph.com/search?q=context:global+repo:%5Egithub%5C.com/danmar/cppcheck%24+txt&patternType=standard
+</li>
 
 </ul>
+<li><strong>为服务器添加一个用户</strong>
+    <pre>
+#!/bin/bash
+
+echo "Please input user name:"
+read NAME
+
+IS_EXIST=$(cat /etc/passwd | grep "${NAME}")
+
+if [ "${IS_EXIST}" = "" ]; then
+    echo "USERNAME: ${NAME}"
+else
+    echo "This man is exist, please select another one"
+    echo "/etc/passwd -> ${IS_EXIST}"
+    exit -1
+fi
+
+echo "Please input select user base home dir:"
+echo "1. /home"
+echo "2. /home2"
+echo "3. /home3"
+echo "4. /home4"
+read HOME_DIR
+
+case ${HOME_DIR} in
+1|/home)
+    HOME_DIR="/home"
+    ;;
+2|/home2)
+    HOME_DIR="/home2"
+    ;;
+3|/home3)
+    HOME_DIR="/home3"
+    ;;
+4|/home4)
+    HOME_DIR="/home4"
+    ;;
+*)
+    echo "Not this option"
+    exit -1
+    ;;
+esac
+
+SMB_CONFIG_CONTENT="[${NAME}]\n   comment = A Shared Directory\n   path = ${HOME_DIR}/${NAME}\n   valid users = ${NAME}\n   public = no\n   writable = yes\n   max connections = 10\n"
+
+echo "---"
+echo "USER --> ${NAME}"
+echo "PASSWORD --> ${NAME}"
+echo "HOME_DIR --> ${HOME_DIR}"
+echo "SAMBA PASSWORD --> ${NAME}"
+
+echo "--- SMB CONFIG"
+echo -e "${SMB_CONFIG_CONTENT}"
+
+useradd -d ${HOME_DIR}/${NAME} -m -p $(openssl passwd -1 ${NAME}) -s /bin/bash ${NAME}
+smbpasswd -a ${NAME} -w ${NAME}
+echo -e "${SMB_CONFIG_CONTENT}" >> /etc/samba/smb.conf
+systemctl  restart smbd
+    </pre>
+
+</li>
 </div>
 
 

@@ -1586,7 +1586,7 @@ interface ICameraProvider extends @2.6::ICameraProvider {
 
 <div class="head head_3">setCallback</div>
 <p>
-    原型：<code>setCallback(ICameraProviderCallback callback) generates (Status status);</code>;
+    原型：<code>setCallback(ICameraProviderCallback callback) generates (Status status);</code>
 </p><p>
     该接口用于设置一个回调函数，该回调函数用于同步底层 camera 子系统的事件，
     camera  service 必须在其启动期间，在调用其他 provider 方法前，调用以下该函数。
@@ -1597,7 +1597,7 @@ interface ICameraProvider extends @2.6::ICameraProvider {
 
 <div class="head head_3">getVendorTags</div>
 <p>
-    原型：<code>getVendorTags() generates (Status status, vec<VendorTagSection> sections);</code>;
+    原型：<code>getVendorTags() generates (Status status, vec&lt;VendorTagSection&gt; sections);</code>
 </p><p>
     camera service 可通过该接口获取 所有的 vendor tag。
     这些 tag 将会通过 <code>section</code> 字段返回。
@@ -1607,79 +1607,37 @@ interface ICameraProvider extends @2.6::ICameraProvider {
 
 <div class="head head_3">getCameraIdList</div>
 <p>
-    Returns the list of internal camera device interfaces known to this
-    camera provider. These devices can then be accessed via the hardware
-    service manager.
-         *
-    External camera devices (camera facing EXTERNAL) must be reported through
-    the device status change callback, not in this list. Only devices with
-    facing BACK or FRONT must be listed here.
-         *
-    @return status Status code for the operation, one of:
-    OK:
-    On a succesful generation of camera ID list
-    INTERNAL_ERROR:
-    A camera ID list cannot be created. This may be due to
-    a failure to initialize the camera subsystem, for example.
-    @return cameraDeviceNames The vector of internal camera device
-    names known to this provider.
-         */
+    原型：<code>getCameraIdList() generates (Status status, vec&lt;string&gt; cameraDeviceNames);</code>
+</p><p>
+    该接口给应用层返回一个列表，该列表为 provider 知道的 camera 设备名字。
+    这些设备都必须能被 hardware service 所管理。
+</p><p>
+    外接摄像头设备必须通过设备状态变化回调上报，并不出现在此列表中。 
+    此处必须仅列出前后摄像头设备。
+</p><p>
+    需要注意的是返回值 <code>status</code> 返回的可能值有 <code>OK</code>,  <code>INTERNAL_ERROR</code>。
+    需要注意的是，如果返回值为 <code>INTERNAL_ERROR</code> 那么很有可能是 camera 子系统初始化失败导致。
 </p>
+
 <div class="head head_3">isSetTorchModeSupported</div>
 <p>
-    Returns if the camera devices known to this camera provider support
-    setTorchMode API or not. If the provider does not support setTorchMode
-    API, calling to setTorchMode will return METHOD_NOT_SUPPORTED.
-         *
-    Note that not every camera device has a flash unit, so even this API
-    returns true, setTorchMode call might still fail due to the camera device
-    does not have a flash unit. In such case, the returned status will be
-    OPERATION_NOT_SUPPORTED.
-         *
-    @return status Status code for the operation, one of:
-    OK:
-    On a succesful call
-    INTERNAL_ERROR:
-    Torch API support cannot be queried. This may be due to
-    a failure to initialize the camera subsystem, for example.
-    @return support Whether the camera devices known to this provider
-    supports setTorchMode API or not. Devices launched with SDK
-    level 29 or higher must return true.
+    原型：<code>isSetTorchModeSupported() generates (Status status, bool support);</code>
+</p><p>
+    该接口不用太多解释，该接口用于检查 camera device 是否支持手电筒模式。
+    需要注意的是，该接口并不是非常准确，因为并不是每一个 camera 设备都知道自己是否拥有 flash 单元。
 </p>
 
 <div class="head head_3">getCameraDeviceInterface_VN_x</div>
 <p>
-    Return a android.hardware.camera.device@N.x/ICameraDevice interface for
-    the requested device name. This does not power on the camera device, but
-    simply acquires the interface for querying the device static information,
-    or to additionally open the device for active use.
-         *
-    A separate method is required for each major revision of the camera device
-    HAL interface, since they are not compatible with each other.
-         *
-    Valid device names for this provider can be obtained via either
-    getCameraIdList(), or via availability callbacks from
-    ICameraProviderCallback::cameraDeviceStatusChange().
-         *
-    The returned interface must be of the highest defined minor version for
-    the major version; it's the responsibility of the HAL client to ensure
-    they do not use methods/etc that are not valid for the actual minor
-    version of the device.
-         *
-    @param cameraDeviceName the name of the device to get an interface to.
-    @return status Status code for the operation, one of:
-    OK:
-    On a succesful generation of camera ID list
-    ILLEGAL_ARGUMENT:
-    This device name is unknown, or has been disconnected
-    OPERATION_NOT_SUPPORTED:
-    The specified device does not support this major version of the
-    HAL interface.
-    INTERNAL_ERROR:
-    A camera interface cannot be returned due to an unexpected
-    internal error.
-    @return device The inteface to this camera device, or null in case of
-    error.
+    原型：<code>getCameraDeviceInterface_V1_x(string cameraDeviceName) generates(Status status, android.hardware.camera.device@1.0::ICameraDevice device);</code> 和
+    <code>getCameraDeviceInterface_V3_x(string cameraDeviceName) generates(Status status, android.hardware.camera.device@3.2::ICameraDevice device);</code>
+</p><p>
+    这不会直接给摄像头设备上电，而只是获取查询设备静态信息的接口，或者额外打开设备进行活动使用。
+    每一个主版本，返回的相机设备 HAL 都是互相独立的，因为它们彼此不兼容。
+</p><p>
+    提供程序的有效设备名称可以通过 <code>getCameraIdList()</code> 或通过来自 <code>ICameraProviderCallback::cameraDeviceStatusChange()</code> 的可用性回调获得。
+</p><p>
+    返回接口的版本必须是主要版本下的最高（即主版本号相同，次版本最高）。而 HAL 客户端负责处理好次版本存在但实际不支持的方法。
 </p>
 
 <div class="head head_3">notifyDeviceStateChange</div>

@@ -5,7 +5,15 @@
 <title>随笔</title>
  <!-- <script defer src="./js/katex.min.js" ></script> -->
  <link rel="stylesheet" href="katex/katex.min.css" >
+ <link rel="stylesheet" href="js/bower_components/js-sequence-diagrams/dist/sequence-diagram-min.css"/>
+
  <script type="text/javascript" src="katex/katex.min.js" ></script>
+
+ <script type="text/javascript" src="js/bower_components/bower-webfontloader/webfont.js"> </script>
+ <script type="text/javascript" src="js/bower_components/snap.svg/dist/snap.svg-min.js"></script>
+ <script type="text/javascript" src="js/bower_components/underscore/underscore-min.js"></script>
+ <script type="text/javascript" src="js/bower_components/js-sequence-diagrams/dist/sequence-diagram-min.js"></script>
+
 </head>
 <body>
 
@@ -235,6 +243,12 @@ th{
 
 
 
+<div class="fsd" id="diagram">
+Andrew-China: Says Hello;
+Note right of China: China thinks\nabout it;
+China-->Andrew: How are you?;
+Andrew->>China: I am good thanks!;
+</div>
 
 
 
@@ -1249,6 +1263,125 @@ smbpasswd -a ${NAME} -w ${NAME}
 echo -e "${SMB_CONFIG_CONTENT}" >> /etc/samba/smb.conf
 systemctl  restart smbd
     </pre>
+
+</li>
+<li><strong>u-boot 启动流程</strong>
+    <br> u-boot 的关联文件 <code>u-boot.lds</code> 可看出，启动函数即是 <code>_start</code> 函数，而该函数在 <code>start.s</code> 中，但你的工程里面大部分可能情况存在大量的 <code>start.S</code>,
+    这时候你最重要的工作就是找到 start.s， 最简单的办法就是编译一次，看那个 <code>start.o</code> 被编译出来了
+    <br> 随后你可能发现你的 <code>start.S</code> 里面非常多的宏，也不知道到底运行到哪里了，这时候最好的办法还是编译一次，然后使用 <code>objdump -S/-d start.o</code> 将之反编译，然后查看汇编文档，像我拿出来的汇编文档如下所示：
+    <pre>
+~/rk3588/u-boot develop
+❯ ../prebuilts/gcc/linux-x86/aarch64/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-objdump -d arch/arm/cpu/armv8/start.o | sed 's/&lt;/\&amp;lt;/g' | sed 's/&gt;/\&amp;gt;/g'
+
+arch/arm/cpu/armv8/start.o:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+0000000000000000 &lt;_start&gt;:
+   0:   1400000a        b       28 &lt;reset&gt;
+   4:   d503201f        nop
+
+0000000000000008 &lt;_TEXT_BASE&gt;:
+   8:   00200000        .word   0x00200000
+   c:   00000000        .word   0x00000000
+
+0000000000000010 &lt;_end_ofs&gt;:
+        ...
+
+0000000000000018 &lt;_bss_start_ofs&gt;:
+        ...
+
+0000000000000020 &lt;_bss_end_ofs&gt;:
+        ...
+
+0000000000000028 &lt;reset&gt;:
+  28:   14000000        b       118 &lt;save_boot_params&gt;
+
+000000000000002c &lt;save_boot_params_ret&gt;:
+  2c:   10000000        adr     x0, 0 &lt;vectors&gt;
+  30:   d5384241        mrs     x1, currentel
+  34:   f100303f        cmp     x1, #0xc
+  38:   540000a0        b.eq    4c &lt;save_boot_params_ret+0x20&gt;
+  3c:   f100203f        cmp     x1, #0x8
+  40:   54000160        b.eq    6c &lt;save_boot_params_ret+0x40&gt;
+  44:   f100103f        cmp     x1, #0x4
+  48:   540001a0        b.eq    7c &lt;save_boot_params_ret+0x50&gt;
+  4c:   d51ec000        msr     vbar_el3, x0
+  50:   d53e1100        mrs     x0, scr_el3
+  54:   b2400c00        orr     x0, x0, #0xf
+  58:   d51e1100        msr     scr_el3, x0
+  5c:   d51e115f        msr     cptr_el3, xzr
+  60:   58000600        ldr     x0, 120 &lt;save_boot_params+0x8&gt;
+  64:   d51be000        msr     cntfrq_el0, x0
+  68:   14000008        b       88 &lt;save_boot_params_ret+0x5c&gt;
+  6c:   d51cc000        msr     vbar_el2, x0
+  70:   d2867fe0        mov     x0, #0x33ff                     // #13311
+  74:   d51c1140        msr     cptr_el2, x0
+  78:   14000004        b       88 &lt;save_boot_params_ret+0x5c&gt;
+  7c:   d518c000        msr     vbar_el1, x0
+  80:   d2a00600        mov     x0, #0x300000                   // #3145728
+  84:   d5181040        msr     cpacr_el1, x0
+  88:   94000000        bl      94 &lt;apply_core_errata&gt;
+  8c:   94000000        bl      b8 &lt;lowlevel_init&gt;
+
+0000000000000090 &lt;master_cpu&gt;:
+  90:   94000000        bl      0 &lt;_main&gt;
+
+0000000000000094 &lt;apply_core_errata&gt;:
+  94:   aa1e03fd        mov     x29, x30
+  98:   d5380000        mrs     x0, midr_el1
+  9c:   d344fc00        lsr     x0, x0, #4
+  a0:   92402c00        and     x0, x0, #0xfff
+  a4:   f1341c1f        cmp     x0, #0xd07
+  a8:   54000060        b.eq    b4 &lt;apply_a57_core_errata&gt;
+  ac:   aa1d03fe        mov     x30, x29
+  b0:   d65f03c0        ret
+
+00000000000000b4 &lt;apply_a57_core_errata&gt;:
+  b4:   17fffffe        b       ac &lt;apply_core_errata+0x18&gt;
+
+00000000000000b8 &lt;lowlevel_init&gt;:
+  b8:   aa1e03fd        mov     x29, x30
+  bc:   58000360        ldr     x0, 128 &lt;save_boot_params+0x10&gt;
+  c0:   94000000        bl      0 &lt;gic_init_secure&gt;
+  c4:   58000360        ldr     x0, 130 &lt;save_boot_params+0x18&gt;
+  c8:   94000000        bl      0 &lt;gic_init_secure_percpu&gt;
+  cc:   aa1d03fe        mov     x30, x29
+  d0:   d65f03c0        ret
+
+00000000000000d4 &lt;smp_kick_all_cpus&gt;:
+  d4:   580002a0        ldr     x0, 128 &lt;save_boot_params+0x10&gt;
+  d8:   14000000        b       0 &lt;gic_kick_secondary_cpus&gt;
+  dc:   d65f03c0        ret
+
+00000000000000e0 &lt;c_runtime_cpu_setup&gt;:
+  e0:   10000000        adr     x0, 0 &lt;vectors&gt;
+  e4:   d5384241        mrs     x1, currentel
+  e8:   f100303f        cmp     x1, #0xc
+  ec:   540000a0        b.eq    100 &lt;c_runtime_cpu_setup+0x20&gt;
+  f0:   f100203f        cmp     x1, #0x8
+  f4:   540000a0        b.eq    108 &lt;c_runtime_cpu_setup+0x28&gt;
+  f8:   f100103f        cmp     x1, #0x4
+  fc:   540000a0        b.eq    110 &lt;c_runtime_cpu_setup+0x30&gt;
+ 100:   d51ec000        msr     vbar_el3, x0
+ 104:   14000004        b       114 &lt;c_runtime_cpu_setup+0x34&gt;
+ 108:   d51cc000        msr     vbar_el2, x0
+ 10c:   14000002        b       114 &lt;c_runtime_cpu_setup+0x34&gt;
+ 110:   d518c000        msr     vbar_el1, x0
+ 114:   d65f03c0        ret
+
+0000000000000118 &lt;save_boot_params&gt;:
+ 118:   14000000        b       2c &lt;save_boot_params_ret&gt;
+ 11c:   00000000        .inst   0x00000000 ; undefined
+ 120:   016e3600        .word   0x016e3600
+ 124:   00000000        .word   0x00000000
+ 128:   fe600000        .word   0xfe600000
+ 12c:   00000000        .word   0x00000000
+ 130:   fe680000        .word   0xfe680000
+ 134:   00000000        .word   0x00000000
+    </pre>
+    <br> 
 
 </li>
 </div>

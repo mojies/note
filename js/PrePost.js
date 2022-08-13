@@ -223,9 +223,31 @@ function format_math_fomula(){
     }
 }
 
+function format_function_seq_diagram(){
+    if( typeof(Diagram) == "undefined" ) return;
+    fsd_eles = document.getElementsByClassName( 'fsd' );
+    if( fsd_eles ){
+        for( var i = 0; i < fsd_eles.length; i++ ){
+            e = fsd_eles[ i ]
+            estr = e.innerText
+            estr = estr.replace('; ','\n')
+            e.innerText = "";
+            console.log( estr )
+            var d = Diagram.parse( estr );
+            var options = {theme: 'hand'};
+            d.drawSVG(e, options);
+        }
+    }
+}
+
 
 externalLinks();
 autoCreateIndex();
 formate_table();
 format_math_fomula();
+format_function_seq_diagram();
 
+// var e = document.getElementById('diagram')
+// var d = Diagram.parse("A->B: Does something");
+// var options = {theme: 'simple'};
+// d.drawSVG(e, options);

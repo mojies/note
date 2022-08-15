@@ -3,12 +3,12 @@ function generateIndexLine( parent, index, innerContent ){
     var subIndexList;
 
     subIndex = document.createElement("a");
-    subIndex.setAttribute("style" , "text-decoration:none;" );
+    // subIndex.setAttribute("style" , "text-decoration:none;margin:0;" );
     subIndex.setAttribute("href" , index );
     subIndex.innerHTML = innerContent;
 
     subIndexList = document.createElement("li");
-    subIndexList.setAttribute("style" , "list-style-type:none;" );
+    subIndexList.setAttribute("style" , "list-style-type:none;margin:0;" );
     subIndexList.appendChild( subIndex );
     parent.appendChild( subIndexList );
     return subIndexList;
@@ -175,6 +175,28 @@ transition-duration: 0.6s;
     }
 
 }
+
+/**
+ * {
+ *      "head": [ 1,2 ],
+ *      "data": [
+ *          [ 1, 2 ],
+ *          [ 3, 4 ]
+ *      ],
+ *      "attr":[
+ *          [ 0, 1, 'colspan', 2 ] // row 0, col 1, colspan = 2
+ *          [ 0, 0, 'rowspan', 3 ] // row 0, col 0, colspan = 3
+ *      ]
+ * }
+ * 
+ * ---->
+ * 
+ *  |   |   2   |
+ *  | 1 | 1 | 2 |
+ *  |   | 3 | 4 |
+ * 
+ * @returns 
+ */
 function formate_table(){
     tbs = document.getElementsByClassName('tb_format')
     console.log( '---> 0 ', tbs.length )
@@ -185,6 +207,7 @@ function formate_table(){
         js_body = JSON.parse( tb_txt )
         if( js_body == null ) return;
         tb = document.createElement('table')
+        // add head
         if( js_body.head != null && js_body.head.length != 0 ){
             head = js_body.head
             tb_tr = document.createElement('tr')
@@ -195,6 +218,7 @@ function formate_table(){
             }
             tb.appendChild( tb_tr )
         }
+        // add data
         if( js_body.data != null && js_body.data.length != 0 ){
             data = js_body.data
             for( var j = 0; j < data.length; j++ ){
@@ -205,6 +229,27 @@ function formate_table(){
                     tb_tr.appendChild( tb_td )
                 }
                 tb.appendChild( tb_tr )
+            }
+        }
+        // add attr
+        if( js_body.attr != null && js_body.attr.length != 0 ){
+            attr = js_body.attr
+            for( var j = 0; j < attr.length; j++ ){
+                if( attr[j].length != 4 ) continue;
+                row_n = attr[j][0]
+                col_n = attr[j][1]
+                attr_k = attr[j][2]
+                attr_v = attr[j][3]
+                // console.log( "attr_k ", attr_k )
+                // console.log( "attr_v ", attr_v )
+
+                // console.log( "tb.children.length ", tb.children.length )
+                if( row_n < tb.children.length ){
+                    // console.log( "tb.children[ row_n ].children.length ", tb.children[ row_n ].children.length )
+                    if( col_n < tb.children[ row_n ].children.length ){
+                        tb.children[ row_n ].children[ col_n ].setAttribute( attr_k, attr_v )
+                    }
+                }
             }
         }
         p.innerHTML = null

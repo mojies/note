@@ -1479,9 +1479,6 @@ int main(int argc, char** argv){
 
 
 <div class="breadboard">
-<div class="head head_1">Camera Device</div>
-
-
 <div class="head head_1">Camera Provider</div>
 <p>
     camera.provider 位于 <code>hardware/interface/camera/provider</code> 目录。
@@ -1788,6 +1785,125 @@ interface ICameraProviderCallback extends @2.4::ICameraProviderCallback{
     2) 对于任何处于初始 <code>NOT_PRESENT</code> 状态的设备，和任何的 external camera 设备，只要其通过 setCallback 注册了回调函数，
      Provider 必须调用该函数通知 camera service 设备当前的具体状态。
 </p>
+
+
+<div class="head head_1">camera device</div>
+<p>
+    和 camera.provider 相似， camera.device hal 层的接口位于 <code>hardware/interface/camera/device</code> 目录。
+</p>
+
+
+<div class="head head_1">ICameraDevice</div>
+<p>
+
+</p>
+<p>
+    下面是各版本 ICameraDevice 的接口一览，其中 3.0 针对 camera.device 做了重构，因此 1.0 和 3.x 的接口是不兼容的，使用起来也要注意： 
+</p>
+<pre>
+---&gt; ./device/1.0/ICameraDevice.hal
+interface ICameraDevice {
+    <code>getResourceCost</code>() generates (Status status, CameraResourceCost resourceCost);
+    <code>getCameraInfo</code>() generates (Status status, CameraInfo info);
+    <code>setTorchMode</code>(TorchMode mode) generates (Status status);
+    <code>dumpState</code>(handle fd) generates (Status status);
+    <code>open</code>(ICameraDeviceCallback callback) generates (Status status);
+    <code>setPreviewWindow</code>(ICameraDevicePreviewCallback window) generates (Status status);
+    <code>enableMsgType</code>(FrameCallbackFlags msgType);
+    <code>disableMsgType</code>(FrameCallbackFlags msgType);
+    <code>msgTypeEnabled</code>(FrameCallbackFlags msgType) generates (bool enabled);
+    <code>startPreview</code>() generates (Status status);
+    <code>stopPreview</code>();
+    <code>previewEnabled</code>() generates (bool enabled);
+    <code>storeMetaDataInBuffers</code>(bool enable) generates (Status status);
+    <code>startRecording</code>() generates (Status status);
+    <code>stopRecording</code>();
+    <code>recordingEnabled</code>() generates (bool enabled);
+    <code>releaseRecordingFrame</code>(MemoryId memId, uint32_t bufferIndex);
+    <code>releaseRecordingFrameHandle</code>(MemoryId memId, uint32_t bufferIndex, handle frame);
+    <code>releaseRecordingFrameHandleBatch</code>(vec&lt;VideoFrameMessage&gt; batch);
+    <code>autoFocus</code>() generates (Status status);
+    <code>cancelAutoFocus</code>() generates (Status status);
+    <code>takePicture</code>() generates (Status status);
+    <code>cancelPicture</code>() generates (Status status);
+    <code>setParameters</code>(string params) generates (Status status);
+    <code>getParameters</code>() generates (string parms);
+    <code>sendCommand</code>(CommandType cmd, int32_t arg1, int32_t arg2) generates (Status status);
+    <code>close</code>();
+}
+
+---&gt; ./device/3.2/ICameraDevice.hal
+interface ICameraDevice {                                                                       
+    <code>getResourceCost</code>() generates (Status status, CameraResourceCost resourceCost);
+    <code>getCameraCharacteristics</code>() generates (Status status, CameraMetadata cameraCharacteristics);
+    <code>setTorchMode</code>(TorchMode mode) generates (Status status);
+    <code>open</code>(ICameraDeviceCallback callback) generates (Status status, ICameraDeviceSession session);
+    <code>dumpState</code>(handle fd);
+}
+
+---&gt; ./device/3.5/ICameraDevice.hal
+interface ICameraDevice extends @3.2::ICameraDevice{
+    <code>getPhysicalCameraCharacteristics</code>(string physicalCameraId) generates (Status status, CameraMetadata cameraCharacteristics);
+    <code>isStreamCombinationSupported</code>(@3.4::StreamConfiguration streams) generates (Status status, bool queryStatus);
+}
+
+---&gt; ./device/3.6/ICameraDevice.hal
+interface ICameraDevice extends @3.5::ICameraDevice{
+}
+
+---&gt; ./device/3.7/ICameraDevice.hal
+interface ICameraDevice extends @3.6::ICameraDevice{
+    <code>isStreamCombinationSupported_3_7</code>(StreamConfiguration streams) generates (Status status, bool queryStatus);
+}
+</pre>
+
+<div class="head head_1">ICameraDeviceSession</div>
+<p>
+
+</p>
+<p>
+    下面是各版本 ICameraDeviceSession 的接口一览： 
+</p>
+<pre>
+--&gt; ./3.2/ICameraDeviceSession.hal
+interface ICameraDeviceSession {
+    <code>constructDefaultRequestSettings</code>(RequestTemplate type) generates (Status status, CameraMetadata requestTemplate);
+    <code>configureStreams</code>(StreamConfiguration requestedConfiguration) generates (Status status, HalStreamConfiguration halConfiguration);
+    <code>processCaptureRequest</code>(vec&lt;CaptureRequest&gt; requests, vec&lt;BufferCache&gt; cachesToRemove) generates (Status status, uint32_t numRequestProcessed);
+    <code>getCaptureRequestMetadataQueue</code>() generates (fmq_sync&lt;uint8_t&gt; queue);
+    <code>getCaptureResultMetadataQueue</code>() generates (fmq_sync&lt;uint8_t&gt; queue);
+    <code>flush</code>() generates (Status status);
+}
+
+--&gt; ./3.3/ICameraDeviceSession.hal
+interface ICameraDeviceSession extends @3.2::ICameraDeviceSession{
+    <code>configureStreams_3_3</code>(StreamConfiguration requestedConfiguration) generates (Status status, @3.3::HalStreamConfiguration halConfiguration);
+}
+
+--&gt; ./3.4/ICameraDeviceSession.hal
+interface ICameraDeviceSession extends @3.3::ICameraDeviceSession{
+    <code>configureStreams_3_4</code>(@3.4::StreamConfiguration requestedConfiguration) generates (Status status, @3.4::HalStreamConfiguration halConfiguration);
+    <code>processCaptureRequest_3_4</code>(vec&lt;CaptureRequest&gt; requests, vec&lt;BufferCache&gt; cachesToRemove) generates (Status status, uint32_t numRequestProcessed);
+}
+
+--&gt; ./3.5/ICameraDeviceSession.hal
+interface ICameraDeviceSession extends @3.4::ICameraDeviceSession {
+    <code>configureStreams_3_5</code>(@3.5::StreamConfiguration requestedConfiguration) generates (Status status, @3.4::HalStreamConfiguration halConfiguration);
+    oneway <code>signalStreamFlush</code>( vec&lt;int32_t&gt; streamIds, uint32_t streamConfigCounter );
+    <code>isReconfigurationRequired</code>(CameraMetadata oldSessionParams, CameraMetadata newSessionParams) generates(Status status, bool reconfigurationNeeded);
+}
+
+--&gt; ./3.6/ICameraDeviceSession.hal
+interface ICameraDeviceSession extends @3.5::ICameraDeviceSession {
+    <code>configureStreams_3_6</code>(@3.5::StreamConfiguration requestedConfiguration) generates (Status status, HalStreamConfiguration halConfiguration);
+    <code>switchToOffline</code>(vec&lt;int32_t&gt; streamsToKeep) generates (Status status, CameraOfflineSessionInfo offlineSessionInfo, ICameraOfflineSession offlineSession);
+}
+
+--&gt; ./3.7/ICameraDeviceSession.hal
+interface ICameraDeviceSession extends @3.6::ICameraDeviceSession {
+    <code>configureStreams_3_7</code>(StreamConfiguration requestedConfiguration) generates (Status status, @3.6::HalStreamConfiguration halConfiguration);
+    <code>processCaptureRequest_3_7</code>(vec&lt;CaptureRequest&gt; requests, vec&lt;BufferCache&gt; cachesToRemove) generates (Status status, uint32_t numRequestProcessed);
+}
 
 </div>
 

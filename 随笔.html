@@ -39,16 +39,17 @@ li{
 }
 code{
     line-height: 24px;
-    border-bottom: rgb(253, 191, 186) solid 2px;
+    border-bottom: rgb(253, 191, 186) solid 1px;
     margin: 3px 0.5em;
     padding: 2px;
 
     font-weight: 400;
-    font-size: 12px;
-    font-style: oblique;
+    font-size: 13px;
+    /* font-style: oblique; */
     border-radius: 3px;
     backdrop-filter: blur(2px);
     color: rgb(231,76,60);
+    background-color:#c7c7c7;
 }
 /* code{
     line-height: 20px;
@@ -241,14 +242,6 @@ th{
 </ol></div>
 </div>
 
-
-
-<!-- <div class="fsd" id="diagram">
-Andrew-China: Says Hello;
-Note right of China: China thinks\nabout it;
-China--Andrew: How are you?;
-Andrew-China: I am good thanks!;
-</div> -->
 
 
 
@@ -536,13 +529,336 @@ Andrew-China: I am good thanks!;
 
 
 
+<div class="breadboard">
+<div class="head head_1">linux Driver</div>
+<div class="head head_2">platform_driver</div>
+<p>
+    platform 框架的初始化流程( 以 arm 平台为例子 )：
+    <code>arch/arm/kernel/vmlinux.lds: ENTRY(stext)</code> ->
+    <code>arch/arm/kernel/{head.S, head-common.S}： stext -> __mmap_switched</code>
+    <code>init/main.c: asmlinkage __visible void __init start_kernel(void)</code> ->
+    <code>init/main.c: static noinline void __ref rest_init(void)</code> -> 
+    <code>init/main.c: static int __ref kernel_init(void *unused)</code> ->
+    <code>init/main.c: static noinline void __init kernel_init_freeable(void)</code> ->
+    <code>init/main.c: static void __init do_basic_setup(void)</code> -> 
+    <code>drivers/base/init.c： void __init driver_init(void)</code> ->
+    <code>drivers/base/platform.c：int __init platform_bus_init(void)</code>
+</p><p>
+
+</p>
+<p>
+    下面是编写 platform 驱动程序最关键的两个结构体：
+</p>
+<pre>
+// include/linux/platform_device.h
+struct platform_device {
+    const char                          *name;
+    int                                 id;
+    bool                                id_auto;
+    struct device                       dev;
+    u32                                 num_resources;
+    struct resource                     *resource;
+
+    const struct platform_device_id     *id_entry;
+    char                                *driver_override; /* Driver name to force a match */
+
+    /* MFD cell pointer */
+    struct mfd_cell                     *mfd_cell;
+
+    /* arch specific additions */
+    struct pdev_archdata                archdata;
+};
+
+</pre>
+
+<pre>
+// include/linux/mod_devicetable.h
+struct platform_device_id{
+    char                name[PLATFORM_NAME_SIZE];
+    kernel_ulong_t      driver_data;
+}
+
+// include/linux/platform_device.h
+struct platform_driver {
+    int     (*probe)(struct platform_device *);
+    int     (*remove)(struct platform_device *);
+    void    (*shutdown)(struct platform_device *);
+    int     (*suspend)(struct platform_device *, pm_message_t state);
+    int     (*resume)(struct platform_device *);
+    struct device_driver                driver;
+    const struct platform_device_id     *id_table;
+    bool                                prevent_deferred_probe;
+};
+</pre>
+<p>
+    内核根据 <code>platform_device.name</code> 和 <code>platform_driver.id_table.name</code> 来匹配设备和驱动。如果 id_table 不存在，则会匹配 <code>platform_driver.driver</code> 中的名字。
+</p>
+
+</div>    
+
+
+
+
+
+
+
+
+
 
 
 <div class="breadboard">
-<div class="head head_1">DTS</div>
-<div class="head head_2">DTS 是什么</div>
-<div class="head head_2">DTS 如何在 Linux 中起作用的</div>
-<div class="head head_2">DTS 如何编译出来的</div>
+<div class="head head_1">Device Tree Linux</div>
+<p>
+    了解 dt 最好的文档就是 Linux <a href="https://elinux.org/Device_Tree_Linux">官方的文档</a> 。
+</p><p>
+    为什么有 dt 嘞？我们都知道 Linux 为应用层提供了统一的访问硬件接口，而需要让应用层能够控制硬件，我们就需要通过驱动将（open read write close ioctl ...）接口的请求转换成对应的硬件操作逻辑，然后和硬件沟通。
+</p><p>
+    早期，Linux 的驱动分为两个部分，一部分是业务（Driver），另外一部分是配置（硬件资源，Device）。这也很好理解，因为，一般同一个硬件的业务逻辑都是高度相似的。
+    比如： GPIO 口控制的指示灯，高电平点亮，低电平熄灭，或者高电平熄灭，低电平点亮。这里我们就可以分成两个部分。一个部分是控制 GPIO 口反转的部分，这部分就是控制灯光的业务逻辑部分。另外一部分就是定义 GPIO 的引脚状态，和与灯亮灭相关对应的电平。
+    这是一个简单的例子，但是对应到复杂一点的情况实际上也是这样的，比如统一平台的 USB 协议都是一样的，只是不同硬件其对应的 DMA 或者外部定义的 GPIO 配置不一样。
+</p><p>
+    而早先的 Linux 也是将业务和配置部分分开编写的。但是当我们的硬件发生变化的时候还是需要重新编译整个内核或者驱动。
+</p><p>
+    如果我们需要将重新编译的这个步骤优化掉，那么我们应该如何做嘞？
+    以前的办法是把配置编译成具体的静态数据，整合到整个驱动或者镜像中？
+    我们是否可以借鉴一下数据库的概念？我们创造一个数据库的编译器和解析器，然后将我们的硬件配置序列化编译成数据库文件，在开机的时候将之加载到内存中，然后驱动程序直接调用解析器提取当前硬件的配置。
+    这就是 dt 的核心逻辑。
+</p><p>
+    了解 dt 还需要了解几种文件类型：dts, dtsi, dtb， dtc。
+    其中 dtsi 一般当作 dts 的引用文件，dts 则为生成 dtb 的主文件。
+    而 dtb 一般就是烧录到某个分区中的二进制编码文件了。  
+    而 dtc 就是将 dts 编译成 dtb 的编译工具了。
+</p>
+
+<div class="head head_2">DTS 如何编译？</div>
+<p>
+    从上文可知，编译 dtb 的工具为 dtc， dtc 的源代码位于 <code>./scripts/dtc</code> 中，dtc 工具回在编译内核的前期编译出来，编译后生成的 dtc 同样位于 <code>scripts/dtc/</code> 目录。
+</p>
+
+<div class="head head_2">DTB 如何加载？</div>
+<p>
+    dt 被加载之后，在系统的 <code>/sys/firmware/devicetree</code> 目录下有所有 dtb 中的配置。
+</p>
+
+<div class="head head_2">dts 中的设备如何匹配到设备驱动程序</div>
+<p>
+    dts 中描述的每个节点都必须包含 <code>compatible</code> 属性，该属性适用于匹配匹配驱动的。比如：
+</p>
+<pre>    
+&i2c1 {
+    status = "okay";
+    clock-frequency = &lt;400000&gt;;
+    dw9714: dw9714@0c {
+            <code>compatible</code> = <code>"dongwoon,dw9714"</code>;
+            reg = &lt;0x0c&gt;;
+            rockchip,vcm-start-current = &lt;29&gt;;
+            rockchip,vcm-rated-current = &lt;65&gt;;
+            rockchip,vcm-step-mode = &lt;4&gt;;
+            rockchip,camera-module-index = &lt;1&gt;;
+            rockchip,camera-module-facing = "front";
+            xsd-gpios=&lt;&gpio2 RK_PD3 GPIO_ACTIVE_HIGH&gt;;
+    };
+</pre>
+<p>
+    而与之对应的驱动中则会存在与之对应的 <code>of_match_table</code>， 如下所示：
+</p>
+<pre>
+// ./drivers/media/i2c/dw9714.c
+static const struct of_device_id dw9714_of_table[] = {
+    { .compatible = <code>"dongwoon,dw9714"</code> },
+    { { 0 } }
+};
+
+static struct i2c_driver dw9714_i2c_driver = {
+    .driver = {
+            .name = DW9714_NAME,
+            .pm = &dw9714_pm_ops,
+            .<code>of_match_table</code> = dw9714_of_table,
+    },
+    .probe = &dw9714_probe,
+    .remove = &dw9714_remove,
+    .id_table = dw9714_id_table,
+};
+
+module_i2c_driver(dw9714_i2c_driver);
+</pre>
+<p>
+    这里首先会牵扯到驱动加载的过程，首先，分析大部分的 <code>xxx_register</code> 函数，都会发现最总这些驱动都调用了 <code>drivers/base/driver.c： int driver_register(struct device_driver *drv)</code> 来注册驱动。
+    而设备和驱动的绑定也就是在这个阶段进行的。其流程如下所示：
+</p>
+
+<pre>
+// 注册驱动
+// drivers/base/driver.c
+int driver_register(struct device_driver *drv){
+    ...
+    ret = <code>bus_add_driver</code>(drv);
+    ...
+}
+
+// drivers/base/bus.c
+int bus_add_driver(struct device_driver *drv){
+    ...
+    if (drv-&gt;bus-&gt;p-&gt;drivers_autoprobe) {
+        error = <code>driver_attach</code>(drv);
+        ...
+    }
+    ...
+}
+
+// 便利设备列表中的每一个设备，并调用 __driver_attach 试图进行绑定
+// drivers/base/dd.c
+int driver_attach(struct device_driver *drv){
+    return bus_for_each_dev(drv-&gt;bus, NULL, drv, <code>__driver_attach</code>);
+}
+
+// drivers/base/bus.c
+int bus_for_each_dev(struct bus_type *bus, struct device *start, void *data, int (*fn)(struct device *, void *));
+
+// drivers/base/dd.c
+static int __driver_attach(struct device *dev, void *data){
+    ...
+    ret = <code>driver_match_device</code>(drv, dev);
+    // 处理 ret 错误信息
+    ...
+    // 如果没错，将会执行到该步骤
+    // 该函数会将 driver 和 device 进行关联
+    device_driver_attach(drv, dev);
+    ...
+}
+
+// 调用总线的 match 方法，查找设备并进行绑定
+// drivers/base/base.h
+static inline int driver_match_device(struct device_driver *drv, struct device *dev){
+    return drv-&gt;bus-&gt;match ? drv-&gt;bus-&gt;match(dev, drv) : 1;
+}
+</pre>
+<p>
+    以 platform 驱动为例：动匹配设备的过程发生在 <code>drivers/base/platform.c： static int platform_match(struct device *dev, struct device_driver *drv)</code> 函数中。
+    如下所示：
+</p>
+<pre>
+// drivers/base/platform.c
+static int platform_match(struct device *dev, struct device_driver *drv){
+    ...
+    if (<code>of_driver_match_device</code>(dev, drv))
+        return 1;
+    ...
+}
+
+// include/linux/of_device.h
+static inline int of_driver_match_device(struct device *dev, const struct device_driver *drv){
+    return <code>of_match_device</code>(drv-&gt;of_match_table, dev) != NULL;
+}
+
+// drivers/of/device.c
+const struct of_device_id *of_match_device(const struct of_device_id *matches, const struct device *dev){
+    if ((!matches) || (!dev-&gt;of_node))
+        return NULL;
+    return <code>of_match_node</code>(matches, dev-&gt;of_node);
+}
+
+// drivers/of/base.c
+const struct of_device_id *of_match_node(const struct of_device_id *matches, const struct device_node *node){
+    ...
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    match = <code>__of_match_node</code>(matches, node);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    ...
+}
+
+// drivers/of/base.c
+static const struct of_device_id *__of_match_node(const struct of_device_id *matches, const struct device_node *node){
+    const struct of_device_id *best_match = NULL;
+    int score, best_score = 0;
+
+    if (!matches)
+        return NULL;
+
+    for (; matches-&gt;name[0] || matches-&gt;type[0] || matches-&gt;compatible[0]; matches++) {
+        score = <code>__of_device_is_compatible</code>(node, matches-&gt;compatible, matches-&gt;type, matches-&gt;name);
+        if (score > best_score) {
+            best_match = matches;
+            best_score = score;
+        }
+    }
+    return best_match;
+}
+
+// drivers/of/base.c
+/**
+ * __of_device_is_compatible() - Check if the node matches given constraints
+ * @device: pointer to node
+ * @compat: required compatible string, NULL or "" for any match
+ * @type: required device_type value, NULL or "" for any match
+ * @name: required node name, NULL or "" for any match
+ *
+ * Checks if the given @compat, @type and @name strings match the
+ * properties of the given @device. A constraints can be skipped by
+ * passing NULL or an empty string as the constraint.
+ *
+ * Returns 0 for no match, and a positive integer on match. The return
+ * value is a relative score with larger values indicating better
+ * matches. The score is weighted for the most specific compatible value
+ * to get the highest score. Matching type is next, followed by matching
+ * name. Practically speaking, this results in the following priority
+ * order for matches:
+ *
+ * 1. specific compatible && type && name
+ * 2. specific compatible && type
+ * 3. specific compatible && name
+ * 4. specific compatible
+ * 5. general compatible && type && name
+ * 6. general compatible && type
+ * 7. general compatible && name
+ * 8. general compatible
+ * 9. type && name
+ * 10. type
+ * 11. name
+ */
+static int <code>__of_device_is_compatible</code>(const struct device_node *device,
+                                     const char *compat, const char *type, const char *name)
+{
+    struct property     *prop;
+    const char          *cp;
+    int                 index = 0;
+    int                 score = 0;
+
+    /* Compatible match has highest priority */
+    if (compat && compat[0]) {
+        prop = __of_find_property(device, "compatible", NULL);
+        for (cp = of_prop_next_string(prop, NULL); cp;
+            cp = of_prop_next_string(prop, cp), index++) {
+            if (of_compat_cmp(cp, compat, strlen(compat)) == 0) {
+                score = INT_MAX/2 - (index << 2);
+                break;
+            }
+        }
+        if (!score)
+            return 0;
+    }
+
+    /* Matching type is better than matching name */
+    if (type && type[0]) {
+        if (!device-&gt;type || of_node_cmp(type, device-&gt;type))
+            return 0;
+        score += 2;
+    }
+
+    /* Matching name is a bit better than not */
+    if (name && name[0]) {
+        if (!device-&gt;name || of_node_cmp(name, device-&gt;name))
+            return 0;
+        score++;
+    }
+
+    return score;
+}
+</pre>
+<p>
+
+</p>
+
 <div class="head head_2">DTS 存在 Linux 镜像的哪个位置</div>
 <div class="head head_2">DTS 与 bootloader 的关系</div>
 <div class="head head_2">DTS Linux 如何使用 DTS 中的配置</div>
@@ -780,13 +1096,13 @@ https://blog.csdn.net/wesleyflagon/article/details/80272696
     以下例子测试 TCP 传输性能，并在统计数据中去除前几秒的影响。
 </p>
 <pre>
-// ---------------------------------------------------------------------------------> SERVER PART
+// ---------------------------------------------------------------------------------&gt; SERVER PART
 pi@raspberrypi:~ $ iperf3 -s
 -----------------------------------------------------------
 Server listening on 5201
 -----------------------------------------------------------
 
-// ---------------------------------------------------------------------------------> CLIENT PART
+// ---------------------------------------------------------------------------------&gt; CLIENT PART
 $ ./iperf3.exe -c  172.16.20.74 -p 5201 -b 10M -O 3 --get-server-output
 Connecting to host 172.16.20.74, port 5201
 [  4] local 10.1.114.200 port 10908 connected to 172.16.20.74 port 5201
@@ -1033,6 +1349,23 @@ iperf Done.
 
 
 
+
+<div class="breadboard">
+<div class="head head_1">测试</div>
+<div class="head head_2">为什么要测试？</div>
+<p>
+    借之前听到的某个人说的一句话：“这是保证——你写的代码是你想要的结果——的最有效办法！”，谁说的，我不记得了，但是这是我非常赞成的一个理由。
+</p>
+
+</div>
+
+
+
+
+
+
+
+
 <div class="breadboard">
 <div class="head head_1">图像</div>
 <ul>
@@ -1122,7 +1455,7 @@ iperf Done.
 <div class="head head_1">其他</div>
 <ul>
 <li><strong>介绍 ASOC 架构的文章</strong>
-    <br> <a href="https://blog.csdn.net/yangjizhen1533?type=blog">Linux 音频驱动(一 -> 六)</a>
+    <br> <a href="https://blog.csdn.net/yangjizhen1533?type=blog">Linux 音频驱动(一 -&gt; 六)</a>
 
 </li>
 <li><strong>Ross Anderson 大牛的主页</strong>
@@ -1215,7 +1548,7 @@ if [ "${IS_EXIST}" = "" ]; then
     echo "USERNAME: ${NAME}"
 else
     echo "This man is exist, please select another one"
-    echo "/etc/passwd -> ${IS_EXIST}"
+    echo "/etc/passwd -&gt; ${IS_EXIST}"
     exit -1
 fi
 
@@ -1248,10 +1581,10 @@ esac
 SMB_CONFIG_CONTENT="[${NAME}]\n   comment = A Shared Directory\n   path = ${HOME_DIR}/${NAME}\n   valid users = ${NAME}\n   public = no\n   writable = yes\n   max connections = 10\n"
 
 echo "---"
-echo "USER --> ${NAME}"
-echo "PASSWORD --> ${NAME}"
-echo "HOME_DIR --> ${HOME_DIR}"
-echo "SAMBA PASSWORD --> ${NAME}"
+echo "USER --&gt; ${NAME}"
+echo "PASSWORD --&gt; ${NAME}"
+echo "HOME_DIR --&gt; ${HOME_DIR}"
+echo "SAMBA PASSWORD --&gt; ${NAME}"
 
 echo "--- SMB CONFIG"
 echo -e "${SMB_CONFIG_CONTENT}"

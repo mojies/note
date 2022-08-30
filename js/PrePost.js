@@ -279,7 +279,8 @@ function format_function_seq_diagram(){
             e.innerText = "";
             console.log( estr )
             var d = Diagram.parse( estr );
-            var options = {theme: 'hand'};
+            // var options = {theme: 'hand'};
+            var options = {theme: 'simple'};
             d.drawSVG(e, options);
         }
     }

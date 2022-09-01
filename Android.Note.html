@@ -1856,6 +1856,13 @@ interface ICameraDevice extends @3.6::ICameraDevice{
     <code>isStreamCombinationSupported_3_7</code>(StreamConfiguration streams) generates (Status status, bool queryStatus);
 }
 </pre>
+<p>
+    其中 1.0 的版本官方已经作废了，而且强烈建议新的设备都切换到 3.2 以及更高版本的接口，目前应用层仅在 LEGACY 模式支持 android.hardware.Camera 和 android.hardware.camera2 API。
+</p><p>
+    而且该接口将在 Android 15 ( P ) 版本中移除。
+</p>
+
+
 
 <div class="head head_1">ICameraDeviceSession</div>
 <p>

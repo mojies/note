@@ -252,6 +252,136 @@ th{
 
 <div class="breadboard">
 <div class="head head_1">编译相关</div>
+
+
+<div class="head head_2">arm64 平台汇编解读</div>
+<div class="head head_3">一个例子</div>
+<p>下面我们看一个简单的例子，C 原型如下所示：</p>
+<pre>
+int main( int argc, char *argv[] ){
+    int a = 1, b, c ;
+    a = 1;
+    a = 2;
+    b = a;
+    c = a*b;
+    if ( a == b )
+        c = 3;
+    else
+        c = 4;
+    return 0;
+}
+</pre>
+<p>
+    然后将只编译成汇编文件： <code>gcc -S main.c</code> 或者 <code>clang -S main.c</code>。
+    下面我们看一下生成的文件：（注意，不同编译器编译生成的汇编代码会有差异，而且还可能和参数相关，因此你不必在意是否和我生成的代码是否一致）
+</p>
+<pre>
+    .text                                   # 代码段
+    .file       "main.c"                        # 
+    .globl      main                            # 声明 main 为全局变量
+    .p2align    4, 0x90                 # 将代码移动到以四字节对齐的位置
+    .type       main,@function                  # 声明 main 为一个函数类型
+main:                                       # @main 代码段开始
+    .cfi_startproc                          # 与 cfi_endproc 呼应， 标识一个 function 的开始
+# %bb.0:
+    pushq   %rbp                            # 将之前的 rbp 地址压栈（rsp），防止丢失栈指针
+    .cfi_def_cfa_offset 16
+    .cfi_offset %rbp, -16
+    movq    %rsp, %rbp
+    .cfi_def_cfa_register %rbp
+    movl    $0, -4(%rbp)
+    movl    %edi, -8(%rbp)
+    movq    %rsi, -16(%rbp)
+                                            # a 在栈 -20 的位置
+                                            # b 在栈 -24 的位置
+                                            # c 在栈 -28 的位置
+                                            # 注意不同的编译器，编译出来的相对位置会有些许不同
+
+    movl    $1, -20(%rbp)                   # 将立即数 1 赋值给 a       对应 int a = 1;
+    movl    $1, -20(%rbp)                   # 将立即数 1 赋值给 a       对应 a = 1;
+    movl    $2, -20(%rbp)                   # 将立即数 2 赋值给 a       对应 a = 2;
+
+    movl    -20(%rbp), %eax                 # 取 a 的值赋值给 eax       
+    movl    %eax, -24(%rbp)                 # 将 eax 赋值给 b
+                                            # 以上两行对应 b = a
+
+    movl    -20(%rbp), %eax                 # 取 a 的值赋值给 eax 
+    imull   -24(%rbp), %eax                 # 取 b 的与 eax 的值相乘并赋值给 eax
+    movl    %eax, -28(%rbp)                 # 取 eax 地址中的值给 c
+                                            # 以上三行对应 c = a * b
+
+    movl    -20(%rbp), %eax                 # 取 a 的值赋值给 eax
+    cmpl    -24(%rbp), %eax                 # 比较 b 的值与 eax 的值
+    jne     .LBB0_2                         # 如果不相等则跳转到 .LBB0_2
+
+# %bb.1:                                    # 相等
+    movl    $3, -28(%rbp)                   # 将立即数 3 赋值给 c
+    jmp     .LBB0_3                         # 跳转到 .LBB0_3
+.LBB0_2:
+    movl    $4, -28(%rbp)                   # 将立即数 4 赋值给 c
+
+.LBB0_3:
+    xorl    %eax, %eax                      # 清空 eax 防止信息泄漏
+    popq    %rbp                            # （从 rsp 中）恢复栈指针
+    .cfi_def_cfa %rsp, 8
+    retq
+.Lfunc_end0:
+    .size   main, .Lfunc_end0-main
+    .cfi_endproc
+                                    # -- End function
+    .ident  "Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee)"
+    .section        ".note.GNU-stack","",@progbits
+    .addrsig
+</pre>
+<p>
+    如果没看懂，也没关系，你可以先看下面的内容，然后再回过头来看前面的这部分代码，就会一目了然了。
+</p><p>
+    首先我们得知道下面这几个概念：
+</p><p>
+    首先我们知道，函数的局部变量都存放在栈内，而我们访问定义的局部变量时都是依当前栈加偏移取访问的，因为机器并不懂那个变量时 a/b/c, a/b/c 是给人看的，编译器在帮我们做转换。
+    而机器懂的只是，在那个地址，取多少位数据。而如果你写汇编代码，你就一定要记住，那个地址，存放的是什么什么属性的值。
+    通常我们会使用 <strong>基地址指针寄存器</strong> 的值加上偏移值取索引对应的局部变量。
+    而这里的基地址指针寄存器在 16 位系统中名 <code>bp</code>, 32 位系统 <code>ebp</code>, 64 位系统 <code>rbp</code>。
+</p><p>
+    另外这里面在进入函数的时候调用了一个 <code>pushq</code>, 出函数之前调用了 <code>popq</code> ，这里分别代表将后叙寄存器的值压栈和将栈顶的值弹到寄存器中（如下所示），为什么要这样操作嘞？
+    因为调用函数的时候，函数很有可能会修改 bp 的指针，如果不对其进行恢复，则会影响掉调用方之后函数作用域内变量的访问。
+    而这里的栈指针寄存器在 16 位系统中名 <code>sp</code>, 32 位系统 <code>esp</code>, 64 位系统 <code>rsp</code>。
+</p>
+<pre>
+# pushq %rbp
+subq $8, %rsp
+movq %rbp, (%rsp)
+
+# popq %rbp
+movq (%rsp), %rbp
+addq $8, %rsp
+</pre>
+<p>
+    然后是大名鼎鼎的指令寄存器：16 位系统中名 <code>ip</code>, 32 位系统 <code>eip</code>, 64 位系统 <code>rip</code>。
+    和段地址寄存器 <code>ss</code>。
+</p>
+
+
+
+<div class="head head_3">编译</div>
+<p>
+    汇编代码可以通过 <code>as</code> + <code>ld</code> 生成可执行文件，也可以使用 <code>gcc</code> 一部生成，如下所示：
+</p>
+<pre>
+as program.s -o program.o
+ld program.o -o program
+
+# or
+gcc -o program program.s
+</pre>
+
+
+<ul>
+<li>
+    <a href="https://developer.arm.com/documentation/dui0742/g/Migrating-ARM-syntax-assembly-code-to-GNU-syntax/Overview-of-differences-between-ARM-and-GNU-syntax-assembly-code">ARM Compiler Migration and Compatibility Guide Version 6.6</a>
+</li>
+</ul>
+
 <div class="head head_2">gdb</div>
 <div class="head head_2">readelf</div>
 <div class="head head_3">elf 文件格式</div>
@@ -531,7 +661,13 @@ th{
 
 
 <div class="breadboard">
-<div class="head head_1">linux Driver</div>
+<div class="head head_1">linux 内核</div>
+<div class="head head_2">内核初始化模块</div>
+<p>
+    可参考 <code>init/main.c start_kernel(void)</code> 函数，参考 CSDN 上博主 <code>HZero.chen</code> 写的 <a href="https://blog.csdn.net/jasonactions/article/details/111715545">kernel启动流程-xxx</a> 系列。
+    （本来想字节写的，但是别人已经写得非常详细，就不再重复了）
+</p>
+
 <div class="head head_2">platform_driver</div>
 <p>
     platform 框架的初始化流程( 以 arm 平台为例子 )：
@@ -629,11 +765,20 @@ struct platform_driver {
     其中 dtsi 一般当作 dts 的引用文件，dts 则为生成 dtb 的主文件。
     而 dtb 一般就是烧录到某个分区中的二进制编码文件了。  
     而 dtc 就是将 dts 编译成 dtb 的编译工具了。
+</p><p>
+    另外应该 DT 节点中字段的定义几乎完全取决于驱动程序（除了 <code>compatible</code> ），因此写驱动程序时，驱动程序的作者还应该提供一份 DT 的编写规则描述文档。
+    官方 Linux 的驱动的 DT 描述再 <code>Documentation/devicetree/bindings/</code> 目录下。
 </p>
 
-<div class="head head_2">DTS 如何编译？</div>
+<div class="head head_2">DTS 的编译和反编译</div>
 <p>
     从上文可知，编译 dtb 的工具为 dtc， dtc 的源代码位于 <code>./scripts/dtc</code> 中，dtc 工具回在编译内核的前期编译出来，编译后生成的 dtc 同样位于 <code>scripts/dtc/</code> 目录。
+</p><p>
+    使用 dtc 的时候需要指定输入格式以及输出格式，比如你可以用下面的方法编译一个 dts 文件： <code>dtc  -I dts -O dtb -o /tmp/xxx.dtb kernel-5.10/arch/arm64/boot/dts/xxx/xxx.dts</code>， 
+    其中 <code>-I</code> 指定输入格式， <code>-O</code> 指定输出格式， 而 <code>-o</code> 指定输出文件。
+</p><p>
+    当然，你也可以通过上面的方法将一个 dtb 文件反编译成一个 dts 文件： <code>dtc -I dtb -O dts -o /tmp/xxx.dts /tmp/xxx.dtb</code>。
+    因为很多时候一个 dts 文件会包含很多的 dtsi 文件，而且配置之间还可以覆盖，因此当你想要确定 dts 中某一个配置是否正确的时候，可以反编译出来查看。
 </p>
 
 <div class="head head_2">DTB 如何加载？</div>
@@ -879,6 +1024,19 @@ static int <code>__of_device_is_compatible</code>(const struct device_node *devi
 
 <div class="breadboard">
 <div class="head head_1">网络相关</div>
+
+<div class="head head_2">硬件</div>
+<div class="head head_3">POE 供电方式</div>
+<p>
+    10MBASE-T 和 100MBASE-T 只用到了两队双绞线，而五类（+）双绞线有四对，因此我们可以使用另外两对来进行供电，或者通过数据线来供电。
+    而 1000MBASE-T 的方案也简单，其中 modeA 是利用 1，2，3，6 传输，modeB 是利用 4，5，7，8 进行电力传输。不过需要特别注意供电端的纹波和恢复时间，取电端的滤波和功耗控制等问题。
+    如下所示：
+</p><p>
+    PS： 使用数据线的方案，因为传输的是直流和数字信号，数字信号可以通过耦合电感取出，只原直流信号的纹波幅度不影响复合的数字信号，则不会对数据传输造成影响。
+</p>
+<div class="img_center">
+    <img src="https://images.cnblogs.com/cnblogs_com/mojies/2171355/o_220905060131_ETH_POE.png" alt="">
+</div>
 
 <div class="head head_2">知识点</div>
 <p>

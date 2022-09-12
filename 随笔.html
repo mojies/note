@@ -249,10 +249,61 @@ th{
 
 
 
+<div class="breadboard">
+<div class="head head_1">u-boot 启动</div>
+<p>
+    首先我们要找到 <code>LDSCRIPT</code> ，因为 <code>LDSCRIPT</code> 会指定你目标平台的 lds 文件，
+    而 lds 文件将为我们指定函数的入口，在生成目标镜像的时候将会根据该 lds 文件中的配置进行链接。
+</p><p>
+    <code>LDSCRIPT</code> 的默认定义一般会在相应芯片架构的 KConfig 目录中，如果 u-boot 的硬件板级和默认的不一样，
+    则会在板级配置（ xxx_defconfig ） 还会存在一个定义。
+    最后，如果发现板级配置中没有指定， Makefile 文件中有一个默认的逻辑，自动的选用对应平台的 lds 文件。
+    如下所示：
+</p>
+<pre>
+# vi arch/arm/mach-rockchip/Kconfig
+...
+config TPL_LDSCRIPT
+    default "arch/arm/mach-rockchip/u-boot-tpl.lds"
+...
+</pre><pre>
+# vi .config
+...
+CONFIG_SPL_LDSCRIPT="arch/arm/cpu/armv8/u-boot-spl.lds
+...
+</pre><pre>
+# vi Makefile
+...
+ifndef LDSCRIPT
+        ifeq ($(wildcard $(LDSCRIPT)),)
+                LDSCRIPT := $(srctree)/board/$(BOARDDIR)/u-boot.lds
+        endif
+        ifeq ($(wildcard $(LDSCRIPT)),)
+                LDSCRIPT := $(srctree)/$(CPUDIR)/u-boot.lds
+        endif
+        ifeq ($(wildcard $(LDSCRIPT)),)
+                LDSCRIPT := $(srctree)/arch/$(ARCH)/cpu/u-boot.lds
+        endif
+endif
+...
+</pre>
+<p>
+    下面我们来看一下 <code>u-boot-spl.lds</code>, ( 有关 lds 文件的更多信息可以参考：
+    <a href="http://web.mit.edu/rhel-doc/3/rhel-ld-en-3/index.html">Red Hat Enterprise Linux 3</a> 第四章的描述 )
+</p>
+
+
+</div>
+
+
+
+
+
+
+
 
 <div class="breadboard">
 <div class="head head_1">编译相关</div>
-
 
 <div class="head head_2">arm64 平台汇编解读</div>
 <div class="head head_3">一个例子</div>
@@ -389,6 +440,23 @@ gcc -o program program.s
     <a href="https://cpulator.01xz.net/?sys=arm">一个可以在线调试 asm 程序的网站</a>
 </li>
 </ul>
+
+<div class="head head_2">LDS Script</div>
+<p>
+    我们都知道程序的编译分成四个阶段：预处理，编译，汇编，链接。
+    比如说一个 <code>.c</code> 文件预处理之后会生成 <code>.i</code> 文件，之后会编译成为汇编文件 <code>.s</code> , 
+    汇编文件最后通过汇编生成 <code>.o</code> 文件，然后所有的 <code>.o</code> 文件将通过链接器链接成一个可执行文件。
+</p><p>
+    这里我们要介绍链接器，链接器是受 LDS 控制的，但大部分情况下我们都不需要指明 LDS 文件，因为链接器会有一个默认的 lds 配置，除非我们需要定制我们的生成文件格式。一个比较常见的场景就是在 u-boot 和 kernel 的编译中。
+    你会在这两个工程中发现很多 lds 文件，而这些文件就是配置链接方式的配置文件。
+</p>
+
+<p>
+    如果你想查看 object 中的 <code>section</code> 字段，你可以使用 <code>objdump</code> 加 <code>-h</code> 选项查看。
+</p>
+<p>
+    如果你想查看 程序 中的 <code>symbols</code> ，你可以使用 <code>nm</code> 或者 <code>objdump</code> 加 <code>-t</code> 选项查看。
+</p>
 
 <div class="head head_2">gdb</div>
 <div class="head head_2">readelf</div>

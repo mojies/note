@@ -14,22 +14,33 @@ function generateIndexLine( parent, index, innerContent ){
     return subIndexList;
 }
 
+function randomString(e) {    
+    e = e || 32;
+    var t = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz1234567890",
+    a = t.length,
+    n = "";
+    for (i = 0; i < e; i++) n += t.charAt(Math.floor(Math.random() * a));
+    return n
+}
+
 function autoCreateIndex(){
     var index_0 = document.getElementById("main_index");
     if( !index_0 ) return;
     var index_1 = 0;
+    var idCount = 0;
 
     var tagDivs = document.getElementsByTagName("div");
-    var index_count = 1
     var i, j, k;
     var ol_head2, ol_head3;
 
     for( i = 0; i < tagDivs.length; i++ ){
         if( tagDivs[i].getAttribute("class") == "head head_1" ){
             j = 0;
-            tagDivs[i].setAttribute("id" , "subTitle_head1_"+index_count.toString() );
-            index_1 = generateIndexLine( index_0, "#subTitle_head1_"+index_count.toString(), tagDivs[i].innerHTML );
-            index_count++;
+            // idStr = randomString( 16 )
+            idStr = 'MM_' + idCount; idCount++;
+            tagDivs[i].setAttribute("id" , idStr );
+            index_1 = generateIndexLine( index_0, "#"+idStr, tagDivs[i].innerHTML );
+
         }else
         if( tagDivs[i].getAttribute("class") == "head head_2" ){
             k = 0;
@@ -39,9 +50,10 @@ function autoCreateIndex(){
                 index_1.appendChild( ol_head2 );
                 j++;
             }
-            tagDivs[i].setAttribute("id" , "subTitle_head2_"+index_count.toString() );
-            index_1 = generateIndexLine( ol_head2, "#subTitle_head2_"+index_count.toString(), tagDivs[i].innerHTML );
-            index_count++;
+            idStr = 'MM_' + idCount; idCount++;
+            // idStr = randomString( 16 )
+            tagDivs[i].setAttribute("id" , idStr );
+            index_1 = generateIndexLine( ol_head2, "#"+idStr, tagDivs[i].innerHTML );
         }else
         if( tagDivs[i].getAttribute("class") == "head head_3" ){
             if( k == 0 ){
@@ -50,9 +62,10 @@ function autoCreateIndex(){
                 index_1.appendChild( ol_head3 );
                 k++;
             }
-            tagDivs[i].setAttribute("id" , "subTitle_head3_"+index_count.toString() );
-            index_1 = generateIndexLine( ol_head3, "#subTitle_head3_"+index_count.toString(), tagDivs[i].innerHTML );
-            index_count++;
+            idStr = 'MM_' + idCount; idCount++;
+            // idStr = randomString( 16 )
+            tagDivs[i].setAttribute("id" , idStr );
+            index_1 = generateIndexLine( ol_head3, "#" + idStr, tagDivs[i].innerHTML );
         }
     }
 }

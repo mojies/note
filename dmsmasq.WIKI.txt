@@ -109,50 +109,94 @@ Note that in general missing parameters are allowed and switch off functions, fo
 	为缓存中的条目设置最大 TTL 值
 
 --min-cache-ttl=<time>
-	Extend short TTL values to the time given when caching them. Note that artificially extending TTL values is in general a bad idea, do not do it unless you have a good reason, and understand what you are doing.
+	Extend short TTL values to the time given when caching them.
+	Note that artificially extending TTL values is in general a bad idea, do not do it unless you have a good reason, and understand what you are doing.
 	Dnsmasq limits the value of this option to one hour, unless recompiled.
+	设置缓存的 TTL 下限，不过注意，认为的增大 TTL 的值通常是一个 bas idea，除非你有一个非常好的理由，而且知道这么做会有什么样的后果，否则不建议你这样做。
+	dnsmasq 将该值设置默认为 1 小时。
 
 --auth-ttl=<time>
 	Set the TTL value returned in answers from the authoritative server.
 
 -k, --keep-in-foreground
 	Do not go into the background at startup but otherwise run as normal. This is intended for use when dnsmasq is run under daemontools or launchd.
-
+	保持程序运行在前台。
+	这在使用 deamontools 或者 launchd 等工具运行 dnsmasq 时非常有用。
+	
 -d, --no-daemon
-	Debug mode: don't fork to the background, don't write a pid file, don't change user id, generate a complete cache dump on receipt on SIGUSR1, log to stderr as well as syslog, don't fork new processes to handle TCP queries. Note that this option is for use in debugging only, to stop dnsmasq daemonising in production, use --keep-in-foreground.
+	Debug mode: don't fork to the background, don't write a pid file, don't change user id, generate a complete cache dump on receipt on SIGUSR1, log to stderr as well as syslog, don't fork new processes to handle TCP queries.
+	Note that this option is for use in debugging only, to stop dnsmasq daemonising in production, use --keep-in-foreground.
+	Debug 模式，不 fork 到后台，不写 pid 文件，不改变用户 id，在 SIGUSR1 接收时生成完整的缓存转储，打印日志到 stderr 以及 syslog，对于 TCP queries 将不会 fork 出新的进程来处理。
+	注意该选项仅仅用于调试模式。如果想在正式版本使进程保持在前台，请使用 --keep-in-foreground.
 
 -q, --log-queries
-	Log the results of DNS queries handled by dnsmasq. Enable a full cache dump on receipt of SIGUSR1. If the argument "extra" is supplied, ie --log-queries=extra then the log has extra information at the start of each line. This consists of a serial number which ties together the log lines associated with an individual query, and the IP address of the requestor.
+	Log the results of DNS queries handled by dnsmasq.
+	Enable a full cache dump on receipt of SIGUSR1.
+	If the argument "extra" is supplied, ie --log-queries=extra then the log has extra information at the start of each line.
+	This consists of a serial number which ties together the log lines associated with an individual query, and the IP address of the requestor.
+	记录由 dnsmasq 处理的 DNS 查询的结果。
+	在收到 SIGUSR1 时启用完整的缓存转储。
+	如果提供了参数“extra”，即--log-queries=extra，那么日志在每一行的开头都有额外的信息。
+	这包括一个序列号，该序列号将与单个查询关联的日志行和请求者的 IP 地址联系在一起。
 
 -8, --log-facility=<facility>
-	Set the facility to which dnsmasq will send syslog entries, this defaults to DAEMON, and to LOCAL0 when debug mode is in operation. If the facility given contains at least one '/' character, it is taken to be a filename, and dnsmasq logs to the given file, instead of syslog. If the facility is '-' then dnsmasq logs to stderr. (Errors whilst reading configuration will still go to syslog, but all output from a successful startup, and all output whilst running, will go exclusively to the file.) When logging to a file, dnsmasq will close and reopen the file when it receives SIGUSR2. This allows the log file to be rotated without stopping dnsmasq.
+	Set the facility to which dnsmasq will send syslog entries, this defaults to DAEMON, and to LOCAL0 when debug mode is in operation.
+	If the facility given contains at least one '/' character, it is taken to be a filename, and dnsmasq logs to the given file, instead of syslog.
+	If the facility is '-' then dnsmasq logs to stderr. (Errors whilst reading configuration will still go to syslog, but all output from a successful startup, and all output whilst running, will go exclusively to the file.)
+	When logging to a file, dnsmasq will close and reopen the file when it receives SIGUSR2. This allows the log file to be rotated without stopping dnsmasq.
+	设置 dnsmasq 将发送 syslog 条目的设施，默认为 DAEMON，（在调试模式运行时为 LOCAL0）。
+	如果给定的工具至少包含一个“/”字符，则将其视为一个文件名，并且 dnsmasq 将日志记录到给定文件，而不是 syslog。
+	如果设施是 "-"，则 dnsmasq 记录到 stderr。 （读取配置时的错误仍会进入 syslog，但成功启动的所有输出以及运行时的所有输出都将专门进入文件。）
+	当记录到文件时，dnsmasq 将在收到 SIGUSR2 时关闭并重新打开文件 . 这允许在不停止 dnsmasq 的情况下轮换日志文件。
 
 --log-debug
 	Enable extra logging intended for debugging rather than information.
+	使能调试信息。
 
 --log-async[=<lines>]
-	Enable asynchronous logging and optionally set the limit on the number of lines which will be queued by dnsmasq when writing to the syslog is slow. Dnsmasq can log asynchronously: this allows it to continue functioning without being blocked by syslog, and allows syslog to use dnsmasq for DNS queries without risking deadlock. If the queue of log-lines becomes full, dnsmasq will log the overflow, and the number of messages lost. The default queue length is 5, a sane value would be 5-25, and a maximum limit of 100 is imposed.
+	Enable asynchronous logging and optionally set the limit on the number of lines which will be queued by dnsmasq when writing to the syslog is slow.
+	Dnsmasq can log asynchronously: this allows it to continue functioning without being blocked by syslog, and allows syslog to use dnsmasq for DNS queries without risking deadlock.
+	If the queue of log-lines becomes full, dnsmasq will log the overflow, and the number of messages lost. 
+	The default queue length is 5, a sane value would be 5-25, and a maximum limit of 100 is imposed.
+	启用异步日志记录，并可选择设置在写入 syslog 缓慢时将由 dnsmasq 排队的行数限制。
+	Dnsmasq 可以异步记录：这允许它继续运行而不会被 syslog 阻止，并允许 syslog 使用 dnsmasq 进行 DNS 查询而不会出现死锁风险。
+	如果日志行队列已满，dnsmasq 将记录溢出和丢失的消息数。
+	默认队列长度是 5，合理的值是 5-25，最大限制为 100。
 
 -x, --pid-file=<path>
 	Specify an alternate path for dnsmasq to record its process-id in. Normally /var/run/dnsmasq.pid.
+	指定 dnsmasq 将 pid 写到哪个文件。
 
 -u, --user=<username>
-	Specify the userid to which dnsmasq will change after startup. Dnsmasq must normally be started as root, but it will drop root privileges after startup by changing id to another user. Normally this user is "nobody" but that can be over-ridden with this switch.
+	Specify the userid to which dnsmasq will change after startup.
+	Dnsmasq must normally be started as root, but it will drop root privileges after startup by changing id to another user. 
+	Normally this user is "nobody" but that can be over-ridden with this switch.
+	指定 dnsmasq 启动之后将变成哪个用户 id。
+	dnsmasq 必须由 root 启动，但启动之后将变成另外一个 user 丢弃 root 的特权。
+	通常情况下，该用户为 nobody，但你可以通过该选项改写之。
 
 -g, --group=<groupname>
 	Specify the group which dnsmasq will run as. The default is "dip", if available, to facilitate access to /etc/ppp/resolv.conf which is not normally world readable.
+	与上类似。默认为 dip，以获取访问 /etc/ppp/resolv.conf 的权限。
 
 -v, --version
 	Print the version number.
+	打印版本号
 
 -p, --port=<port>
 	Listen on <port> instead of the standard DNS port (53). Setting this to zero completely disables DNS function, leaving only DHCP and/or TFTP.
+	修改 DNS 监听地址（DNS 默认端口号为 53）。
+	将该选项设置为 0 将禁用 DNS 的功能，仅仅保留 DHCP 和/或 TFTP 的功能。
 
 -P, --edns-packet-max=<size>
-	Specify the largest EDNS.0 UDP packet which is supported by the DNS forwarder. Defaults to 4096, which is the RFC5625-recommended size.
+	Specify the largest EDNS.0 UDP packet which is supported by the DNS forwarder.
+	Defaults to 4096, which is the RFC5625-recommended size.
+	指定最大的 EDNS.0 UDP 包大小，默认为 4096， 该值为 RFC5625 推荐的大小。
 
 -Q, --query-port=<query_port>
-	Send outbound DNS queries from, and listen for their replies on, the specific UDP port <query_port> instead of using random ports. NOTE that using this option will make dnsmasq less secure against DNS spoofing attacks but it may be faster and use less resources. Setting this option to zero makes dnsmasq use a single port allocated to it by the OS: this was the default behaviour in versions prior to 2.43.
+	Send outbound DNS queries from, and listen for their replies on, the specific UDP port <query_port> instead of using random ports.
+	NOTE that using this option will make dnsmasq less secure against DNS spoofing attacks but it may be faster and use less resources.
+	Setting this option to zero makes dnsmasq use a single port allocated to it by the OS: this was the default behaviour in versions prior to 2.43.
 
 --min-port=<port>
 	Do not use ports less than that given as source for outbound DNS queries. Dnsmasq picks random ports as source for outbound queries: when this option is given, the ports used will always be larger than that specified. Useful for systems behind firewalls. If not specified, defaults to 1024.

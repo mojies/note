@@ -1,0 +1,1 @@
+https://wiki.teamssix.com/cloudsecurityresources/

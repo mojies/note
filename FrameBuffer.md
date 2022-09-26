@@ -214,6 +214,12 @@ struct fb_var_screeninfo {
 };
 ```
 
+FB 设备提了两种途径来配置 FB 的格式：传统 API 和 FOURCC-based 的 API。
+
+Legacy API 长期以来一直是唯一的帧缓冲区格式配置 API，因此被应用程序广泛使用。当使用 RGB 和灰度格式以及传统的非标准格式时，它是应用程序推荐的 API。
+
+To select a format, applications set the fb_var_screeninfo bits_per_pixel field to the desired frame buffer depth. Values up to 8 will usually map to monochrome, grayscale or pseudocolor visuals, although this is not required.
+
 ## fb_fix_screeninfo type 有哪些类型？
 
 首先我们先介绍一下 Linux 内核中定义的集中 FB 类型：

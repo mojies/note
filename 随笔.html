@@ -477,7 +477,7 @@ gcc -o program program.s
 <p>
     GNU 工具集主要提供如下工具：
 </p>
-<div class="tb_format">
+<div class="tb_format offset_1em">
     {
         "head": [ "指令", "说明" ],
         "data": [
@@ -558,47 +558,62 @@ print(std::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt
 
 <div class="head head_3">gdb 基本调试命令</div>
 <p>
-    下面列举了一些基本的 gdb 调试命令：
+    下面列举了一些基本的 gdb 调试命令(不全)：
 </p>
 <div class="tb_format offset_1em">
     {
         "head": [ "指令", "说明" ],
         "data": [
-        ["break xxx<br/>b xxx", "在源代码指定的某一行设置断点，其中 xxx 用于指定具体打断点的位置"],
+        ["break $xxx<br/>b $xxx", "在源代码指定的某一行设置断点，其中 xxx 用于指定具体打断点的位置"],
         ["tbreak", "和 break 功能类似，但是该指令仅仅会在断点处暂停一次，暂停一次之后该断点会自动消失"],
-        ["run <br/>r", "执行被调试的程序，其会自动在第一个断点处暂停执行。"],
-        ["continue <br/>c", "当程序在某一断点处停止运行后，使用该指令可以继续执行，直至遇到下一个断点或者程序结束。"],
-        ["next <br/>n", "令程序一行代码一行代码的执行。"],
-        ["print <code>xxx</code> <br/> p <code>xxx</code> ", "打印指定变量的值，其中 <code>xxx</code> 指的就是某一变量名。"],
-        ["list <br/>l", "显示源程序代码的内容，包括各行代码所在的行号。"],
-        ["quit <br/>q", "终止调试。"],
+        ["rbreak", "rbreak 命令的作用对象是 C、C++ 程序中的函数，它会在指定函数( 符合其正则表达式 )的开头位置打断点"],
+        ["clear $location", "清除断点， $location 通常为某一行代码的行号或者某个具体的函数名
+            <br>当 location 参数为某个函数的函数名时，表示删除位于该函数入口处的所有断点"],
+        ["run <br/>r", "执行被调试的程序，其会自动在第一个断点处暂停执行"],
+        ["continue <br/>c", "当程序在某一断点处停止运行后，使用该指令可以继续执行，直至遇到下一个断点或者程序结束"],
+        ["next [n]", "执行一行代码，当存在 n 的时候会执行 n 行代码"],
+        ["step [n]<br>s [n]", "执行一行代码，当存在 n 的时候会执行 n 行代码
+            <br>和 next 的区别是，next 会把调用的函数当成一行，但 step 会将函数内部的行全部计入运行步数"],
+        ["enable<br>disable", "使能和禁用断点，详细参考：https://sourceware.org/gdb/onlinedocs/gdb/Disabling.html#Disabling"],
+        ["until [$location]", "不带参数的时候跳出当前循环，但不存在循环的时候表现和 next 一致
+            <br>当带参数的时候可以使程序运行到 $location 位置
+            <br>$location 为某一行代码的行号"],
+        ["finish", "执行完当前函数"],
+        ["return", "直接从当前暂停位置结束函数的执行，相当于在当前暂停位置后加一个 return 然后执行"],
+        ["jump $linenum", "跳转到 $linenum 处执行代码（你需要很小心的使用该指令）"],
+        ["print $xxx [ = value]<br/> p $xxx [ = value]", "打印指定变量的值，其中 $xxx 指的就是某一变量名，更详细的用法参考下面章节内容"],
+        ["display[\\fmt] $expr", "和 print 类似，但是 display 是再每次暂停的时候打印目标变量的值，详细用法参考下面章节"],
+        ["list <br/>l", "显示源程序代码的内容，包括各行代码所在的行号"],
+        ["quit <br/>q", "终止调试"],
         ["file <br/>exec-file", "指定需要调试的程序"],
         ["detatch", "当我们 attach 到一个正在执行的应用中时，使用该命令可以让 GDB 调试器和程序分离"],
         ["cd", "切换工作目录"],
-        ["xxx", "xxx"]
+        ["watch  $cond", "监控 C、C++ 程序中某变量或表达式的值是否发生改变，$conde 指的就是要监控的变量或表达式"],
+        ["catch $event", "其中 $event 可以是异常，也可以是库的加载或者释放,
+            <br> 具体使用方法参考: https://sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html "],
+        ["display", "xxx"]
         ]
     }
 </div>
+
+<div class="head head_3">设置断点（break / tbreak / rbreak）</div>
 <p>
     <code>break</code> 设置断点方式有以下几种：
-</p>
-<div class="tb_format offset_1em">
+</p><div class="tb_format offset_1em">
     {
         "head": [ "参数类型", "说明" ],
         "data": [
             [ "linenum", "表示要打断点处代码的行号。查看程序原信息可可通过执行 <code>l</code>(小写的) <code>L</code> 查看" ],
             [ "filename:linenum", "filename 表示源程序文件名； linenum 为整数，表示具体行数。<br/>即表示在文件 filename 中的第 linenum 行打断点。" ],
             [ "+offset <br/>-offset", "正整数代表当前暂停位置向下 offset 行，负数则为向上 offset 行。<br/>比如当前暂停在 10 行，设置 +2 则代表在 12 行处打一个断点" ],
-            [ "function", "function 表示程序中包含的函数的函数名，即将断点设置为该函数的第一行代码处。" ],
-            [ "filename:function", "filename 表示远程文件名， function 表示程序中函数的函数名。<br/>整体的意思是在指定文件 filename 中 function 函数的开头位置打断点。" ]
+            [ "function", "function 表示程序中包含的函数的函数名，即将断点设置为该函数的第一行代码处" ],
+            [ "filename:function", "filename 表示远程文件名， function 表示程序中函数的函数名。<br/>整体的意思是在指定文件 filename 中 function 函数的开头位置打断点" ]
         ]
     }
-</div>
-<p>
+</div><p>
     <code>break</code> / <code>tbreak</code> 具体有两种形式： <code>(gdb) break xxx</code> <code>(gdb) break ... if cond</code>。
     其中 cond 是一个表达式，比如假如我们有源程序如下所示：
-</p>
-<pre>
+</p><pre>
 #include &lt;stdio.h>
 main()
 { 
@@ -612,11 +627,182 @@ main()
     如果我们想要在 i == 5 的时候停下，我们可以在 gdb 里面使用如下命令设置断点：
 </p><pre>
 (gdb) break iter.c:6 if i == 5
+</pre><p>
+    <code>rbreak</code> 的常用方法为 <code>rbreak $regex</code>, 其中 $regex 为正则表达式，
+</p>
+
+<div class="head head_3">watch</div>
+<p>
+    和 watch 相似的指令还有 rwatch / awatch, 其中三者的差异如下所示：
+    和 watch 命令功能相似的，还有 rwatch 和 awatch 命令。
+    其中 rwatch 命令：只要程序中出现读取目标变量（表达式）的值的操作，程序就会停止运行；
+    awatch 命令：只要程序中出现读取目标变量（表达式）的值或者改变值的操作，程序就会停止运行。
+</p><div class="tb_format offset_1em">
+    {
+        "head": [
+            "指令", "描述"
+        ],
+        "data": [
+            ["watch", "变量值 发生变化 的时候程序停止运行"],
+            ["rwatch", "变量值 被读 的时候程序停止运行"],
+            ["awatch", "变量值 发生变化 或者 被读 的时候程序停止运行"]
+        ]
+    }
+</div><p>
+    值得一提的是，对于使用 watch（rwatch、awatch）命令监控 C、C++ 程序中变量或者表达式的值，有以下几点需要注意：
+</p><ul>
+    <li>
+        当监控的变量（表达式）为局部变量（表达式）时，一旦局部变量（表达式）失效，则监控操作也随即失效；
+    </li><li>
+        如果监控的是一个指针变量（例如 *p），则 watch *p 和 watch p 是有区别的，前者监控的是 p 所指数据的变化情况，而后者监控的是 p 指针本身有没有改变指向；
+    </li><li>
+        这 3 个监控命令还可以用于监控数组中元素值的变化情况，例如对于 a[10] 这个数组，watch a 表示只要 a 数组中存储的数据发生改变，程序就会停止执行。
+    </li>
+</ul>
+
+<div class="head head_3">print</div>
+<p>
+    通常我们使用 print 打印某个变量的值（比如： <code>p var</code>, <code>p 'cppfile.cpp'classAVal::b</code> ），或者修改某个变量的值（比如： <code>p var1 = 1</code> ）。
+    但有时候我们有更多的需求，而 print 也支持更多的功能，其完整的语法格式为 <code>p [options ...] [/fmt] expr</code>, 其中三个参数的含义如下所示：
+</p><ul>
+<li><strong>options</strong>：
+    表示该命令所支持的选项，这些选项可以控制 print 命令输出指定内容的变量或者表达式的值
+</li><li><strong>fmt</strong>：
+    指定输出变量或表达式值时所采用的格式
+</li><li><strong>expr</strong>
+    指定要查看的变量或表达式
+</li>
+</ul><p>
+    print 拥有的一些 options 有：
+</p><div class="tb_format offset_1em">
+    {
+        "head": [
+            "指令", "描述"
+        ],
+        "data": [
+            ["-address on<br>-address off", "查看某一指针变量的值时，是否同时打印其占用的内存地址，默认值为 on。
+                <br>该选项等同于单独执行 set print address on|off 命令"],
+            ["-array on<br>-array off", "是否以便于阅读的格式输出数组中的元素，默认值为 off
+                <br>该选项等同于单独执行 set printf array on|off 命令"],
+            ["-array-indexes on<br>-array-indexes off", "对于非字符类型数组，在打印数组中每个元素值的同时，是否同时显示每个元素对应的数组下标，默认值为 off
+                <br>该选项等同于单独执行 set print array-indexes on|off 命令"],
+            ["-pretty on<br>-pretty off", "以便于阅读的格式打印某个结构体变量的值，默认值为 off
+                <br>该选项等同于单独执行 set print pretty on|off 命令"]
+        ]
+    }
+</div><p>
+    常用的 /fmt 参数
+</p><ul>
+<li><strong>/x</strong>
+    - 以十六进制的形式打印出整数
+</li>
+<li><strong>/d</strong>
+    - 以有符号、十进制的形式打印出整数
+</li>
+<li><strong>/u</strong>
+    - 以无符号、十进制的形式打印出整数
+</li>
+<li><strong>/o</strong>
+    - 以无符号、十进制的形式打印出整数
+</li>
+<li><strong>/t</strong>
+    - 以二进制的形式打印出整数
+</li>
+<li><strong>/f</strong>
+    - 以浮点数的形式打印变量或表达式的值
+</li>
+<li><strong>/c</strong>
+    - 以字符形式打印变量或表达式的值
+</li>
+</ul><p>
+    下面是一些例子：
+</p>
+<pre>
+// class A{ public: int a; }
+// static int g_int1 = 100;
+// static float g_f1 = 0.123;
+// static int g_arr1[4] = {1,2,3,4};
+// static int *g_p1 = &g_int1;
+// int main(...){
+// ...
+//      A a; a.a = 10;
+//      int count = 100;
+// ...    
+// }
+
+
+(gdb) p 'main.cpp'::g_int1
+$5 = 100
+(gdb) p 'main.cpp'::count
+No symbol "count" in specified context.
+(gdb) p 'main'::count
+$6 = 100
+
+(gdb) p a.a
+$7 = 10
+(gdb) p a
+$8 = {a = 10}
+(gdb) p -pretty on -- a
+$25 = {
+  a = 10
+}
+
+(gdb) p  -address on --  g_p1
+$13 = (int *) 0x7fffffffe40c
+(gdb) p  -address off --  g_p1
+$14 = (int *)
+
+(gdb) p   g_arr1
+$21 = {1, 2, 3, 4}
+(gdb) p  -array-indexes on --  g_arr1
+$16 = {[0] = 1, [1] = 2, [2] = 3, [3] = 4}
+(gdb) p  -array-indexes off --  g_arr1
+$17 = {1, 2, 3, 4}
+(gdb) p  /x  g_arr1@2
+$19 = {{0x1, 0x2, 0x3, 0x4}, {0x0, 0x0, 0x0, 0x0}}
+(gdb) p  /x  g_arr1
+$20 = {0x1, 0x2, 0x3, 0x4}
+
+(gdb) p g_f1
+$1 = 0.123000003
+(gdb) p /d g_f1
+$2 = 0
+(gdb) p /f g_f1
+$3 = 0.123000003
 </pre>
+
+<div class="head head_3">display</div>
+<p>
+    display 的缩写新式再上面表格中已经给出来了，其中 <code>\\fmt</code> 的支持的值类型和 print 支持的一样，但是这里的值和 display 关键词之间是没有空格的。
+</p><p>
+    因为 display 是在程序暂停执行（例如单步执行）时，GDB 调试器自动帮我们打印出来，因此这些监控的变量也存在一个表中，可以使用 <code>info</code> 来查看，
+    另外，也可以通过 <code>disable display num1 num2 ...</code> 进行禁用，或者使用  <code>enable display num1 num2 ...</code> 进行使能。
+</p><p>
+    如果需要删除 display 跟踪，那么可以使用 <code>undisplay num1 num2 ...</code>， 或者 <code>delete display num1 num2 ...</code>。
+</p>
+
+<div class="head head_3">info</div>
+<p>
+    GDB 中 info 指令可用于查看当前 gdb 调试过程中的一些信息，其具体的使用方法可以参考下表：
+</p><div class="tb_format offset_1em">
+    {
+        "head": [
+            "指令", "描述"
+        ],
+        "data": [
+            ["info breakpoint [n]<br>info break [n]", "查看所有断点信息，包括 tbreak 和 rbreak 的"],
+            ["info watchpoints [n]", "查看所有观察点信息"],
+            ["info display", "查看所有通过 display 监控的目标变量"],
+            ["awatch", "变量值 发生变化 或者 被读 的时候程序停止运行"]
+        ]
+    }
+</div>
+
 
 <div class="head head_3">参考资料</div>
 <ol>
 <li><a href="https://www.sourceware.org/gdb/">GDB 官方网站</a></li>
+<li><a href="https://sourceware.org/gdb/onlinedocs/gdb/index.html#Top">GDB 官方调试指导手册</a></li>
 <li><a href="https://www.hiyu.space/2021/02/24/GDB%E5%85%A5%E9%97%A8/">GDB入门</a></li>
 <li><a href="http://c.biancheng.net/view/8123.html">GDB 是什么</a></li>
 </ol>
@@ -1705,7 +1891,6 @@ https://blog.csdn.net/wesleyflagon/article/details/80272696
     <br> 比如： https://sourcegraph.com/search?q=context:global+repo:%5Egithub%5C.com/danmar/cppcheck%24+txt&patternType=standard
 </li>
 
-</ul>
 <li><strong>u-boot 启动流程</strong>
     <br> u-boot 的关联文件 <code>u-boot.lds</code> 可看出，启动函数即是 <code>_start</code> 函数，而该函数在 <code>start.s</code> 中，但你的工程里面大部分可能情况存在大量的 <code>start.S</code>,
     这时候你最重要的工作就是找到 start.s， 最简单的办法就是编译一次，看那个 <code>start.o</code> 被编译出来了
@@ -1825,6 +2010,13 @@ Disassembly of section .text:
     <br> 
 
 </li>
+<li><strong>敏捷</strong>
+    <ul>
+    <li><a href="https://mp.weixin.qq.com/mp/appmsgalbum?__biz=Mzg4ODY2MzA3Mg==&action=getalbum&album_id=2340367071639011328">敏捷项目管理思考篇</a></li>
+    </ul>
+
+</li>
+</ul>
 </div>
 
 

@@ -217,6 +217,9 @@ function formate_table(){
         p = tbs[i]
         tb_txt = p.innerHTML
         if( tb_txt == null ) return;
+        tb_txt = tb_txt.replaceAll("\r", ' ')
+        tb_txt = tb_txt.replaceAll("\n", ' ')
+        // console.log( tb_txt )
         js_body = JSON.parse( tb_txt )
         if( js_body == null ) return;
         tb = document.createElement('table')
